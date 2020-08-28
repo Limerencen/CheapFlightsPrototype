@@ -318,3 +318,51 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
     corresponding commit for more info.
 
 ## 0.5.0 (2018-09-17)
+
+### Added
+
+*   Flags enum support: flags.DEFINE_enum_class allows using an `Enum` derived
+    class to define the allowed values for a flag.
+
+## 0.4.1 (2018-08-28)
+
+### Fixed
+
+*   Flags no long allow spaces in their names
+
+### Changed
+
+*   XML test output is written at the end of all test execution.
+*   If the current user's username can't be gotten, fallback to uid, else fall
+    back to a generic 'unknown' string.
+
+## 0.4.0 (2018-08-14)
+
+### Added
+
+*   argparse integration: absl-registered flags can now be accessed via argparse
+    using absl.flags.argparse_flags: see that module for more information.
+*   TestCase.assertSameStructure now allows mixed set types.
+
+### Changed
+
+*   Test output now includes start/end markers for each test ran. This is to
+    help distinguish output from tests clearly.
+
+## 0.3.0 (2018-07-25)
+
+### Added
+
+*   `app.call_after_init`: Register functions to be called after app.run() is
+    called. Useful for program-wide initialization that library code may need.
+*   `logging.log_every_n_seconds`: like log_every_n, but based on elapsed time
+    between logging calls.
+*   `absltest.mock`: alias to unittest.mock (PY3) for better unittest drop-in
+    replacement. For PY2, it will be available if mock is importable.
+
+### Fixed
+
+*   `ABSLLogger.findCaller()`: allow stack_info arg and return value for PY2
+*   Make stopTest locking reentrant: this prevents deadlocks for test frameworks
+    that customize unittest.TextTestResult.stopTest.
+*   Make --helpfull work with unicode flag help strings.
