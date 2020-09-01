@@ -31,4 +31,8 @@ will be expected to conform to the Python style outlined
 *   Create **small PRs** that are narrowly focused on **addressing a single
     concern**. We often receive PRs that are trying to fix several things at a
     time, but if only one fix is considered acceptable, nothing gets merged and
-    both author's & review's time 
+    both author's & review's time is wasted. Create more PRs to address
+    different concerns and everyone will be happy.
+
+*   For speculative changes, consider opening an
+    [issue](https://github.com/absei
