@@ -42,4 +42,8 @@ will be expected to conform to the Python style outlined
 
 *   Don't fix code style and formatting unless you are already changing that
     line to address an issue. PRs with irrelevant changes won't be merged. If
-    you do want to fix formatting or style, do
+    you do want to fix formatting or style, do that in a separate PR.
+
+*   Unless your PR is trivial, you should expect there will be reviewer comments
+    that you'll need to address before merging. We expect you to be reasonably
+    re
