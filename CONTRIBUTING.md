@@ -46,4 +46,8 @@ will be expected to conform to the Python style outlined
 
 *   Unless your PR is trivial, you should expect there will be reviewer comments
     that you'll need to address before merging. We expect you to be reasonably
-    re
+    responsive to those comments, otherwise the PR will be closed after 2-3
+    weeks of inactivity.
+
+*   Maintain **clean commit history** and use **meaningful commit messages**.
+    PRs with messy commit history are difficult
