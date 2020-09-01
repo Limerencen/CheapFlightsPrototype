@@ -35,4 +35,7 @@ will be expected to conform to the Python style outlined
     different concerns and everyone will be happy.
 
 *   For speculative changes, consider opening an
-    [issue](https://github.com/absei
+    [issue](https://github.com/abseil/abseil-py/issues) and discussing it first.
+
+*   Provide a good **PR description** as a record of **what** change is being
+    made and **why** it was made. Link to a GitHub issue if i
