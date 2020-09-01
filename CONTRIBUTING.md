@@ -38,4 +38,8 @@ will be expected to conform to the Python style outlined
     [issue](https://github.com/abseil/abseil-py/issues) and discussing it first.
 
 *   Provide a good **PR description** as a record of **what** change is being
-    made and **why** it was made. Link to a GitHub issue if i
+    made and **why** it was made. Link to a GitHub issue if it exists.
+
+*   Don't fix code style and formatting unless you are already changing that
+    line to address an issue. PRs with irrelevant changes won't be merged. If
+    you do want to fix formatting or style, do
