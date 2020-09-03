@@ -50,4 +50,7 @@ will be expected to conform to the Python style outlined
     weeks of inactivity.
 
 *   Maintain **clean commit history** and use **meaningful commit messages**.
-    PRs with messy commit history are difficult
+    PRs with messy commit history are difficult to review and won't be merged.
+    Use `rebase -i upstream/main` to curate your commit history and/or to
+    bring in latest changes from main (but avoid rebasing in the middle of a
+    code revi
