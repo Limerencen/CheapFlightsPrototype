@@ -63,4 +63,7 @@ will be expected to conform to the Python style outlined
     [Running Tests](README.md#running-tests)).
 
 *   Exceptions to the rules can be made if there's a compelling reason for doing
-    so. That is - the rules are here to serve us, not the othe
+    so. That is - the rules are here to serve us, not the other way around, and
+    the rules need to be serving their intended purpose to be valuable.
+
+*   All submissions, including submissions by project members, require review.
