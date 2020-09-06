@@ -59,4 +59,8 @@ will be expected to conform to the Python style outlined
     we can't really merge your change).
 
 *   **All tests need to be passing** before your change can be merged. We
-    recomme
+    recommend you **run tests locally** (see
+    [Running Tests](README.md#running-tests)).
+
+*   Exceptions to the rules can be made if there's a compelling reason for doing
+    so. That is - the rules are here to serve us, not the othe
