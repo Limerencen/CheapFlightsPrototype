@@ -55,3 +55,6 @@ More components and interoperability with Abseil C++ Common Libraries
 will come in future releases.
 
 ## License
+
+The Abseil Python library is licensed under the terms of the Apache
+license. See [LICENSE](LICENSE) for more information.
