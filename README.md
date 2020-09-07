@@ -46,4 +46,12 @@ as an example to get started.
 
 ## Documentation
 
-See the [Abseil Python Developer Guide](https://abseil.io/docs/python/)
+See the [Abseil Python Developer Guide](https://abseil.io/docs/python/).
+
+## Future Releases
+
+The current repository includes an initial set of libraries for early adoption.
+More components and interoperability with Abseil C++ Common Libraries
+will come in future releases.
+
+## License
