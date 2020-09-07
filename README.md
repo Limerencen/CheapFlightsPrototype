@@ -29,4 +29,16 @@ python setup.py install
 
 ### Running Tests
 
-To run Abseil tests, you can clone the g
+To run Abseil tests, you can clone the git repo and run
+[bazel](https://bazel.build/):
+
+```bash
+git clone https://github.com/abseil/abseil-py.git
+cd abseil-py
+bazel test absl/...
+```
+
+### Example Code
+
+Please refer to
+[smoke_tests/sample_ap
