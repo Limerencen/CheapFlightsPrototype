@@ -41,4 +41,9 @@ bazel test absl/...
 ### Example Code
 
 Please refer to
-[smoke_tests/sample_ap
+[smoke_tests/sample_app.py](https://github.com/abseil/abseil-py/blob/main/smoke_tests/sample_app.py)
+as an example to get started.
+
+## Documentation
+
+See the [Abseil Python Developer Guide](https://abseil.io/docs/python/)
