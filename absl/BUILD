@@ -68,3 +68,18 @@ py_test(
     python_version = "PY3",
     srcs_version = "PY3",
     deps = [
+        ":command_name",
+        "//absl/testing:absltest",
+    ],
+)
+
+py_test(
+    name = "tests/python_version_test",
+    srcs = ["tests/python_version_test.py"],
+    python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        "//absl/flags",
+        "//absl/testing:absltest",
+    ],
+)
