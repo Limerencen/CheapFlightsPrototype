@@ -17,4 +17,18 @@ class ExceptionHandler():
     ...
 
 
-EXCEPTION_HANDLERS: List[Exc
+EXCEPTION_HANDLERS: List[ExceptionHandler] = ...
+
+
+class HelpFlag(_flag.BooleanFlag):
+  def __init__(self):
+    ...
+
+
+class HelpshortFlag(HelpFlag):
+  ...
+
+
+class HelpfullFlag(_flag.BooleanFlag):
+  def __init__(self):
+ 
