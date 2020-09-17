@@ -31,4 +31,18 @@ class HelpshortFlag(HelpFlag):
 
 class HelpfullFlag(_flag.BooleanFlag):
   def __init__(self):
- 
+    ...
+
+
+class HelpXMLFlag(_flag.BooleanFlag):
+  def __init__(self):
+    ...
+
+
+def define_help_flags() -> None:
+  ...
+
+
+@overload
+def usage(shorthelp: Union[bool, int] = ...,
+          writeto_stdout: Union[bo
