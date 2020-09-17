@@ -45,4 +45,12 @@ def define_help_flags() -> None:
 
 @overload
 def usage(shorthelp: Union[bool, int] = ...,
-          writeto_stdout: Union[bo
+          writeto_stdout: Union[bool, int] = ...,
+          detailed_error: Optional[Any] = ...,
+          exitcode: None = ...) -> None:
+  ...
+
+
+@overload
+def usage(shorthelp: Union[bool, int] = ...,
+          writeto_stdo
