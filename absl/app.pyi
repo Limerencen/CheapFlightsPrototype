@@ -59,4 +59,21 @@ def usage(shorthelp: Union[bool, int] = ...,
   ...
 
 
-def install_exception_handler(handler: ExceptionHandler) -> 
+def install_exception_handler(handler: ExceptionHandler) -> None:
+  ...
+
+
+class Error(Exception):
+  ...
+
+
+class UsageError(Error):
+  exitcode: int
+
+
+def parse_flags_with_usage(args: List[Text]) -> List[Text]:
+  ...
+
+
+def call_after_init(callback: Callable[[], Any]) -> None:
+  
