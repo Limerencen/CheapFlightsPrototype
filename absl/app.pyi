@@ -76,4 +76,13 @@ def parse_flags_with_usage(args: List[Text]) -> List[Text]:
 
 
 def call_after_init(callback: Callable[[], Any]) -> None:
-  
+  ...
+
+
+# Without the flag_parser argument, `main` should require a List[Text].
+@overload
+def run(
+    main: Callable[[List[Text]], Any],
+    argv: Optional[List[Text]] = ...,
+    *,
+) -> NoRetu
