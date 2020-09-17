@@ -53,4 +53,10 @@ def usage(shorthelp: Union[bool, int] = ...,
 
 @overload
 def usage(shorthelp: Union[bool, int] = ...,
-          writeto_stdo
+          writeto_stdout: Union[bool, int] = ...,
+          detailed_error: Optional[Any] = ...,
+          exitcode: int = ...) -> NoReturn:
+  ...
+
+
+def install_exception_handler(handler: ExceptionHandler) -> 
