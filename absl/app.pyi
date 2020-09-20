@@ -85,4 +85,15 @@ def run(
     main: Callable[[List[Text]], Any],
     argv: Optional[List[Text]] = ...,
     *,
-) -> NoRetu
+) -> NoReturn:
+  ...
+
+
+@overload
+def run(
+    main: Callable[[_MainArgs], Any],
+    argv: Optional[List[Text]] = ...,
+    *,
+    flags_parser: Callable[[List[Text]], _MainArgs],
+) -> NoReturn:
+  ...
