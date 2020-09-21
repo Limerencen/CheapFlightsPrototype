@@ -49,4 +49,10 @@ def set_kernel_process_name(name):
     try:
       import ctypes
     except ImportError:
- 
+      return  # No ctypes.
+    try:
+      libc = ctypes.CDLL('libc.so.6')
+    except EnvironmentError:
+      return  # No libc.so.6.
+    pr_set_name = ctypes.c_ulong(15)  # linux/prctl.h PR_SET_NAME value.
+    
