@@ -27,4 +27,8 @@ def make_process_name_useful():
 
 
 def set_kernel_process_name(name):
-  """Changes the
+  """Changes the Kernel's /proc/self/status process name on Linux.
+
+  The kernel name is NOT what will be shown by the ps or top command.
+  It is a 15 character string stored in the kernel's process table that
+  is 
