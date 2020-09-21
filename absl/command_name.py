@@ -55,4 +55,9 @@ def set_kernel_process_name(name):
     except EnvironmentError:
       return  # No libc.so.6.
     pr_set_name = ctypes.c_ulong(15)  # linux/prctl.h PR_SET_NAME value.
-    
+    zero = ctypes.c_ulong(0)
+    try:
+      libc.prctl(pr_set_name, name, zero, zero, zero)
+      # Ignore the prctl return value.  Nothing we can do if it errored.
+    except AttributeError:
+      return  # No pr
