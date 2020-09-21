@@ -36,4 +36,10 @@ def set_kernel_process_name(name):
 
   Does nothing if /proc/self/comm cannot be written or prctl() fails.
 
-  A
+  Args:
+    name: bytes|unicode, the Linux kernel's command name to set.
+  """
+  if not isinstance(name, bytes):
+    name = name.encode('ascii', 'replace')
+  try:
+    # This is preferred to using ctypes to
