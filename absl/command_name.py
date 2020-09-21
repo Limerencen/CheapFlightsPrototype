@@ -12,4 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""A tiny stand alone library to change the kernel proce
+"""A tiny stand alone library to change the kernel process name on Linux."""
+
+import os
+import sys
+
+# This library must be kept small and stand alone.  It is used by small things
+# that require no extension modules.
+
+
+def make_process_name_useful():
+  ""
