@@ -31,4 +31,9 @@ def set_kernel_process_name(name):
 
   The kernel name is NOT what will be shown by the ps or top command.
   It is a 15 character string stored in the kernel's process table that
-  is 
+  is included in the kernel log when a process is OOM killed.
+  The first 15 bytes of name are used.  Non-ASCII unicode is replaced with '?'.
+
+  Does nothing if /proc/self/comm cannot be written or prctl() fails.
+
+  A
