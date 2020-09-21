@@ -42,4 +42,11 @@ def set_kernel_process_name(name):
   if not isinstance(name, bytes):
     name = name.encode('ascii', 'replace')
   try:
-    # This is preferred to using ctypes to
+    # This is preferred to using ctypes to try and call prctl() when possible.
+    with open('/proc/self/comm', 'wb') as proc_comm:
+      proc_comm.write(name[:15])
+  except EnvironmentError:
+    try:
+      import ctypes
+    except ImportError:
+ 
