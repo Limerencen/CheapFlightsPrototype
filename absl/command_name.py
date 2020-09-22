@@ -60,4 +60,4 @@ def set_kernel_process_name(name):
       libc.prctl(pr_set_name, name, zero, zero, zero)
       # Ignore the prctl return value.  Nothing we can do if it errored.
     except AttributeError:
-      return  # No pr
+      return  # No prctl.
