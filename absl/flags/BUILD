@@ -49,4 +49,16 @@ py_library(
 
 py_library(
     name = "_exceptions",
-    srcs = ["_ex
+    srcs = ["_exceptions.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        ":_helpers",
+    ],
+)
+
+py_library(
+    name = "_flag",
+    srcs = ["_flag.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        ":_argument_parser",
