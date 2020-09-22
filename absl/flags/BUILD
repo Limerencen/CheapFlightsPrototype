@@ -38,4 +38,15 @@ py_library(
     srcs = ["_defines.py"],
     srcs_version = "PY2AND3",
     deps = [
-        "
+        ":_argument_parser",
+        ":_exceptions",
+        ":_flag",
+        ":_flagvalues",
+        ":_helpers",
+        ":_validators",
+    ],
+)
+
+py_library(
+    name = "_exceptions",
+    srcs = ["_ex
