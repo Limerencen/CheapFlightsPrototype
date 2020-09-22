@@ -62,3 +62,15 @@ py_library(
     srcs_version = "PY2AND3",
     deps = [
         ":_argument_parser",
+        ":_exceptions",
+        ":_helpers",
+    ],
+)
+
+py_library(
+    name = "_flagvalues",
+    srcs = ["_flagvalues.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        ":_exceptions",
+  
