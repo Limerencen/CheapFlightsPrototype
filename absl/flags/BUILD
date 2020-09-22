@@ -27,4 +27,15 @@ py_library(
 py_library(
     name = "_argument_parser",
     srcs = ["_argument_parser.py"],
-    src
+    srcs_version = "PY2AND3",
+    deps = [
+        ":_helpers",
+    ],
+)
+
+py_library(
+    name = "_defines",
+    srcs = ["_defines.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        "
