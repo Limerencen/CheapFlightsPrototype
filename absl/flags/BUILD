@@ -99,4 +99,15 @@ py_library(
 )
 
 py_library(
-   
+    name = "_validators_classes",
+    srcs = [
+        "_validators_classes.py",
+    ],
+    srcs_version = "PY2AND3",
+    deps = [
+        ":_exceptions",
+    ],
+)
+
+py_test(
+    name = "tests/_argu
