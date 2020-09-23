@@ -110,4 +110,10 @@ py_library(
 )
 
 py_test(
-    name = "tests/_argu
+    name = "tests/_argument_parser_test",
+    srcs = ["tests/_argument_parser_test.py"],
+    python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":_argument_parser",
+        "//absl/testing:absltest"
