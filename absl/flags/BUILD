@@ -137,4 +137,13 @@ py_test(
 
 py_test(
     name = "tests/_flagvalues_test",
-    size = 
+    size = "small",
+    srcs = ["tests/_flagvalues_test.py"],
+    python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":_defines",
+        ":_exceptions",
+        ":_flagvalues",
+        ":_helpers",
+        ":_v
