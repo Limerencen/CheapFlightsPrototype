@@ -126,4 +126,15 @@ py_test(
     srcs = ["tests/_flag_test.py"],
     python_version = "PY3",
     srcs_version = "PY3",
-    dep
+    deps = [
+        ":_argument_parser",
+        ":_exceptions",
+        ":_flag",
+        "//absl/testing:absltest",
+        "//absl/testing:parameterized",
+    ],
+)
+
+py_test(
+    name = "tests/_flagvalues_test",
+    size = 
