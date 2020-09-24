@@ -116,4 +116,14 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":_argument_parser",
-        "//absl/testing:absltest"
+        "//absl/testing:absltest",
+        "//absl/testing:parameterized",
+    ],
+)
+
+py_test(
+    name = "tests/_flag_test",
+    srcs = ["tests/_flag_test.py"],
+    python_version = "PY3",
+    srcs_version = "PY3",
+    dep
