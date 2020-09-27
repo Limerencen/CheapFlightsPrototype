@@ -164,4 +164,13 @@ py_test(
         ":_helpers",
         ":tests/module_bar",
         ":tests/module_foo",
-        "//absl/testing:abslte
+        "//absl/testing:absltest",
+    ],
+)
+
+py_test(
+    name = "tests/_validators_test",
+    size = "small",
+    srcs = ["tests/_validators_test.py"],
+    python_version = "PY3",
+    srcs_version = "PY3"
