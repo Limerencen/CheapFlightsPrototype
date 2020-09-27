@@ -146,4 +146,15 @@ py_test(
         ":_exceptions",
         ":_flagvalues",
         ":_helpers",
-        ":_v
+        ":_validators",
+        ":tests/module_foo",
+        "//absl/logging",
+        "//absl/testing:absltest",
+        "//absl/testing:parameterized",
+    ],
+)
+
+py_test(
+    name = "tests/_helpers_test",
+    size = "small",
+    srcs 
