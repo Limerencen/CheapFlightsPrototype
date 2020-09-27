@@ -157,4 +157,11 @@ py_test(
 py_test(
     name = "tests/_helpers_test",
     size = "small",
-    srcs 
+    srcs = ["tests/_helpers_test.py"],
+    python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":_helpers",
+        ":tests/module_bar",
+        ":tests/module_foo",
+        "//absl/testing:abslte
