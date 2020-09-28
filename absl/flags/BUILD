@@ -217,4 +217,15 @@ py_test(
     name = "tests/flags_formatting_test",
     size = "small",
     srcs = ["tests/flags_formatting_test.py"],
-    python_version
+    python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":_helpers",
+        ":flags",
+        "//absl/testing:absltest",
+    ],
+)
+
+py_test(
+    name = "tests/flags_helpxml_test",
+    size = "small",
