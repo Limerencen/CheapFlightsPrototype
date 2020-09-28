@@ -173,4 +173,16 @@ py_test(
     size = "small",
     srcs = ["tests/_validators_test.py"],
     python_version = "PY3",
-    srcs_version = "PY3"
+    srcs_version = "PY3",
+    deps = [
+        ":_defines",
+        ":_exceptions",
+        ":_flagvalues",
+        ":_validators",
+        "//absl/testing:absltest",
+    ],
+)
+
+py_test(
+    name = "tests/argparse_flags_test",
+    size = 
