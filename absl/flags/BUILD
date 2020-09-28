@@ -200,4 +200,12 @@ py_test(
     ],
 )
 
-py_bin
+py_binary(
+    name = "tests/argparse_flags_test_helper",
+    testonly = 1,
+    srcs = ["tests/argparse_flags_test_helper.py"],
+    python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":argparse_flags",
+    
