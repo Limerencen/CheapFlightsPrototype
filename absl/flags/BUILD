@@ -208,4 +208,13 @@ py_binary(
     srcs_version = "PY3",
     deps = [
         ":argparse_flags",
-    
+        ":flags",
+        "//absl:app",
+    ],
+)
+
+py_test(
+    name = "tests/flags_formatting_test",
+    size = "small",
+    srcs = ["tests/flags_formatting_test.py"],
+    python_version
