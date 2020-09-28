@@ -192,3 +192,12 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":argparse_flags",
+        ":flags",
+        "//absl/logging",
+        "//absl/testing:_bazelize_command",
+        "//absl/testing:absltest",
+        "//absl/testing:parameterized",
+    ],
+)
+
+py_bin
