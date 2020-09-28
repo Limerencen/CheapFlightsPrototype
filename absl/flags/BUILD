@@ -236,4 +236,12 @@ py_test(
         ":_helpers",
         ":flags",
         ":tests/module_bar",
-  
+        "//absl/testing:absltest",
+    ],
+)
+
+py_test(
+    name = "tests/flags_numeric_bounds_test",
+    size = "small",
+    srcs = ["tests/flags_numeric_bounds_test.py"],
+    python_version = "PY3",
