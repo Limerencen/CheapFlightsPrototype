@@ -229,3 +229,11 @@ py_test(
 py_test(
     name = "tests/flags_helpxml_test",
     size = "small",
+    srcs = ["tests/flags_helpxml_test.py"],
+    python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":_helpers",
+        ":flags",
+        ":tests/module_bar",
+  
