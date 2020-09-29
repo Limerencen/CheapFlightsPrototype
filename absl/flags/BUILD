@@ -274,4 +274,15 @@ py_test(
     name = "tests/flags_unicode_literals_test",
     size = "small",
     srcs = ["tests/flags_unicode_literals_test.py"],
-    python
+    python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        ":flags",
+        "//absl/testing:absltest",
+    ],
+)
+
+py_library(
+    name = "tests/module_bar",
+    testonly = 1,
+    srcs = ["tests/modu
