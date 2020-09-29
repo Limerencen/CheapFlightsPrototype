@@ -264,4 +264,14 @@ py_test(
         ":_helpers",
         ":flags",
         ":tests/module_bar",
-        ":tests/module_
+        ":tests/module_baz",
+        ":tests/module_foo",
+        "//absl/testing:absltest",
+    ],
+)
+
+py_test(
+    name = "tests/flags_unicode_literals_test",
+    size = "small",
+    srcs = ["tests/flags_unicode_literals_test.py"],
+    python
