@@ -297,4 +297,14 @@ py_library(
     name = "tests/module_baz",
     testonly = 1,
     srcs = ["tests/module_baz.py"],
-    srcs_versio
+    srcs_version = "PY2AND3",
+    deps = [":flags"],
+)
+
+py_library(
+    name = "tests/module_foo",
+    testonly = 1,
+    srcs = ["tests/module_foo.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        ":_help
