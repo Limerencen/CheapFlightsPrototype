@@ -307,4 +307,8 @@ py_library(
     srcs = ["tests/module_foo.py"],
     srcs_version = "PY2AND3",
     deps = [
-        ":_help
+        ":_helpers",
+        ":flags",
+        ":tests/module_bar",
+    ],
+)
