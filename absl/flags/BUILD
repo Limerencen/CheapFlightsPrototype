@@ -285,4 +285,16 @@ py_test(
 py_library(
     name = "tests/module_bar",
     testonly = 1,
-    srcs = ["tests/modu
+    srcs = ["tests/module_bar.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        ":_helpers",
+        ":flags",
+    ],
+)
+
+py_library(
+    name = "tests/module_baz",
+    testonly = 1,
+    srcs = ["tests/module_baz.py"],
+    srcs_versio
