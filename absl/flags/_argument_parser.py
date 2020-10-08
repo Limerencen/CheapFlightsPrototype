@@ -444,3 +444,187 @@ class EnumClassParser(ArgumentParser):
                   if name.lower() == key.lower())
 
   def flag_type(self):
+    """See base class."""
+    return 'enum class'
+
+
+class ListSerializer(ArgumentSerializer):
+
+  def __init__(self, list_sep):
+    self.list_sep = list_sep
+
+  def serialize(self, value):
+    """See base class."""
+    return self.list_sep.join([str(x) for x in value])
+
+
+class EnumClassListSerializer(ListSerializer):
+  """A serializer for :class:`MultiEnumClass` flags.
+
+  This serializer simply joins the output of `EnumClassSerializer` using a
+  provided separator.
+  """
+
+  def __init__(self, list_sep, **kwargs):
+    """Initializes EnumClassListSerializer.
+
+    Args:
+      list_sep: String to be used as a separator when serializing
+      **kwargs: Keyword arguments to the `EnumClassSerializer` used to serialize
+        individual values.
+    """
+    super(EnumClassListSerializer, self).__init__(list_sep)
+    self._element_serializer = EnumClassSerializer(**kwargs)
+
+  def serialize(self, value):
+    """See base class."""
+    if isinstance(value, list):
+      return self.list_sep.join(
+          self._element_serializer.serialize(x) for x in value)
+    else:
+      return self._element_serializer.serialize(value)
+
+
+class CsvListSerializer(ArgumentSerializer):
+
+  def __init__(self, list_sep):
+    self.list_sep = list_sep
+
+  def serialize(self, value):
+    """Serializes a list as a CSV string or unicode."""
+    output = io.StringIO()
+    writer = csv.writer(output, delimiter=self.list_sep)
+    writer.writerow([str(x) for x in value])
+    serialized_value = output.getvalue().strip()
+
+    # We need the returned value to be pure ascii or Unicodes so that
+    # when the xml help is generated they are usefully encodable.
+    return str(serialized_value)
+
+
+class EnumClassSerializer(ArgumentSerializer):
+  """Class for generating string representations of an enum class flag value."""
+
+  def __init__(self, lowercase):
+    """Initializes EnumClassSerializer.
+
+    Args:
+      lowercase: If True, enum member names are lowercased during serialization.
+    """
+    self._lowercase = lowercase
+
+  def serialize(self, value):
+    """Returns a serialized string of the Enum class value."""
+    as_string = str(value.name)
+    return as_string.lower() if self._lowercase else as_string
+
+
+class BaseListParser(ArgumentParser):
+  """Base class for a parser of lists of strings.
+
+  To extend, inherit from this class; from the subclass ``__init__``, call::
+
+      super().__init__(token, name)
+
+  where token is a character used to tokenize, and name is a description
+  of the separator.
+  """
+
+  def __init__(self, token=None, name=None):
+    assert name
+    super(BaseListParser, self).__init__()
+    self._token = token
+    self._name = name
+    self.syntactic_help = 'a %s separated list' % self._name
+
+  def parse(self, argument):
+    """See base class."""
+    if isinstance(argument, list):
+      return argument
+    elif not argument:
+      return []
+    else:
+      return [s.strip() for s in argument.split(self._token)]
+
+  def flag_type(self):
+    """See base class."""
+    return '%s separated list of strings' % self._name
+
+
+class ListParser(BaseListParser):
+  """Parser for a comma-separated list of strings."""
+
+  def __init__(self):
+    super(ListParser, self).__init__(',', 'comma')
+
+  def parse(self, argument):
+    """Parses argument as comma-separated list of strings."""
+    if isinstance(argument, list):
+      return argument
+    elif not argument:
+      return []
+    else:
+      try:
+        return [s.strip() for s in list(csv.reader([argument], strict=True))[0]]
+      except csv.Error as e:
+        # Provide a helpful report for case like
+        #   --listflag="$(printf 'hello,\nworld')"
+        # IOW, list flag values containing naked newlines.  This error
+        # was previously "reported" by allowing csv.Error to
+        # propagate.
+        raise ValueError('Unable to parse the value %r as a %s: %s'
+                         % (argument, self.flag_type(), e))
+
+  def _custom_xml_dom_elements(self, doc):
+    elements = super(ListParser, self)._custom_xml_dom_elements(doc)
+    elements.append(_helpers.create_xml_dom_element(
+        doc, 'list_separator', repr(',')))
+    return elements
+
+
+class WhitespaceSeparatedListParser(BaseListParser):
+  """Parser for a whitespace-separated list of strings."""
+
+  def __init__(self, comma_compat=False):
+    """Initializer.
+
+    Args:
+      comma_compat: bool, whether to support comma as an additional separator.
+          If False then only whitespace is supported.  This is intended only for
+          backwards compatibility with flags that used to be comma-separated.
+    """
+    self._comma_compat = comma_compat
+    name = 'whitespace or comma' if self._comma_compat else 'whitespace'
+    super(WhitespaceSeparatedListParser, self).__init__(None, name)
+
+  def parse(self, argument):
+    """Parses argument as whitespace-separated list of strings.
+
+    It also parses argument as comma-separated list of strings if requested.
+
+    Args:
+      argument: string argument passed in the commandline.
+
+    Returns:
+      [str], the parsed flag value.
+    """
+    if isinstance(argument, list):
+      return argument
+    elif not argument:
+      return []
+    else:
+      if self._comma_compat:
+        argument = argument.replace(',', ' ')
+      return argument.split()
+
+  def _custom_xml_dom_elements(self, doc):
+    elements = super(WhitespaceSeparatedListParser, self
+                    )._custom_xml_dom_elements(doc)
+    separators = list(string.whitespace)
+    if self._comma_compat:
+      separators.append(',')
+    separators.sort()
+    for sep_char in separators:
+      elements.append(_helpers.create_xml_dom_element(
+          doc, 'list_separator', repr(sep_char)))
+    return elements
