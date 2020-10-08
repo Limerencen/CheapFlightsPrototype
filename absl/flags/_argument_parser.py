@@ -232,3 +232,215 @@ class FloatParser(NumericParser):
               type(argument)))
 
   def flag_type(self):
+    """See base class."""
+    return 'float'
+
+
+class IntegerParser(NumericParser):
+  """Parser of an integer value.
+
+  Parsed value may be bounded to a given upper and lower bound.
+  """
+  number_article = 'an'
+  number_name = 'integer'
+  syntactic_help = ' '.join((number_article, number_name))
+
+  def __init__(self, lower_bound=None, upper_bound=None):
+    super(IntegerParser, self).__init__()
+    self.lower_bound = lower_bound
+    self.upper_bound = upper_bound
+    sh = self.syntactic_help
+    if lower_bound is not None and upper_bound is not None:
+      sh = ('%s in the range [%s, %s]' % (sh, lower_bound, upper_bound))
+    elif lower_bound == 1:
+      sh = 'a positive %s' % self.number_name
+    elif upper_bound == -1:
+      sh = 'a negative %s' % self.number_name
+    elif lower_bound == 0:
+      sh = 'a non-negative %s' % self.number_name
+    elif upper_bound == 0:
+      sh = 'a non-positive %s' % self.number_name
+    elif upper_bound is not None:
+      sh = '%s <= %s' % (self.number_name, upper_bound)
+    elif lower_bound is not None:
+      sh = '%s >= %s' % (self.number_name, lower_bound)
+    self.syntactic_help = sh
+
+  def convert(self, argument):
+    """Returns the int value of argument."""
+    if _is_integer_type(argument):
+      return argument
+    elif isinstance(argument, str):
+      base = 10
+      if len(argument) > 2 and argument[0] == '0':
+        if argument[1] == 'o':
+          base = 8
+        elif argument[1] == 'x':
+          base = 16
+      return int(argument, base)
+    else:
+      raise TypeError('Expect argument to be a string or int, found {}'.format(
+          type(argument)))
+
+  def flag_type(self):
+    """See base class."""
+    return 'int'
+
+
+class BooleanParser(ArgumentParser):
+  """Parser of boolean values."""
+
+  def parse(self, argument):
+    """See base class."""
+    if isinstance(argument, str):
+      if argument.lower() in ('true', 't', '1'):
+        return True
+      elif argument.lower() in ('false', 'f', '0'):
+        return False
+      else:
+        raise ValueError('Non-boolean argument to boolean flag', argument)
+    elif isinstance(argument, int):
+      # Only allow bool or integer 0, 1.
+      # Note that float 1.0 == True, 0.0 == False.
+      bool_value = bool(argument)
+      if argument == bool_value:
+        return bool_value
+      else:
+        raise ValueError('Non-boolean argument to boolean flag', argument)
+
+    raise TypeError('Non-boolean argument to boolean flag', argument)
+
+  def flag_type(self):
+    """See base class."""
+    return 'bool'
+
+
+class EnumParser(ArgumentParser):
+  """Parser of a string enum value (a string value from a given set)."""
+
+  def __init__(self, enum_values, case_sensitive=True):
+    """Initializes EnumParser.
+
+    Args:
+      enum_values: [str], a non-empty list of string values in the enum.
+      case_sensitive: bool, whether or not the enum is to be case-sensitive.
+
+    Raises:
+      ValueError: When enum_values is empty.
+    """
+    if not enum_values:
+      raise ValueError(
+          'enum_values cannot be empty, found "{}"'.format(enum_values))
+    super(EnumParser, self).__init__()
+    self.enum_values = enum_values
+    self.case_sensitive = case_sensitive
+
+  def parse(self, argument):
+    """Determines validity of argument and returns the correct element of enum.
+
+    Args:
+      argument: str, the supplied flag value.
+
+    Returns:
+      The first matching element from enum_values.
+
+    Raises:
+      ValueError: Raised when argument didn't match anything in enum.
+    """
+    if self.case_sensitive:
+      if argument not in self.enum_values:
+        raise ValueError('value should be one of <%s>' %
+                         '|'.join(self.enum_values))
+      else:
+        return argument
+    else:
+      if argument.upper() not in [value.upper() for value in self.enum_values]:
+        raise ValueError('value should be one of <%s>' %
+                         '|'.join(self.enum_values))
+      else:
+        return [value for value in self.enum_values
+                if value.upper() == argument.upper()][0]
+
+  def flag_type(self):
+    """See base class."""
+    return 'string enum'
+
+
+class EnumClassParser(ArgumentParser):
+  """Parser of an Enum class member."""
+
+  def __init__(self, enum_class, case_sensitive=True):
+    """Initializes EnumParser.
+
+    Args:
+      enum_class: class, the Enum class with all possible flag values.
+      case_sensitive: bool, whether or not the enum is to be case-sensitive. If
+        False, all member names must be unique when case is ignored.
+
+    Raises:
+      TypeError: When enum_class is not a subclass of Enum.
+      ValueError: When enum_class is empty.
+    """
+    # Users must have an Enum class defined before using EnumClass flag.
+    # Therefore this dependency is guaranteed.
+    import enum
+
+    if not issubclass(enum_class, enum.Enum):
+      raise TypeError('{} is not a subclass of Enum.'.format(enum_class))
+    if not enum_class.__members__:
+      raise ValueError('enum_class cannot be empty, but "{}" is empty.'
+                       .format(enum_class))
+    if not case_sensitive:
+      members = collections.Counter(
+          name.lower() for name in enum_class.__members__)
+      duplicate_keys = {
+          member for member, count in members.items() if count > 1
+      }
+      if duplicate_keys:
+        raise ValueError(
+            'Duplicate enum values for {} using case_sensitive=False'.format(
+                duplicate_keys))
+
+    super(EnumClassParser, self).__init__()
+    self.enum_class = enum_class
+    self._case_sensitive = case_sensitive
+    if case_sensitive:
+      self._member_names = tuple(enum_class.__members__)
+    else:
+      self._member_names = tuple(
+          name.lower() for name in enum_class.__members__)
+
+  @property
+  def member_names(self):
+    """The accepted enum names, in lowercase if not case sensitive."""
+    return self._member_names
+
+  def parse(self, argument):
+    """Determines validity of argument and returns the correct element of enum.
+
+    Args:
+      argument: str or Enum class member, the supplied flag value.
+
+    Returns:
+      The first matching Enum class member in Enum class.
+
+    Raises:
+      ValueError: Raised when argument didn't match anything in enum.
+    """
+    if isinstance(argument, self.enum_class):
+      return argument
+    elif not isinstance(argument, str):
+      raise ValueError(
+          '{} is not an enum member or a name of a member in {}'.format(
+              argument, self.enum_class))
+    key = EnumParser(
+        self._member_names, case_sensitive=self._case_sensitive).parse(argument)
+    if self._case_sensitive:
+      return self.enum_class[key]
+    else:
+      # If EnumParser.parse() return a value, we're guaranteed to find it
+      # as a member of the class
+      return next(value for name, value in self.enum_class.__members__.items()
+                  if name.lower() == key.lower())
+
+  def flag_type(self):
