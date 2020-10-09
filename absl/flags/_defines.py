@@ -22,4 +22,17 @@ import types
 
 from absl.flags import _argument_parser
 from absl.flags import _exceptions
-from absl.flags import _fl
+from absl.flags import _flag
+from absl.flags import _flagvalues
+from absl.flags import _helpers
+from absl.flags import _validators
+
+# pylint: disable=unused-import
+try:
+  from typing import Text, List, Any
+except ImportError:
+  pass
+
+try:
+  import enum
+exce
