@@ -13,4 +13,13 @@
 # limitations under the License.
 """This modules contains flags DEFINE functions.
 
-Do NOT import this module directly. Import the flags package and use
+Do NOT import this module directly. Import the flags package and use the
+aliases defined at the package level instead.
+"""
+
+import sys
+import types
+
+from absl.flags import _argument_parser
+from absl.flags import _exceptions
+from absl.flags import _fl
