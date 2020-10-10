@@ -43,4 +43,9 @@ _helpers.disclaim_module_ids.add(id(sys.modules[__name__]))
 
 
 def _register_bounds_validator_if_needed(parser, name, flag_values):
-  """Enfo
+  """Enforces lower and upper bounds for numeric flags.
+
+  Args:
+    parser: NumericParser (either FloatParser or IntegerParser), provides lower
+      and upper bounds, and help text to display.
+    name: str, name of 
