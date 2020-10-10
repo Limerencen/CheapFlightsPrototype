@@ -35,4 +35,12 @@ except ImportError:
 
 try:
   import enum
-exce
+except ImportError:
+  pass
+# pylint: enable=unused-import
+
+_helpers.disclaim_module_ids.add(id(sys.modules[__name__]))
+
+
+def _register_bounds_validator_if_needed(parser, name, flag_values):
+  """Enfo
