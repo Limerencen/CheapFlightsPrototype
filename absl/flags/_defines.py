@@ -59,4 +59,13 @@ def _register_bounds_validator_if_needed(parser, name, flag_values):
         raise _exceptions.ValidationError(message)
       return True
 
-    _validators.register_validator(name, c
+    _validators.register_validator(name, checker, flag_values=flag_values)
+
+
+def DEFINE(  # pylint: disable=invalid-name
+    parser,
+    name,
+    default,
+    help,  # pylint: disable=redefined-builtin
+    flag_values=_flagvalues.FLAGS,
+    serializer=No
