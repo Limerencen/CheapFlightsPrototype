@@ -68,4 +68,13 @@ def DEFINE(  # pylint: disable=invalid-name
     default,
     help,  # pylint: disable=redefined-builtin
     flag_values=_flagvalues.FLAGS,
-    serializer=No
+    serializer=None,
+    module_name=None,
+    required=False,
+    **args):
+  """Registers a generic Flag object.
+
+  NOTE: in the docstrings of all DEFINE* functions, "registers" is short
+  for "creates a new flag and registers it".
+
+ 
