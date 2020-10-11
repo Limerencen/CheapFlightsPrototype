@@ -54,4 +54,9 @@ def _register_bounds_validator_if_needed(parser, name, flag_values):
   if parser.lower_bound is not None or parser.upper_bound is not None:
 
     def checker(value):
-      if value is not None a
+      if value is not None and parser.is_outside_bounds(value):
+        message = '%s is not %s' % (value, parser.syntactic_help)
+        raise _exceptions.ValidationError(message)
+      return True
+
+    _validators.register_validator(name, c
