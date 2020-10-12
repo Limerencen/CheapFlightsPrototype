@@ -83,4 +83,7 @@ def DEFINE(  # pylint: disable=invalid-name
   Args:
     parser: :class:`ArgumentParser`, used to parse the flag arguments.
     name: str, the flag name.
-    defau
+    default: The default value of the flag.
+    help: str, the help message.
+    flag_values: :class:`FlagValues`, the FlagValues instance with which the
+      flag will be registered. This should almost never
