@@ -89,4 +89,10 @@ def DEFINE(  # pylint: disable=invalid-name
       flag will be registered. This should almost never need to be overridden.
     serializer: :class:`ArgumentSerializer`, the flag serializer instance.
     module_name: str, the name of the Python module declaring this flag. If not
-      provided, it will be comp
+      provided, it will be computed using the stack trace of this call.
+    required: bool, is this a required flag. This must be used as a keyword
+      argument.
+    **args: dict, the extra keyword args that are passed to ``Flag.__init__``.
+
+  Returns:
+  
