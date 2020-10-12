@@ -95,4 +95,13 @@ def DEFINE(  # pylint: disable=invalid-name
     **args: dict, the extra keyword args that are passed to ``Flag.__init__``.
 
   Returns:
+    a handle to defined flag.
+  """
+  return DEFINE_flag(
+      _flag.Flag(parser, serializer, name, default, help, **args), flag_values,
+      module_name, required)
+
+
+def DEFINE_flag(  # pylint: disable=invalid-name
+    flag,
   
