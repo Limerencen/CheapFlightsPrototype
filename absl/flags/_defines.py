@@ -77,4 +77,10 @@ def DEFINE(  # pylint: disable=invalid-name
   NOTE: in the docstrings of all DEFINE* functions, "registers" is short
   for "creates a new flag and registers it".
 
- 
+  Auxiliary function: clients should use the specialized ``DEFINE_<type>``
+  function instead.
+
+  Args:
+    parser: :class:`ArgumentParser`, used to parse the flag arguments.
+    name: str, the flag name.
+    defau
