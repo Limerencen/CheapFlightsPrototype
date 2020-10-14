@@ -113,4 +113,9 @@ def DEFINE_flag(  # pylint: disable=invalid-name
 
   Typical users will use one of the more specialized DEFINE_xxx
   functions, such as :func:`DEFINE_string` or :func:`DEFINE_integer`.  But
-  developers who need to c
+  developers who need to create :class:`Flag` objects themselves should use
+  this function to register their flags.
+
+  Args:
+    flag: :class:`Flag`, a flag that is key to the module.
+    flag_values: :class:`
