@@ -104,4 +104,9 @@ def DEFINE(  # pylint: disable=invalid-name
 
 def DEFINE_flag(  # pylint: disable=invalid-name
     flag,
-  
+    flag_values=_flagvalues.FLAGS,
+    module_name=None,
+    required=False):
+  """Registers a :class:`Flag` object with a :class:`FlagValues` object.
+
+  By default, the global :const:`F
