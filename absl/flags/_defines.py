@@ -109,4 +109,8 @@ def DEFINE_flag(  # pylint: disable=invalid-name
     required=False):
   """Registers a :class:`Flag` object with a :class:`FlagValues` object.
 
-  By default, the global :const:`F
+  By default, the global :const:`FLAGS` ``FlagValue`` object is used.
+
+  Typical users will use one of the more specialized DEFINE_xxx
+  functions, such as :func:`DEFINE_string` or :func:`DEFINE_integer`.  But
+  developers who need to c
