@@ -118,4 +118,6 @@ def DEFINE_flag(  # pylint: disable=invalid-name
 
   Args:
     flag: :class:`Flag`, a flag that is key to the module.
-    flag_values: :class:`
+    flag_values: :class:`FlagValues`, the ``FlagValues`` instance with which the
+      flag will be registered. This should almost never need to be overridden.
+    module_name: 
