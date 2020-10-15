@@ -120,4 +120,6 @@ def DEFINE_flag(  # pylint: disable=invalid-name
     flag: :class:`Flag`, a flag that is key to the module.
     flag_values: :class:`FlagValues`, the ``FlagValues`` instance with which the
       flag will be registered. This should almost never need to be overridden.
-    module_name: 
+    module_name: str, the name of the Python module declaring this flag. If not
+      provided, it will be computed using the stack trace of this call.
+    required: bool, is this a required flag. This must be used as a ke
