@@ -167,4 +167,11 @@ def set_default(flag_holder, value):
 
 def _internal_declare_key_flags(flag_names,
                                 flag_values=_flagvalues.FLAGS,
-        
+                                key_flag_values=None):
+  """Declares a flag as key for the calling module.
+
+  Internal function.  User code should call declare_key_flag or
+  adopt_module_key_flags instead.
+
+  Args:
+    
