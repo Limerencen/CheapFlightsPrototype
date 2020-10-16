@@ -162,4 +162,9 @@ def set_default(flag_holder, value):
   Raises:
     IllegalFlagValueError: Raised when value is not valid.
   """
-  flag_holder._flagvalues.set_defau
+  flag_holder._flagvalues.set_default(flag_holder.name, value)  # pylint: disable=protected-access
+
+
+def _internal_declare_key_flags(flag_names,
+                                flag_values=_flagvalues.FLAGS,
+        
