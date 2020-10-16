@@ -143,4 +143,10 @@ def DEFINE_flag(  # pylint: disable=invalid-name
   flag_values.register_flag_by_module_id(id(module), flag)
   if required:
     _validators.mark_flag_as_required(flag.name, fv)
-  ensure_non_none_value = (flag.default is not None) or requ
+  ensure_non_none_value = (flag.default is not None) or required
+  return _flagvalues.FlagHolder(
+      fv, flag, ensure_non_none_value=ensure_non_none_value)
+
+
+def set_default(flag_holder, value):
+  """Changes the default value of the provided flag obje
