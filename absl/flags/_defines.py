@@ -149,4 +149,8 @@ def DEFINE_flag(  # pylint: disable=invalid-name
 
 
 def set_default(flag_holder, value):
-  """Changes the default value of the provided flag obje
+  """Changes the default value of the provided flag object.
+
+  The flag's current value is also updated if the flag is currently using
+  the default value, i.e. not specified in the command line, and not set
+  by FLAGS.name = v
