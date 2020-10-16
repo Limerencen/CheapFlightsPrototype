@@ -135,4 +135,8 @@ def DEFINE_flag(  # pylint: disable=invalid-name
   fv = flag_values
   fv[flag.name] = flag
   # Tell flag_values who's defining the flag.
-  if module
+  if module_name:
+    module = sys.modules.get(module_name)
+  else:
+    module, module_name = _helpers.get_calling_module_object_and_name()
+  flag_values.register_flag_by_module(module_name, 
