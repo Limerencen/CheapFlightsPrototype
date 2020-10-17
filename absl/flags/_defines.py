@@ -185,3 +185,11 @@ def _internal_declare_key_flags(flag_names,
       need to be overridden.
 
   Raises:
+    UnrecognizedFlagError: Raised when the flag is not defined.
+  """
+  key_flag_values = key_flag_values or flag_values
+
+  module = _helpers.get_calling_module()
+
+  for flag_name in flag_names:
+    key_f
