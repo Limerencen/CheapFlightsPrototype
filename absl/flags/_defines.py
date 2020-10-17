@@ -176,4 +176,7 @@ def _internal_declare_key_flags(flag_names,
   Args:
     flag_names: [str], a list of names of already-registered Flag objects.
     flag_values: :class:`FlagValues`, the FlagValues instance with which the
-      flags listed in flag_names have registered (the value of the
+      flags listed in flag_names have registered (the value of the flag_values
+      argument from the ``DEFINE_*`` calls that defined those flags). This
+      should almost never need to be overridden.
+    key_flag_values: :class:`FlagValues`, the FlagValues instance
