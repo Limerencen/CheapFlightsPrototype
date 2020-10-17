@@ -192,4 +192,8 @@ def _internal_declare_key_flags(flag_names,
   module = _helpers.get_calling_module()
 
   for flag_name in flag_names:
-    key_f
+    key_flag_values.register_key_flag_for_module(module, flag_values[flag_name])
+
+
+def declare_key_flag(flag_name, flag_values=_flagvalues.FLAGS):
+  """Declares one flag as key to the current module.
