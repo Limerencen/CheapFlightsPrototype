@@ -201,4 +201,12 @@ def declare_key_flag(flag_name, flag_values=_flagvalues.FLAGS):
   Key flags are flags that are deemed really important for a module.
   They are important when listing help messages; e.g., if the
   --helpshort command-line flag is used, then only the key flags of the
-  main modul
+  main module are listed (instead of all flags, as in the case of
+  --helpfull).
+
+  Sample usage::
+
+      flags.declare_key_flag('flag_1')
+
+  Args:
+    flag_name: str | :class:`FlagHolder`, the name or holder of an
