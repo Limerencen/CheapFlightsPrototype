@@ -197,3 +197,8 @@ def _internal_declare_key_flags(flag_names,
 
 def declare_key_flag(flag_name, flag_values=_flagvalues.FLAGS):
   """Declares one flag as key to the current module.
+
+  Key flags are flags that are deemed really important for a module.
+  They are important when listing help messages; e.g., if the
+  --helpshort command-line flag is used, then only the key flags of the
+  main modul
