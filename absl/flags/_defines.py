@@ -209,4 +209,8 @@ def declare_key_flag(flag_name, flag_values=_flagvalues.FLAGS):
       flags.declare_key_flag('flag_1')
 
   Args:
-    flag_name: str | :class:`FlagHolder`, the name or holder of an
+    flag_name: str | :class:`FlagHolder`, the name or holder of an already
+      declared flag. (Redeclaring flags as key, including flags implicitly key
+      because they were declared in this module, is a no-op.)
+      Positional-only parameter.
+    flag_values: :class:`FlagVal
