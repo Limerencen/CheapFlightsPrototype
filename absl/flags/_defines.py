@@ -213,4 +213,9 @@ def declare_key_flag(flag_name, flag_values=_flagvalues.FLAGS):
       declared flag. (Redeclaring flags as key, including flags implicitly key
       because they were declared in this module, is a no-op.)
       Positional-only parameter.
-    flag_values: :class:`FlagVal
+    flag_values: :class:`FlagValues`, the FlagValues instance in which the
+      flag will be declared as a key flag. This should almost never need to be
+      overridden.
+
+  Raises:
+    ValueError: Raised if flag_name not defined
