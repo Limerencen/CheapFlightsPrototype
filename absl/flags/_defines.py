@@ -218,4 +218,8 @@ def declare_key_flag(flag_name, flag_values=_flagvalues.FLAGS):
       overridden.
 
   Raises:
-    ValueError: Raised if flag_name not defined
+    ValueError: Raised if flag_name not defined as a Python flag.
+  """
+  flag_name, flag_values = _flagvalues.resolve_flag_ref(flag_name, flag_values)
+  if flag_name in _helpers.SPECIAL_FLAGS:
+    # Take care of the special flags, e.g., --fla
