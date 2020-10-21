@@ -226,4 +226,9 @@ def declare_key_flag(flag_name, flag_values=_flagvalues.FLAGS):
     # These flags are defined in SPECIAL_FLAGS, and are treated
     # specially during flag parsing, taking precedence over the
     # user-defined flags.
-    _internal_declare_key_flags([flag_
+    _internal_declare_key_flags([flag_name],
+                                flag_values=_helpers.SPECIAL_FLAGS,
+                                key_flag_values=flag_values)
+    return
+  try:
+    _internal_declare_key_flags([flag_name], flag_values=flag_val
