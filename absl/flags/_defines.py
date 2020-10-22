@@ -245,4 +245,11 @@ def adopt_module_key_flags(module, flag_values=_flagvalues.FLAGS):
       as key flags to the current module.
     flag_values: :class:`FlagValues`, the FlagValues instance in which the
       flags will be declared as key flags. This should almost never need to be
-      
+      overridden.
+
+  Raises:
+    Error: Raised when given an argument that is a module name (a string),
+        instead of a module object.
+  """
+  if not isinstance(module, types.ModuleType):
+    raise _except
