@@ -237,4 +237,8 @@ def declare_key_flag(flag_name, flag_values=_flagvalues.FLAGS):
                      'first define it in Python.' % flag_name)
 
 
-def adopt_module_key_flags(module
+def adopt_module_key_flags(module, flag_values=_flagvalues.FLAGS):
+  """Declares that all flags key to a module are key to the current module.
+
+  Args:
+    module: module, the module object from which all key flags will be declared
