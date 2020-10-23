@@ -252,4 +252,8 @@ def adopt_module_key_flags(module, flag_values=_flagvalues.FLAGS):
         instead of a module object.
   """
   if not isinstance(module, types.ModuleType):
-    raise _except
+    raise _exceptions.Error('Expected a module object, not %r.' % (module,))
+  _internal_declare_key_flags(
+      [f.name for f in flag_values.get_key_flags_for_module(module.__name__)],
+      flag_values=flag_values)
+  # If mod
