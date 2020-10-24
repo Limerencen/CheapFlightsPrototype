@@ -256,4 +256,7 @@ def adopt_module_key_flags(module, flag_values=_flagvalues.FLAGS):
   _internal_declare_key_flags(
       [f.name for f in flag_values.get_key_flags_for_module(module.__name__)],
       flag_values=flag_values)
-  # If mod
+  # If module is this flag module, take _helpers.SPECIAL_FLAGS into account.
+  if module == _helpers.FLAGS_MODULE:
+    _internal_declare_key_flags(
+        # As we associate flags with get_calling_module_
