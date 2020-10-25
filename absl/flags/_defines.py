@@ -259,4 +259,7 @@ def adopt_module_key_flags(module, flag_values=_flagvalues.FLAGS):
   # If module is this flag module, take _helpers.SPECIAL_FLAGS into account.
   if module == _helpers.FLAGS_MODULE:
     _internal_declare_key_flags(
-        # As we associate flags with get_calling_module_
+        # As we associate flags with get_calling_module_object_and_name(), the
+        # special flags defined in this module are incorrectly registered with
+        # a different module.  So, we can't use get_key_flags_for_module.
+        # Instead, we take all 
