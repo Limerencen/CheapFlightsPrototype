@@ -262,4 +262,7 @@ def adopt_module_key_flags(module, flag_values=_flagvalues.FLAGS):
         # As we associate flags with get_calling_module_object_and_name(), the
         # special flags defined in this module are incorrectly registered with
         # a different module.  So, we can't use get_key_flags_for_module.
-        # Instead, we take all 
+        # Instead, we take all flags from _helpers.SPECIAL_FLAGS (a private
+        # FlagValues, where no other module should register flags).
+        [_helpers.SPECIAL_FLAGS[name].name for name in _helpers.SPECIAL_FLAGS],
+  
