@@ -278,4 +278,8 @@ def disclaim_key_flags():
   serializers, since that module will accidentally claim flags defined
   by DEFINE_yyy as its key flags.  After calling this function, the
   module disclaims flag definitions thereafter, so the key flags will
-  be correctly attribut
+  be correctly attributed to the caller of DEFINE_yyy.
+
+  After calling this function, the module will not be able to define
+  any more flags.  This function will affect all FlagValues objects.
+  """
