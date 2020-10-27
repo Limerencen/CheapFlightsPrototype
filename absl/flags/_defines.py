@@ -265,4 +265,11 @@ def adopt_module_key_flags(module, flag_values=_flagvalues.FLAGS):
         # Instead, we take all flags from _helpers.SPECIAL_FLAGS (a private
         # FlagValues, where no other module should register flags).
         [_helpers.SPECIAL_FLAGS[name].name for name in _helpers.SPECIAL_FLAGS],
-  
+        flag_values=_helpers.SPECIAL_FLAGS,
+        key_flag_values=flag_values)
+
+
+def disclaim_key_flags():
+  """Declares that the current module will not define any more key flags.
+
+  Normally, 
