@@ -275,4 +275,7 @@ def disclaim_key_flags():
   Normally, the module that calls the DEFINE_xxx functions claims the
   flag to be its key flag.  This is undesirable for modules that
   define additional DEFINE_yyy functions with its own flag parsers and
-  
+  serializers, since that module will accidentally claim flags defined
+  by DEFINE_yyy as its key flags.  After calling this function, the
+  module disclaims flag definitions thereafter, so the key flags will
+  be correctly attribut
