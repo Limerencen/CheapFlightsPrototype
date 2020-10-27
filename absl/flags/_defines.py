@@ -272,4 +272,7 @@ def adopt_module_key_flags(module, flag_values=_flagvalues.FLAGS):
 def disclaim_key_flags():
   """Declares that the current module will not define any more key flags.
 
-  Normally, 
+  Normally, the module that calls the DEFINE_xxx functions claims the
+  flag to be its key flag.  This is undesirable for modules that
+  define additional DEFINE_yyy functions with its own flag parsers and
+  
