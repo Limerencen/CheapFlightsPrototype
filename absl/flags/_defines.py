@@ -314,4 +314,10 @@ def DEFINE_boolean(  # pylint: disable=invalid-name,redefined-builtin
     default,
     help,
     flag_values=_flagvalues.FLAGS,
-   
+    module_name=None,
+    required=False,
+    **args):
+  """Registers a boolean flag.
+
+  Such a boolean flag does not take an argument.  If a user wants to
+  specify a false value explicitly, the long 
