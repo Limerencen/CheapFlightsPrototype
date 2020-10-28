@@ -303,4 +303,15 @@ def DEFINE_string(  # pylint: disable=invalid-name,redefined-builtin
       name,
       default,
       help,
-    
+      flag_values,
+      serializer,
+      required=required,
+      **args)
+
+
+def DEFINE_boolean(  # pylint: disable=invalid-name,redefined-builtin
+    name,
+    default,
+    help,
+    flag_values=_flagvalues.FLAGS,
+   
