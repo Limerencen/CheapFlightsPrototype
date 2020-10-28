@@ -328,4 +328,7 @@ def DEFINE_boolean(  # pylint: disable=invalid-name,redefined-builtin
   line.
 
   Args:
-    name
+    name: str, the flag name.
+    default: bool|str|None, the default value of the flag.
+    help: str, the help message.
+    flag_values: :class:`FlagValues`, the FlagValues instance
