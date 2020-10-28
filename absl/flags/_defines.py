@@ -337,4 +337,14 @@ def DEFINE_boolean(  # pylint: disable=invalid-name,redefined-builtin
       provided, it will be computed using the stack trace of this call.
     required: bool, is this a required flag. This must be used as a keyword
       argument.
-    **args: dict, the extra keyword args that are passed to ``Flag.__init_
+    **args: dict, the extra keyword args that are passed to ``Flag.__init__``.
+
+  Returns:
+    a handle to defined flag.
+  """
+  return DEFINE_flag(
+      _flag.BooleanFlag(name, default, help, **args), flag_values, module_name,
+      required)
+
+
+def DEFINE_f
