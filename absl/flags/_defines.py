@@ -283,3 +283,9 @@ def disclaim_key_flags():
   After calling this function, the module will not be able to define
   any more flags.  This function will affect all FlagValues objects.
   """
+  globals_for_caller = sys._getframe(1).f_globals  # pylint: disable=protected-access
+  module, _ = _helpers.get_module_object_and_name(globals_for_caller)
+  _helpers.disclaim_module_ids.add(id(module))
+
+
+def
