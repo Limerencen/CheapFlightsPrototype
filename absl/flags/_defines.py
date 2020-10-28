@@ -295,4 +295,12 @@ def DEFINE_string(  # pylint: disable=invalid-name,redefined-builtin
     flag_values=_flagvalues.FLAGS,
     required=False,
     **args):
-  """Registers a flag 
+  """Registers a flag whose value can be any string."""
+  parser = _argument_parser.ArgumentParser()
+  serializer = _argument_parser.ArgumentSerializer()
+  return DEFINE(
+      parser,
+      name,
+      default,
+      help,
+    
