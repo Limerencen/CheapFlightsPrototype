@@ -288,4 +288,11 @@ def disclaim_key_flags():
   _helpers.disclaim_module_ids.add(id(module))
 
 
-def
+def DEFINE_string(  # pylint: disable=invalid-name,redefined-builtin
+    name,
+    default,
+    help,
+    flag_values=_flagvalues.FLAGS,
+    required=False,
+    **args):
+  """Registers a flag 
