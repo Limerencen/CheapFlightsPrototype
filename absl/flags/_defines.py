@@ -320,4 +320,12 @@ def DEFINE_boolean(  # pylint: disable=invalid-name,redefined-builtin
   """Registers a boolean flag.
 
   Such a boolean flag does not take an argument.  If a user wants to
-  specify a false value explicitly, the long 
+  specify a false value explicitly, the long option beginning with 'no'
+  must be used: i.e. --noflag
+
+  This flag will have a value of None, True or False.  None is possible
+  if default=None and the user does not specify the flag on the command
+  line.
+
+  Args:
+    name
