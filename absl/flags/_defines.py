@@ -363,4 +363,9 @@ def DEFINE_float(  # pylint: disable=invalid-name,redefined-builtin
 
   Args:
     name: str, the flag name.
-    default: float|str|None, the default val
+    default: float|str|None, the default value of the flag.
+    help: str, the help message.
+    lower_bound: float, min value of the flag.
+    upper_bound: float, max value of the flag.
+    flag_values: :class:`FlagValues`, the FlagValues instance with which the
+      f
