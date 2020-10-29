@@ -356,4 +356,11 @@ def DEFINE_float(  # pylint: disable=invalid-name,redefined-builtin
     flag_values=_flagvalues.FLAGS,
     required=False,
     **args):
-  """Registers a flag w
+  """Registers a flag whose value must be a float.
+
+  If ``lower_bound`` or ``upper_bound`` are set, then this flag must be
+  within the given range.
+
+  Args:
+    name: str, the flag name.
+    default: float|str|None, the default val
