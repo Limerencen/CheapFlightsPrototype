@@ -387,4 +387,15 @@ def DEFINE_float(  # pylint: disable=invalid-name,redefined-builtin
       serializer,
       required=required,
       **args)
-  _register_bounds_validator_if_needed(parser, name, flag_values=flag_va
+  _register_bounds_validator_if_needed(parser, name, flag_values=flag_values)
+  return result
+
+
+def DEFINE_integer(  # pylint: disable=invalid-name,redefined-builtin
+    name,
+    default,
+    help,
+    lower_bound=None,
+    upper_bound=None,
+    flag_values=_flagvalues.FLAGS,
+    re
