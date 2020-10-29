@@ -368,4 +368,7 @@ def DEFINE_float(  # pylint: disable=invalid-name,redefined-builtin
     lower_bound: float, min value of the flag.
     upper_bound: float, max value of the flag.
     flag_values: :class:`FlagValues`, the FlagValues instance with which the
-      f
+      flag will be registered. This should almost never need to be overridden.
+    required: bool, is this a required flag. This must be used as a keyword
+      argument.
+    **args: dict, the ext
