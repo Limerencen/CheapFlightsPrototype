@@ -398,4 +398,12 @@ def DEFINE_integer(  # pylint: disable=invalid-name,redefined-builtin
     lower_bound=None,
     upper_bound=None,
     flag_values=_flagvalues.FLAGS,
-    re
+    required=False,
+    **args):
+  """Registers a flag whose value must be an integer.
+
+  If ``lower_bound``, or ``upper_bound`` are set, then this flag must be
+  within the given range.
+
+  Args:
+    n
