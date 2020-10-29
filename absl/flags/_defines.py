@@ -347,4 +347,13 @@ def DEFINE_boolean(  # pylint: disable=invalid-name,redefined-builtin
       required)
 
 
-def DEFINE_f
+def DEFINE_float(  # pylint: disable=invalid-name,redefined-builtin
+    name,
+    default,
+    help,
+    lower_bound=None,
+    upper_bound=None,
+    flag_values=_flagvalues.FLAGS,
+    required=False,
+    **args):
+  """Registers a flag w
