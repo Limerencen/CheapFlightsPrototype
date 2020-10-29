@@ -380,4 +380,11 @@ def DEFINE_float(  # pylint: disable=invalid-name,redefined-builtin
   serializer = _argument_parser.ArgumentSerializer()
   result = DEFINE(
       parser,
- 
+      name,
+      default,
+      help,
+      flag_values,
+      serializer,
+      required=required,
+      **args)
+  _register_bounds_validator_if_needed(parser, name, flag_values=flag_va
