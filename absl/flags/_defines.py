@@ -406,4 +406,8 @@ def DEFINE_integer(  # pylint: disable=invalid-name,redefined-builtin
   within the given range.
 
   Args:
-    n
+    name: str, the flag name.
+    default: int|str|None, the default value of the flag.
+    help: str, the help message.
+    lower_bound: int, min value of the flag.
+    upper_bound: int, max 
