@@ -455,4 +455,6 @@ def DEFINE_enum(  # pylint: disable=invalid-name,redefined-builtin
     enum_values: [str], a non-empty list of strings with the possible values for
       the flag.
     help: str, the help message.
-    flag_values: :class:`FlagVa
+    flag_values: :class:`FlagValues`, the FlagValues instance with which the
+      flag will be registered. This should almost never need to be overridden.
+    module_name: str, the name of the Python module declaring this flag. If n
