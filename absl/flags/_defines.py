@@ -413,4 +413,11 @@ def DEFINE_integer(  # pylint: disable=invalid-name,redefined-builtin
     upper_bound: int, max value of the flag.
     flag_values: :class:`FlagValues`, the FlagValues instance with which the
       flag will be registered. This should almost never need to be overridden.
-    required: bool, is this a required flag. Th
+    required: bool, is this a required flag. This must be used as a keyword
+      argument.
+    **args: dict, the extra keyword args that are passed to :func:`DEFINE`.
+
+  Returns:
+    a handle to defined flag.
+  """
+  parser = _argument_parser.IntegerParser(lo
