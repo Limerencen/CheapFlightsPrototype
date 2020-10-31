@@ -451,4 +451,8 @@ def DEFINE_enum(  # pylint: disable=invalid-name,redefined-builtin
 
   Args:
     name: str, the flag name.
-    default: str|None, the defa
+    default: str|None, the default value of the flag.
+    enum_values: [str], a non-empty list of strings with the possible values for
+      the flag.
+    help: str, the help message.
+    flag_values: :class:`FlagVa
