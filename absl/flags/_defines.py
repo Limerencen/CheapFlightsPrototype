@@ -444,4 +444,11 @@ def DEFINE_enum(  # pylint: disable=invalid-name,redefined-builtin
     module_name=None,
     required=False,
     **args):
-  """Registers a flag whose value can be any string from enum
+  """Registers a flag whose value can be any string from enum_values.
+
+  Instead of a string enum, prefer `DEFINE_enum_class`, which allows
+  defining enums from an `enum.Enum` class.
+
+  Args:
+    name: str, the flag name.
+    default: str|None, the defa
