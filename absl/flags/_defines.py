@@ -420,4 +420,13 @@ def DEFINE_integer(  # pylint: disable=invalid-name,redefined-builtin
   Returns:
     a handle to defined flag.
   """
-  parser = _argument_parser.IntegerParser(lo
+  parser = _argument_parser.IntegerParser(lower_bound, upper_bound)
+  serializer = _argument_parser.ArgumentSerializer()
+  result = DEFINE(
+      parser,
+      name,
+      default,
+      help,
+      flag_values,
+      serializer,
+      required=requ
