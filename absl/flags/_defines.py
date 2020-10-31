@@ -429,4 +429,10 @@ def DEFINE_integer(  # pylint: disable=invalid-name,redefined-builtin
       help,
       flag_values,
       serializer,
-      required=requ
+      required=required,
+      **args)
+  _register_bounds_validator_if_needed(parser, name, flag_values=flag_values)
+  return result
+
+
+def DEFINE_enum(  # pylint: disable=invalid-name,redefined-builtin
