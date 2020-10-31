@@ -436,3 +436,12 @@ def DEFINE_integer(  # pylint: disable=invalid-name,redefined-builtin
 
 
 def DEFINE_enum(  # pylint: disable=invalid-name,redefined-builtin
+    name,
+    default,
+    enum_values,
+    help,
+    flag_values=_flagvalues.FLAGS,
+    module_name=None,
+    required=False,
+    **args):
+  """Registers a flag whose value can be any string from enum
