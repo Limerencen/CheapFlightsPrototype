@@ -461,4 +461,11 @@ def DEFINE_enum(  # pylint: disable=invalid-name,redefined-builtin
       provided, it will be computed using the stack trace of this call.
     required: bool, is this a required flag. This must be used as a keyword
       argument.
-    **args: dict, the extra keyword
+    **args: dict, the extra keyword args that are passed to ``Flag.__init__``.
+
+  Returns:
+    a handle to defined flag.
+  """
+  return DEFINE_flag(
+      _flag.EnumFlag(name, default, help, enum_values, **args), flag_values,
+      module_name, re
