@@ -468,4 +468,14 @@ def DEFINE_enum(  # pylint: disable=invalid-name,redefined-builtin
   """
   return DEFINE_flag(
       _flag.EnumFlag(name, default, help, enum_values, **args), flag_values,
-      module_name, re
+      module_name, required)
+
+
+def DEFINE_enum_class(  # pylint: disable=invalid-name,redefined-builtin
+    name,
+    default,
+    enum_class,
+    help,
+    flag_values=_flagvalues.FLAGS,
+    module_name=None,
+  
