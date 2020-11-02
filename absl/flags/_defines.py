@@ -486,4 +486,7 @@ def DEFINE_enum_class(  # pylint: disable=invalid-name,redefined-builtin
   Args:
     name: str, the flag name.
     default: Enum|str|None, the default value of the flag.
+    enum_class: class, the Enum class with all the possible values for the flag.
+    help: str, the help message.
+    flag_values: :class:`FlagValues`, the FlagValues instance with which the
   
