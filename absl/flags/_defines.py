@@ -478,4 +478,12 @@ def DEFINE_enum_class(  # pylint: disable=invalid-name,redefined-builtin
     help,
     flag_values=_flagvalues.FLAGS,
     module_name=None,
+    case_sensitive=False,
+    required=False,
+    **args):
+  """Registers a flag whose value can be the name of enum members.
+
+  Args:
+    name: str, the flag name.
+    default: Enum|str|None, the default value of the flag.
   
