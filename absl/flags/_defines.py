@@ -495,4 +495,14 @@ def DEFINE_enum_class(  # pylint: disable=invalid-name,redefined-builtin
     case_sensitive: bool, whether to map strings to members of the enum_class
       without considering case.
     required: bool, is this a required flag. This must be used as a keyword
-      argument
+      argument.
+    **args: dict, the extra keyword args that are passed to ``Flag.__init__``.
+
+  Returns:
+    a handle to defined flag.
+  """
+  return DEFINE_flag(
+      _flag.EnumClassFlag(
+          name,
+          default,
+          h
