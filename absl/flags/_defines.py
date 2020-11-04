@@ -514,3 +514,13 @@ def DEFINE_enum_class(  # pylint: disable=invalid-name,redefined-builtin
 def DEFINE_list(  # pylint: disable=invalid-name,redefined-builtin
     name,
     default,
+    help,
+    flag_values=_flagvalues.FLAGS,
+    required=False,
+    **args):
+  """Registers a flag whose value is a comma-separated list of strings.
+
+  The flag value is parsed with a CSV parser.
+
+  Args:
+  
