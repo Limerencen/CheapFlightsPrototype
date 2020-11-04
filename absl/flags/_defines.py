@@ -505,4 +505,12 @@ def DEFINE_enum_class(  # pylint: disable=invalid-name,redefined-builtin
       _flag.EnumClassFlag(
           name,
           default,
-          h
+          help,
+          enum_class,
+          case_sensitive=case_sensitive,
+          **args), flag_values, module_name, required)
+
+
+def DEFINE_list(  # pylint: disable=invalid-name,redefined-builtin
+    name,
+    default,
