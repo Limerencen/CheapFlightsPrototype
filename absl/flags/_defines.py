@@ -537,4 +537,16 @@ def DEFINE_list(  # pylint: disable=invalid-name,redefined-builtin
     a handle to defined flag.
   """
   parser = _argument_parser.ListParser()
-  serializer = _argument_parser.CsvListSerializer(','
+  serializer = _argument_parser.CsvListSerializer(',')
+  return DEFINE(
+      parser,
+      name,
+      default,
+      help,
+      flag_values,
+      serializer,
+      required=required,
+      **args)
+
+
+def DEFINE_spaceseplist(  # pylint: disable=invalid-name,redefined-bu
