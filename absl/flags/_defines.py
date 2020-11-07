@@ -527,4 +527,7 @@ def DEFINE_list(  # pylint: disable=invalid-name,redefined-builtin
     default: list|str|None, the default value of the flag.
     help: str, the help message.
     flag_values: :class:`FlagValues`, the FlagValues instance with which the
-      flag will be reg
+      flag will be registered. This should almost never need to be overridden.
+    required: bool, is this a required flag. This must be used as a keyword
+      argument.
+    **args: Dictionary with extra keyword arg
