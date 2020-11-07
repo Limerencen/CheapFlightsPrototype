@@ -523,4 +523,8 @@ def DEFINE_list(  # pylint: disable=invalid-name,redefined-builtin
   The flag value is parsed with a CSV parser.
 
   Args:
-  
+    name: str, the flag name.
+    default: list|str|None, the default value of the flag.
+    help: str, the help message.
+    flag_values: :class:`FlagValues`, the FlagValues instance with which the
+      flag will be reg
