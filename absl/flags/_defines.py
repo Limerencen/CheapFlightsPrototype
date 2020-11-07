@@ -530,4 +530,11 @@ def DEFINE_list(  # pylint: disable=invalid-name,redefined-builtin
       flag will be registered. This should almost never need to be overridden.
     required: bool, is this a required flag. This must be used as a keyword
       argument.
-    **args: Dictionary with extra keyword arg
+    **args: Dictionary with extra keyword args that are passed to the
+      ``Flag.__init__``.
+
+  Returns:
+    a handle to defined flag.
+  """
+  parser = _argument_parser.ListParser()
+  serializer = _argument_parser.CsvListSerializer(','
