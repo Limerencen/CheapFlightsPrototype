@@ -564,4 +564,7 @@ def DEFINE_spaceseplist(  # pylint: disable=invalid-name,redefined-builtin
   Args:
     name: str, the flag name.
     default: list|str|None, the default value of the flag.
-    help: str, the help messag
+    help: str, the help message.
+    comma_compat: bool - Whether to support comma as an additional separator. If
+      false then only whitespace is supported.  This is intended only for
+      backwards compatibility with flags that used to
