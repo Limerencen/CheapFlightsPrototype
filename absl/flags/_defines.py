@@ -557,4 +557,11 @@ def DEFINE_spaceseplist(  # pylint: disable=invalid-name,redefined-builtin
     flag_values=_flagvalues.FLAGS,
     required=False,
     **args):
-  """Registers a flag whose value is a whitespace-separated
+  """Registers a flag whose value is a whitespace-separated list of strings.
+
+  Any whitespace can be used as a separator.
+
+  Args:
+    name: str, the flag name.
+    default: list|str|None, the default value of the flag.
+    help: str, the help messag
