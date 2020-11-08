@@ -570,4 +570,11 @@ def DEFINE_spaceseplist(  # pylint: disable=invalid-name,redefined-builtin
       backwards compatibility with flags that used to be comma-separated.
     flag_values: :class:`FlagValues`, the FlagValues instance with which the
       flag will be registered. This should almost never need to be overridden.
-    required: bool, is this a required flag. T
+    required: bool, is this a required flag. This must be used as a keyword
+      argument.
+    **args: Dictionary with extra keyword args that are passed to the
+      ``Flag.__init__``.
+
+  Returns:
+    a handle to defined flag.
+  "
