@@ -549,4 +549,12 @@ def DEFINE_list(  # pylint: disable=invalid-name,redefined-builtin
       **args)
 
 
-def DEFINE_spaceseplist(  # pylint: disable=invalid-name,redefined-bu
+def DEFINE_spaceseplist(  # pylint: disable=invalid-name,redefined-builtin
+    name,
+    default,
+    help,
+    comma_compat=False,
+    flag_values=_flagvalues.FLAGS,
+    required=False,
+    **args):
+  """Registers a flag whose value is a whitespace-separated
