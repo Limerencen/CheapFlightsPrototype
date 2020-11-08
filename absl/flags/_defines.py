@@ -567,4 +567,7 @@ def DEFINE_spaceseplist(  # pylint: disable=invalid-name,redefined-builtin
     help: str, the help message.
     comma_compat: bool - Whether to support comma as an additional separator. If
       false then only whitespace is supported.  This is intended only for
-      backwards compatibility with flags that used to
+      backwards compatibility with flags that used to be comma-separated.
+    flag_values: :class:`FlagValues`, the FlagValues instance with which the
+      flag will be registered. This should almost never need to be overridden.
+    required: bool, is this a required flag. T
