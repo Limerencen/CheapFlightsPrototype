@@ -605,3 +605,10 @@ def DEFINE_multi(  # pylint: disable=invalid-name,redefined-builtin
   """Registers a generic MultiFlag that parses its args with a given parser.
 
   Auxiliary function.  Normal users should NOT use it directly.
+
+  Developers who need to create their own 'Parser' classes for options
+  which can appear multiple times can call this module function to
+  register their flags.
+
+  Args:
+    parser: ArgumentParser, used to parse the flag arguments
