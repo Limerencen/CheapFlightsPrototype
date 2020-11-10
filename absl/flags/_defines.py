@@ -577,4 +577,13 @@ def DEFINE_spaceseplist(  # pylint: disable=invalid-name,redefined-builtin
 
   Returns:
     a handle to defined flag.
-  "
+  """
+  parser = _argument_parser.WhitespaceSeparatedListParser(
+      comma_compat=comma_compat)
+  serializer = _argument_parser.ListSerializer(' ')
+  return DEFINE(
+      parser,
+      name,
+      default,
+      help,
+   
