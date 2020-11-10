@@ -586,4 +586,15 @@ def DEFINE_spaceseplist(  # pylint: disable=invalid-name,redefined-builtin
       name,
       default,
       help,
-   
+      flag_values,
+      serializer,
+      required=required,
+      **args)
+
+
+def DEFINE_multi(  # pylint: disable=invalid-name,redefined-builtin
+    parser,
+    serializer,
+    name,
+    default,
+    help,
