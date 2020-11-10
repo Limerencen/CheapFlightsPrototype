@@ -598,3 +598,10 @@ def DEFINE_multi(  # pylint: disable=invalid-name,redefined-builtin
     name,
     default,
     help,
+    flag_values=_flagvalues.FLAGS,
+    module_name=None,
+    required=False,
+    **args):
+  """Registers a generic MultiFlag that parses its args with a given parser.
+
+  Auxiliary function.  Normal users should NOT use it directly.
