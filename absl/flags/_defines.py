@@ -611,4 +611,8 @@ def DEFINE_multi(  # pylint: disable=invalid-name,redefined-builtin
   register their flags.
 
   Args:
-    parser: ArgumentParser, used to parse the flag arguments
+    parser: ArgumentParser, used to parse the flag arguments.
+    serializer: ArgumentSerializer, the flag serializer instance.
+    name: str, the flag name.
+    default: Union[Iterable[T], Text, None], the default value of the flag. If
+      the value is text, it will
