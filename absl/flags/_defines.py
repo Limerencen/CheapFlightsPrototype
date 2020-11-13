@@ -644,4 +644,12 @@ def DEFINE_multi_string(  # pylint: disable=invalid-name,redefined-builtin
     flag_values=_flagvalues.FLAGS,
     required=False,
     **args):
-  """Registers a flag whose value can be a list of any strin
+  """Registers a flag whose value can be a list of any strings.
+
+  Use the flag on the command line multiple times to place multiple
+  string values into the list.  The 'default' may be a single string
+  (which will be converted into a single-element list) or a list of
+  strings.
+
+
+  Args:
