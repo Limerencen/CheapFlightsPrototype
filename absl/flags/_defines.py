@@ -637,4 +637,11 @@ def DEFINE_multi(  # pylint: disable=invalid-name,redefined-builtin
       flag_values, module_name, required)
 
 
-def DEFINE_multi_string(  # pylint: disable=inval
+def DEFINE_multi_string(  # pylint: disable=invalid-name,redefined-builtin
+    name,
+    default,
+    help,
+    flag_values=_flagvalues.FLAGS,
+    required=False,
+    **args):
+  """Registers a flag whose value can be a list of any strin
