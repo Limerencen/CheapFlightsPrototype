@@ -624,4 +624,10 @@ def DEFINE_multi(  # pylint: disable=invalid-name,redefined-builtin
       flag will be registered. This should almost never need to be overridden.
     module_name: A string, the name of the Python module declaring this flag. If
       not provided, it will be computed using the stack trace of this call.
-    required: boo
+    required: bool, is this a required flag. This must be used as a keyword
+      argument.
+    **args: Dictionary with extra keyword args that are passed to the
+      ``Flag.__init__``.
+
+  Returns:
+    a handle to defined flag.
