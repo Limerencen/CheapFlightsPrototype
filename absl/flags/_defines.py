@@ -621,4 +621,7 @@ def DEFINE_multi(  # pylint: disable=invalid-name,redefined-builtin
       as-is.
     help: str, the help message.
     flag_values: :class:`FlagValues`, the FlagValues instance with which the
-      flag will be registered. This should almost n
+      flag will be registered. This should almost never need to be overridden.
+    module_name: A string, the name of the Python module declaring this flag. If
+      not provided, it will be computed using the stack trace of this call.
+    required: boo
