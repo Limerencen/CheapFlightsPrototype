@@ -631,3 +631,10 @@ def DEFINE_multi(  # pylint: disable=invalid-name,redefined-builtin
 
   Returns:
     a handle to defined flag.
+  """
+  return DEFINE_flag(
+      _flag.MultiFlag(parser, serializer, name, default, help, **args),
+      flag_values, module_name, required)
+
+
+def DEFINE_multi_string(  # pylint: disable=inval
