@@ -617,4 +617,8 @@ def DEFINE_multi(  # pylint: disable=invalid-name,redefined-builtin
     default: Union[Iterable[T], Text, None], the default value of the flag. If
       the value is text, it will be parsed as if it was provided from the
       command line. If the value is a non-string iterable, it will be iterated
-      over to create a shallow copy of the values. If it is None, it is 
+      over to create a shallow copy of the values. If it is None, it is left
+      as-is.
+    help: str, the help message.
+    flag_values: :class:`FlagValues`, the FlagValues instance with which the
+      flag will be registered. This should almost n
