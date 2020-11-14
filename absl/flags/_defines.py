@@ -657,4 +657,8 @@ def DEFINE_multi_string(  # pylint: disable=invalid-name,redefined-builtin
     default: Union[Iterable[Text], Text, None], the default value of the flag;
       see :func:`DEFINE_multi`.
     help: str, the help message.
-    flag_values: :class:`FlagValues`, th
+    flag_values: :class:`FlagValues`, the FlagValues instance with which the
+      flag will be registered. This should almost never need to be overridden.
+    required: bool, is this a required flag. This must be used as a keyword
+      argument.
+   
