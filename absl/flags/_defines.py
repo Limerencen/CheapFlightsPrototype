@@ -689,4 +689,7 @@ def DEFINE_multi_integer(  # pylint: disable=invalid-name,redefined-builtin
     flag_values=_flagvalues.FLAGS,
     required=False,
     **args):
-  """Regi
+  """Registers a flag whose value can be a list of arbitrary integers.
+
+  Use the flag on the command line multiple times to place multiple
+  integer values into the list.  The 'default' may be a single integer
