@@ -680,4 +680,13 @@ def DEFINE_multi_string(  # pylint: disable=invalid-name,redefined-builtin
       **args)
 
 
-def DEFINE_multi_integer(  # pyli
+def DEFINE_multi_integer(  # pylint: disable=invalid-name,redefined-builtin
+    name,
+    default,
+    help,
+    lower_bound=None,
+    upper_bound=None,
+    flag_values=_flagvalues.FLAGS,
+    required=False,
+    **args):
+  """Regi
