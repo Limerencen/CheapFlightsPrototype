@@ -668,4 +668,16 @@ def DEFINE_multi_string(  # pylint: disable=invalid-name,redefined-builtin
     a handle to defined flag.
   """
   parser = _argument_parser.ArgumentParser()
-  serializer = _argum
+  serializer = _argument_parser.ArgumentSerializer()
+  return DEFINE_multi(
+      parser,
+      serializer,
+      name,
+      default,
+      help,
+      flag_values,
+      required=required,
+      **args)
+
+
+def DEFINE_multi_integer(  # pyli
