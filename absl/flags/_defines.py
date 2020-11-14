@@ -653,3 +653,8 @@ def DEFINE_multi_string(  # pylint: disable=invalid-name,redefined-builtin
 
 
   Args:
+    name: str, the flag name.
+    default: Union[Iterable[Text], Text, None], the default value of the flag;
+      see :func:`DEFINE_multi`.
+    help: str, the help message.
+    flag_values: :class:`FlagValues`, th
