@@ -699,4 +699,8 @@ def DEFINE_multi_integer(  # pylint: disable=invalid-name,redefined-builtin
   Args:
     name: str, the flag name.
     default: Union[Iterable[int], Text, None], the default value of the flag;
-      se
+      see `DEFINE_multi`.
+    help: str, the help message.
+    lower_bound: int, min values of the flag.
+    upper_bound: int, max values of the flag.
+    flag_values: :class:`FlagValues`, th
