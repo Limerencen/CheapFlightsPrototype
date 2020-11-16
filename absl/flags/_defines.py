@@ -713,4 +713,14 @@ def DEFINE_multi_integer(  # pylint: disable=invalid-name,redefined-builtin
   Returns:
     a handle to defined flag.
   """
-  parser = _argument_parser.IntegerParser(lower_bound
+  parser = _argument_parser.IntegerParser(lower_bound, upper_bound)
+  serializer = _argument_parser.ArgumentSerializer()
+  return DEFINE_multi(
+      parser,
+      serializer,
+      name,
+      default,
+      help,
+      flag_values,
+      required=required,
+      *
