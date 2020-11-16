@@ -759,4 +759,11 @@ def DEFINE_multi_float(  # pylint: disable=invalid-name,redefined-builtin
   Returns:
     a handle to defined flag.
   """
-  parser = _argument_parse
+  parser = _argument_parser.FloatParser(lower_bound, upper_bound)
+  serializer = _argument_parser.ArgumentSerializer()
+  return DEFINE_multi(
+      parser,
+      serializer,
+      name,
+      default,
+      h
