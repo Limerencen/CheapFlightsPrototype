@@ -766,4 +766,15 @@ def DEFINE_multi_float(  # pylint: disable=invalid-name,redefined-builtin
       serializer,
       name,
       default,
-      h
+      help,
+      flag_values,
+      required=required,
+      **args)
+
+
+def DEFINE_multi_enum(  # pylint: disable=invalid-name,redefined-builtin
+    name,
+    default,
+    enum_values,
+    help,
+    flag_v
