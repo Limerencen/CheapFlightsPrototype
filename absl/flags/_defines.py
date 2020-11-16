@@ -744,4 +744,9 @@ def DEFINE_multi_float(  # pylint: disable=invalid-name,redefined-builtin
 
   Args:
     name: str, the flag name.
-    default: Union[Iterable
+    default: Union[Iterable[float], Text, None], the default value of the flag;
+      see `DEFINE_multi`.
+    help: str, the help message.
+    lower_bound: float, min values of the flag.
+    upper_bound: float, max values of the flag.
+    
