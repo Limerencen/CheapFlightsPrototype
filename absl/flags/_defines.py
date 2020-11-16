@@ -777,4 +777,10 @@ def DEFINE_multi_enum(  # pylint: disable=invalid-name,redefined-builtin
     default,
     enum_values,
     help,
-    flag_v
+    flag_values=_flagvalues.FLAGS,
+    case_sensitive=True,
+    required=False,
+    **args):
+  """Registers a flag whose value can be a list strings from enum_values.
+
+  Use the flag on the command line multiple
