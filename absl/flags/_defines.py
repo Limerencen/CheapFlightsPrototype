@@ -723,4 +723,13 @@ def DEFINE_multi_integer(  # pylint: disable=invalid-name,redefined-builtin
       help,
       flag_values,
       required=required,
-      *
+      **args)
+
+
+def DEFINE_multi_float(  # pylint: disable=invalid-name,redefined-builtin
+    name,
+    default,
+    help,
+    lower_bound=None,
+    upper_bound=None,
+    flag_values=_flagvalues.FLAGS,
