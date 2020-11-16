@@ -738,4 +738,10 @@ def DEFINE_multi_float(  # pylint: disable=invalid-name,redefined-builtin
   """Registers a flag whose value can be a list of arbitrary floats.
 
   Use the flag on the command line multiple times to place multiple
-  float
+  float values into the list.  The 'default' may be a single float
+  (which will be converted into a single-element list) or a list of
+  floats.
+
+  Args:
+    name: str, the flag name.
+    default: Union[Iterable
