@@ -749,4 +749,6 @@ def DEFINE_multi_float(  # pylint: disable=invalid-name,redefined-builtin
     help: str, the help message.
     lower_bound: float, min values of the flag.
     upper_bound: float, max values of the flag.
-    
+    flag_values: :class:`FlagValues`, the FlagValues instance with which the
+      flag will be registered. This should almost never need to be overridden.
+    required: bool, is this a required flag. T
