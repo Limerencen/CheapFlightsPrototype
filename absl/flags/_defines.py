@@ -733,3 +733,9 @@ def DEFINE_multi_float(  # pylint: disable=invalid-name,redefined-builtin
     lower_bound=None,
     upper_bound=None,
     flag_values=_flagvalues.FLAGS,
+    required=False,
+    **args):
+  """Registers a flag whose value can be a list of arbitrary floats.
+
+  Use the flag on the command line multiple times to place multiple
+  float
