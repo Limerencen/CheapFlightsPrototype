@@ -802,3 +802,12 @@ def DEFINE_multi_enum(  # pylint: disable=invalid-name,redefined-builtin
       argument.
     **args: Dictionary with extra keyword args that are passed to the
       ``Flag.__init__``.
+
+  Returns:
+    a handle to defined flag.
+  """
+  parser = _argument_parser.EnumParser(enum_values, case_sensitive)
+  serializer = _argument_parser.ArgumentSerializer()
+  return DEFINE_multi(
+      parser,
+      seri
