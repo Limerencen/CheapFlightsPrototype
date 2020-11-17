@@ -797,4 +797,8 @@ def DEFINE_multi_enum(  # pylint: disable=invalid-name,redefined-builtin
     help: str, the help message.
     flag_values: :class:`FlagValues`, the FlagValues instance with which the
       flag will be registered. This should almost never need to be overridden.
-    case_sensitive: Whether or not the enum is to be
+    case_sensitive: Whether or not the enum is to be case-sensitive.
+    required: bool, is this a required flag. This must be used as a keyword
+      argument.
+    **args: Dictionary with extra keyword args that are passed to the
+      ``Flag.__init__``.
