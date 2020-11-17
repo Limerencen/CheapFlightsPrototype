@@ -835,4 +835,7 @@ def DEFINE_multi_enum_class(  # pylint: disable=invalid-name,redefined-builtin
   enum values into the list.
 
   Args:
-    name: str, the
+    name: str, the flag name.
+    default: Union[Iterable[Enum], Iterable[Text], Enum, Text, None], the
+      default value of the flag; see `DEFINE_multi`; only differences are
+      documented here. If the value is a single Enum, it is tr
