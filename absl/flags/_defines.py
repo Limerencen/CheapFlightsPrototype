@@ -810,4 +810,13 @@ def DEFINE_multi_enum(  # pylint: disable=invalid-name,redefined-builtin
   serializer = _argument_parser.ArgumentSerializer()
   return DEFINE_multi(
       parser,
-      seri
+      serializer,
+      name,
+      default,
+      '<%s>: %s' % ('|'.join(enum_values), help),
+      flag_values,
+      required=required,
+      **args)
+
+
+def DEFINE_multi_enum_class( 
