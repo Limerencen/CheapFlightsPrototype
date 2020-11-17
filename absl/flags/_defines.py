@@ -783,4 +783,11 @@ def DEFINE_multi_enum(  # pylint: disable=invalid-name,redefined-builtin
     **args):
   """Registers a flag whose value can be a list strings from enum_values.
 
-  Use the flag on the command line multiple
+  Use the flag on the command line multiple times to place multiple
+  enum values into the list.  The 'default' may be a single string
+  (which will be converted into a single-element list) or a list of
+  strings.
+
+  Args:
+    name: str, the flag name.
+    default: Union
