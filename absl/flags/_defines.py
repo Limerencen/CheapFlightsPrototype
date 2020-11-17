@@ -829,4 +829,10 @@ def DEFINE_multi_enum_class(  # pylint: disable=invalid-name,redefined-builtin
     case_sensitive=False,
     required=False,
     **args):
-  ""
+  """Registers a flag whose value can be a list of enum members.
+
+  Use the flag on the command line multiple times to place multiple
+  enum values into the list.
+
+  Args:
+    name: str, the
