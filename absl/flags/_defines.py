@@ -819,4 +819,14 @@ def DEFINE_multi_enum(  # pylint: disable=invalid-name,redefined-builtin
       **args)
 
 
-def DEFINE_multi_enum_class( 
+def DEFINE_multi_enum_class(  # pylint: disable=invalid-name,redefined-builtin
+    name,
+    default,
+    enum_class,
+    help,
+    flag_values=_flagvalues.FLAGS,
+    module_name=None,
+    case_sensitive=False,
+    required=False,
+    **args):
+  ""
