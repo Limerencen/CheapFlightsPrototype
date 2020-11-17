@@ -838,4 +838,7 @@ def DEFINE_multi_enum_class(  # pylint: disable=invalid-name,redefined-builtin
     name: str, the flag name.
     default: Union[Iterable[Enum], Iterable[Text], Enum, Text, None], the
       default value of the flag; see `DEFINE_multi`; only differences are
-      documented here. If the value is a single Enum, it is tr
+      documented here. If the value is a single Enum, it is treated as a
+      single-item list of that Enum value. If it is an iterable, text values
+      within the iterable will be converted to the equivalent Enum objects.
+    enum_class: class, the Enum class with all th
