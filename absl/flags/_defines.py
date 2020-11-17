@@ -794,4 +794,7 @@ def DEFINE_multi_enum(  # pylint: disable=invalid-name,redefined-builtin
       see `DEFINE_multi`.
     enum_values: [str], a non-empty list of strings with the possible values for
       the flag.
-    help: str
+    help: str, the help message.
+    flag_values: :class:`FlagValues`, the FlagValues instance with which the
+      flag will be registered. This should almost never need to be overridden.
+    case_sensitive: Whether or not the enum is to be
