@@ -790,4 +790,8 @@ def DEFINE_multi_enum(  # pylint: disable=invalid-name,redefined-builtin
 
   Args:
     name: str, the flag name.
-    default: Union
+    default: Union[Iterable[Text], Text, None], the default value of the flag;
+      see `DEFINE_multi`.
+    enum_values: [str], a non-empty list of strings with the possible values for
+      the flag.
+    help: str
