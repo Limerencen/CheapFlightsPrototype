@@ -851,4 +851,14 @@ def DEFINE_multi_enum_class(  # pylint: disable=invalid-name,redefined-builtin
       without considering case.
     required: bool, is this a required flag. This must be used as a keyword
       argument.
-    **args: Dic
+    **args: Dictionary with extra keyword args that are passed to the
+      ``Flag.__init__``.
+
+  Returns:
+    a handle to defined flag.
+  """
+  return DEFINE_flag(
+      _flag.MultiEnumClassFlag(
+          name,
+          default,
+       
