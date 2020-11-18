@@ -844,4 +844,7 @@ def DEFINE_multi_enum_class(  # pylint: disable=invalid-name,redefined-builtin
     enum_class: class, the Enum class with all the possible values for the flag.
         help: str, the help message.
     flag_values: :class:`FlagValues`, the FlagValues instance with which the
-      flag will be registered. This should almost ne
+      flag will be registered. This should almost never need to be overridden.
+    module_name: A string, the name of the Python module declaring this flag. If
+      not provided, it will be computed using the stack trace of this call.
+    case_sensit
