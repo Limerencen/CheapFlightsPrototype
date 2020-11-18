@@ -841,4 +841,7 @@ def DEFINE_multi_enum_class(  # pylint: disable=invalid-name,redefined-builtin
       documented here. If the value is a single Enum, it is treated as a
       single-item list of that Enum value. If it is an iterable, text values
       within the iterable will be converted to the equivalent Enum objects.
-    enum_class: class, the Enum class with all th
+    enum_class: class, the Enum class with all the possible values for the flag.
+        help: str, the help message.
+    flag_values: :class:`FlagValues`, the FlagValues instance with which the
+      flag will be registered. This should almost ne
