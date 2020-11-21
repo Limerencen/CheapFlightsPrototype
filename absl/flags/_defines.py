@@ -861,4 +861,16 @@ def DEFINE_multi_enum_class(  # pylint: disable=invalid-name,redefined-builtin
       _flag.MultiEnumClassFlag(
           name,
           default,
-       
+          help,
+          enum_class,
+          case_sensitive=case_sensitive,
+          **args,
+      ),
+      flag_values,
+      module_name,
+      required=required,
+  )
+
+
+def DEFINE_alias(  # pylint: disable=invalid-name
+ 
