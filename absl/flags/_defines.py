@@ -873,4 +873,12 @@ def DEFINE_multi_enum_class(  # pylint: disable=invalid-name,redefined-builtin
 
 
 def DEFINE_alias(  # pylint: disable=invalid-name
- 
+    name,
+    original_name,
+    flag_values=_flagvalues.FLAGS,
+    module_name=None):
+  """Defines an alias flag for an existing one.
+
+  Args:
+    name: str, the flag name.
+    original_name:
