@@ -881,4 +881,6 @@ def DEFINE_alias(  # pylint: disable=invalid-name
 
   Args:
     name: str, the flag name.
-    original_name:
+    original_name: str, the original flag name.
+    flag_values: :class:`FlagValues`, the FlagValues instance with which the
+      flag will be registered. This should almost never need to be overridden.
