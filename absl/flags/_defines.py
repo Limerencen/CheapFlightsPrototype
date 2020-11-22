@@ -884,3 +884,11 @@ def DEFINE_alias(  # pylint: disable=invalid-name
     original_name: str, the original flag name.
     flag_values: :class:`FlagValues`, the FlagValues instance with which the
       flag will be registered. This should almost never need to be overridden.
+    module_name: A string, the name of the module that defines this flag.
+
+  Returns:
+    a handle to defined flag.
+
+  Raises:
+    flags.FlagError:
+      UnrecognizedFlagError: if the referenced flag doesn't exist.
