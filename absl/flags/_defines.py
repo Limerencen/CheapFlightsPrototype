@@ -896,4 +896,11 @@ def DEFINE_alias(  # pylint: disable=invalid-name
   """
   if original_name not in flag_values:
     raise _exceptions.UnrecognizedFlagError(original_name)
-  flag =
+  flag = flag_values[original_name]
+
+  class _FlagAlias(_flag.Flag):
+    """Overrides Flag class so alias value is copy of original flag value."""
+
+    def parse(self, argument):
+      flag.parse(argument)
+      self.prese
