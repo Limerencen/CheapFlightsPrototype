@@ -892,3 +892,8 @@ def DEFINE_alias(  # pylint: disable=invalid-name
   Raises:
     flags.FlagError:
       UnrecognizedFlagError: if the referenced flag doesn't exist.
+      DuplicateFlagError: if the alias name has been used by some existing flag.
+  """
+  if original_name not in flag_values:
+    raise _exceptions.UnrecognizedFlagError(original_name)
+  flag =
