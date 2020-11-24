@@ -908,4 +908,11 @@ def DEFINE_alias(  # pylint: disable=invalid-name
     def _parse_from_default(self, value):
       # The value was already parsed by the aliased flag, so there is no
       # need to call the parser on it a second time.
-    
+      # Additionally, because of how MultiFlag parses and merges values,
+      # it isn't possible to delegate to the aliased flag and still get
+      # the correct values.
+      return value
+
+    @property
+    def value(self):
+      retu
