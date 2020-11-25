@@ -382,3 +382,176 @@ def DEFINE_spaceseplist(
     required: bool = ...,
     **args: Any) -> _flagvalues.FlagHolder[Optional[List[Text]]]:
   ...
+
+@overload
+def DEFINE_spaceseplist(
+    name: Text,
+    default: Union[Iterable[Text], Text],
+    help: Text,
+    comma_compat: bool = ...,
+    flag_values: _flagvalues.FlagValues = ...,
+    required: bool = ...,
+    **args: Any) -> _flagvalues.FlagHolder[List[Text]]:
+  ...
+
+@overload
+def DEFINE_multi(
+    parser : _argument_parser.ArgumentParser[_T],
+    serializer: _argument_parser.ArgumentSerializer[_T],
+    name: Text,
+    default: Union[None, Iterable[_T], _T, Text],
+    help: Text,
+    flag_values:_flagvalues.FlagValues = ...,
+    module_name: Optional[Text] = ...,
+    *,
+    required: Literal[True],
+    **args: Any) -> _flagvalues.FlagHolder[List[_T]]:
+  ...
+
+@overload
+def DEFINE_multi(
+    parser : _argument_parser.ArgumentParser[_T],
+    serializer: _argument_parser.ArgumentSerializer[_T],
+    name: Text,
+    default: None,
+    help: Text,
+    flag_values:_flagvalues.FlagValues = ...,
+    module_name: Optional[Text] = ...,
+    required: bool = ...,
+    **args: Any) -> _flagvalues.FlagHolder[Optional[List[_T]]]:
+  ...
+
+@overload
+def DEFINE_multi(
+    parser : _argument_parser.ArgumentParser[_T],
+    serializer: _argument_parser.ArgumentSerializer[_T],
+    name: Text,
+    default: Union[Iterable[_T], _T, Text],
+    help: Text,
+    flag_values:_flagvalues.FlagValues = ...,
+    module_name: Optional[Text] = ...,
+    required: bool = ...,
+    **args: Any) -> _flagvalues.FlagHolder[List[_T]]:
+  ...
+
+@overload
+def DEFINE_multi_string(
+    name: Text,
+    default: Union[None, Iterable[Text], Text],
+    help: Text,
+    flag_values: _flagvalues.FlagValues = ...,
+    *,
+    required: Literal[True],
+    **args: Any) -> _flagvalues.FlagHolder[List[Text]]:
+  ...
+
+@overload
+def DEFINE_multi_string(
+    name: Text,
+    default: None,
+    help: Text,
+    flag_values: _flagvalues.FlagValues = ...,
+    required: bool = ...,
+    **args: Any) -> _flagvalues.FlagHolder[Optional[List[Text]]]:
+  ...
+
+@overload
+def DEFINE_multi_string(
+    name: Text,
+    default: Union[Iterable[Text], Text],
+    help: Text,
+    flag_values: _flagvalues.FlagValues = ...,
+    required: bool = ...,
+    **args: Any) -> _flagvalues.FlagHolder[List[Text]]:
+  ...
+
+@overload
+def DEFINE_multi_integer(
+    name: Text,
+    default: Union[None, Iterable[int], int, Text],
+    help: Text,
+    lower_bound: Optional[int] = ...,
+    upper_bound: Optional[int] = ...,
+    flag_values: _flagvalues.FlagValues = ...,
+    *,
+    required: Literal[True],
+    **args: Any) -> _flagvalues.FlagHolder[List[int]]:
+  ...
+
+@overload
+def DEFINE_multi_integer(
+    name: Text,
+    default: None,
+    help: Text,
+    lower_bound: Optional[int] = ...,
+    upper_bound: Optional[int] = ...,
+    flag_values: _flagvalues.FlagValues = ...,
+    required: bool = ...,
+    **args: Any) -> _flagvalues.FlagHolder[Optional[List[int]]]:
+  ...
+
+@overload
+def DEFINE_multi_integer(
+    name: Text,
+    default: Union[Iterable[int], int, Text],
+    help: Text,
+    lower_bound: Optional[int] = ...,
+    upper_bound: Optional[int] = ...,
+    flag_values: _flagvalues.FlagValues = ...,
+    required: bool = ...,
+    **args: Any) -> _flagvalues.FlagHolder[List[int]]:
+  ...
+
+@overload
+def DEFINE_multi_float(
+    name: Text,
+    default: Union[None, Iterable[float], float, Text],
+    help: Text,
+    lower_bound: Optional[float] = ...,
+    upper_bound: Optional[float] = ...,
+    flag_values: _flagvalues.FlagValues = ...,
+    *,
+    required: Literal[True],
+    **args: Any) -> _flagvalues.FlagHolder[List[float]]:
+  ...
+
+@overload
+def DEFINE_multi_float(
+    name: Text,
+    default: None,
+    help: Text,
+    lower_bound: Optional[float] = ...,
+    upper_bound: Optional[float] = ...,
+    flag_values: _flagvalues.FlagValues = ...,
+    required: bool = ...,
+    **args: Any) -> _flagvalues.FlagHolder[Optional[List[float]]]:
+  ...
+
+@overload
+def DEFINE_multi_float(
+    name: Text,
+    default: Union[Iterable[float], float, Text],
+    help: Text,
+    lower_bound: Optional[float] = ...,
+    upper_bound: Optional[float] = ...,
+    flag_values: _flagvalues.FlagValues = ...,
+    required: bool = ...,
+    **args: Any) -> _flagvalues.FlagHolder[List[float]]:
+  ...
+
+
+@overload
+def DEFINE_multi_enum(
+    name: Text,
+    default: Union[None, Iterable[Text], Text],
+    enum_values: Iterable[Text],
+    help: Text,
+    flag_values: _flagvalues.FlagValues = ...,
+    *,
+    required: Literal[True],
+    **args: Any) -> _flagvalues.FlagHolder[List[Text]]:
+  ...
+
+@overload
+def DEFINE_multi_enum(
+    name: Text,
