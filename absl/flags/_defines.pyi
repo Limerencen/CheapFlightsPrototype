@@ -187,3 +187,198 @@ def DEFINE_float(
     *,
     required: Literal[True],
     **args: Any) -> _flagvalues.FlagHolder[float]:
+  ...
+
+@overload
+def DEFINE_float(
+    name: Text,
+    default: None,
+    help: Optional[Text],
+    lower_bound: Optional[float] = ...,
+    upper_bound: Optional[float] = ...,
+    flag_values: _flagvalues.FlagValues = ...,
+    required: bool = ...,
+    **args: Any) -> _flagvalues.FlagHolder[Optional[float]]:
+  ...
+
+@overload
+def DEFINE_float(
+    name: Text,
+    default: Union[float, Text],
+    help: Optional[Text],
+    lower_bound: Optional[float] = ...,
+    upper_bound: Optional[float] = ...,
+    flag_values: _flagvalues.FlagValues = ...,
+    required: bool = ...,
+    **args: Any) -> _flagvalues.FlagHolder[float]:
+  ...
+
+
+@overload
+def DEFINE_integer(
+    name: Text,
+    default: Union[None, int, Text],
+    help: Optional[Text],
+    lower_bound: Optional[int] = ...,
+    upper_bound: Optional[int] = ...,
+    flag_values: _flagvalues.FlagValues = ...,
+    *,
+    required: Literal[True],
+    **args: Any) -> _flagvalues.FlagHolder[int]:
+  ...
+
+@overload
+def DEFINE_integer(
+    name: Text,
+    default: None,
+    help: Optional[Text],
+    lower_bound: Optional[int] = ...,
+    upper_bound: Optional[int] = ...,
+    flag_values: _flagvalues.FlagValues = ...,
+    required: bool = ...,
+    **args: Any) -> _flagvalues.FlagHolder[Optional[int]]:
+  ...
+
+@overload
+def DEFINE_integer(
+    name: Text,
+    default: Union[int, Text],
+    help: Optional[Text],
+    lower_bound: Optional[int] = ...,
+    upper_bound: Optional[int] = ...,
+    flag_values: _flagvalues.FlagValues = ...,
+    required: bool = ...,
+    **args: Any) -> _flagvalues.FlagHolder[int]:
+  ...
+
+@overload
+def DEFINE_enum(
+    name : Text,
+    default: Optional[Text],
+    enum_values: Iterable[Text],
+    help: Optional[Text],
+    flag_values: _flagvalues.FlagValues = ...,
+    module_name:  Optional[Text] = ...,
+    *,
+    required: Literal[True],
+    **args: Any) -> _flagvalues.FlagHolder[Text]:
+  ...
+
+@overload
+def DEFINE_enum(
+    name : Text,
+    default: None,
+    enum_values: Iterable[Text],
+    help: Optional[Text],
+    flag_values: _flagvalues.FlagValues = ...,
+    module_name:  Optional[Text] = ...,
+    required: bool = ...,
+    **args: Any) -> _flagvalues.FlagHolder[Optional[Text]]:
+  ...
+
+@overload
+def DEFINE_enum(
+    name : Text,
+    default: Text,
+    enum_values: Iterable[Text],
+    help: Optional[Text],
+    flag_values: _flagvalues.FlagValues = ...,
+    module_name:  Optional[Text] = ...,
+    required: bool = ...,
+    **args: Any) -> _flagvalues.FlagHolder[Text]:
+  ...
+
+@overload
+def DEFINE_enum_class(
+    name: Text,
+    default: Union[None, _ET, Text],
+    enum_class: Type[_ET],
+    help: Optional[Text],
+    flag_values: _flagvalues.FlagValues = ...,
+    module_name: Optional[Text] = ...,
+    case_sensitive: bool = ...,
+    *,
+    required: Literal[True],
+    **args: Any) -> _flagvalues.FlagHolder[_ET]:
+  ...
+
+@overload
+def DEFINE_enum_class(
+    name: Text,
+    default: None,
+    enum_class: Type[_ET],
+    help: Optional[Text],
+    flag_values: _flagvalues.FlagValues = ...,
+    module_name: Optional[Text] = ...,
+    case_sensitive: bool = ...,
+    required: bool = ...,
+    **args: Any) -> _flagvalues.FlagHolder[Optional[_ET]]:
+  ...
+
+@overload
+def DEFINE_enum_class(
+    name: Text,
+    default: Union[_ET, Text],
+    enum_class: Type[_ET],
+    help: Optional[Text],
+    flag_values: _flagvalues.FlagValues = ...,
+    module_name: Optional[Text] = ...,
+    case_sensitive: bool = ...,
+    required: bool = ...,
+    **args: Any) -> _flagvalues.FlagHolder[_ET]:
+  ...
+
+
+@overload
+def DEFINE_list(
+    name: Text,
+    default: Union[None, Iterable[Text], Text],
+    help: Text,
+    flag_values: _flagvalues.FlagValues  = ...,
+    *,
+    required: Literal[True],
+    **args: Any) -> _flagvalues.FlagHolder[List[Text]]:
+  ...
+
+@overload
+def DEFINE_list(
+    name: Text,
+    default: None,
+    help: Text,
+    flag_values: _flagvalues.FlagValues  = ...,
+    required: bool = ...,
+    **args: Any) -> _flagvalues.FlagHolder[Optional[List[Text]]]:
+  ...
+
+@overload
+def DEFINE_list(
+    name: Text,
+    default: Union[Iterable[Text], Text],
+    help: Text,
+    flag_values: _flagvalues.FlagValues  = ...,
+    required: bool = ...,
+    **args: Any) -> _flagvalues.FlagHolder[List[Text]]:
+  ...
+
+@overload
+def DEFINE_spaceseplist(
+    name: Text,
+    default: Union[None, Iterable[Text], Text],
+    help: Text,
+    comma_compat: bool = ...,
+    flag_values: _flagvalues.FlagValues = ...,
+    *,
+    required: Literal[True],
+    **args: Any) -> _flagvalues.FlagHolder[List[Text]]:
+  ...
+
+@overload
+def DEFINE_spaceseplist(
+    name: Text,
+    default: None,
+    help: Text,
+    comma_compat: bool = ...,
+    flag_values: _flagvalues.FlagValues = ...,
+    required: bool = ...,
+    **args: Any) -> _flagvalues.FlagHolder[Optional[List[Text]]]:
+  ...
