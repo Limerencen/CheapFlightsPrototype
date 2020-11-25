@@ -930,4 +930,4 @@ def DEFINE_alias(  # pylint: disable=invalid-name
           name,
           flag.default,
           help_msg,
-          boolean=flag.boolean), flag_values, modu
+          boolean=flag.boolean), flag_values, module_name)
