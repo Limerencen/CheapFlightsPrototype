@@ -555,3 +555,117 @@ def DEFINE_multi_enum(
 @overload
 def DEFINE_multi_enum(
     name: Text,
+    default: None,
+    enum_values: Iterable[Text],
+    help: Text,
+    flag_values: _flagvalues.FlagValues = ...,
+    required: bool = ...,
+    **args: Any) -> _flagvalues.FlagHolder[Optional[List[Text]]]:
+  ...
+
+@overload
+def DEFINE_multi_enum(
+    name: Text,
+    default: Union[Iterable[Text], Text],
+    enum_values: Iterable[Text],
+    help: Text,
+    flag_values: _flagvalues.FlagValues = ...,
+    required: bool = ...,
+    **args: Any) -> _flagvalues.FlagHolder[List[Text]]:
+  ...
+
+@overload
+def DEFINE_multi_enum_class(
+    name: Text,
+    # This is separate from `Union[None, _ET, Text]` to avoid a Pytype issue
+    # inferring the return value to FlagHolder[List[Union[_ET, enum.Enum]]]
+    # when an iterable of concrete enum subclasses are used.
+    default: Iterable[_ET],
+    enum_class: Type[_ET],
+    help: Text,
+    flag_values: _flagvalues.FlagValues = ...,
+    module_name: Optional[Text] = ...,
+    *,
+    required: Literal[True],
+    **args: Any) -> _flagvalues.FlagHolder[List[_ET]]:
+  ...
+
+@overload
+def DEFINE_multi_enum_class(
+    name: Text,
+    default: Union[None, _ET, Text],
+    enum_class: Type[_ET],
+    help: Text,
+    flag_values: _flagvalues.FlagValues = ...,
+    module_name: Optional[Text] = ...,
+    *,
+    required: Literal[True],
+    **args: Any) -> _flagvalues.FlagHolder[List[_ET]]:
+  ...
+
+@overload
+def DEFINE_multi_enum_class(
+    name: Text,
+    default: None,
+    enum_class: Type[_ET],
+    help: Text,
+    flag_values: _flagvalues.FlagValues = ...,
+    module_name: Optional[Text] = ...,
+    required: bool = ...,
+    **args: Any) -> _flagvalues.FlagHolder[Optional[List[_ET]]]:
+  ...
+
+@overload
+def DEFINE_multi_enum_class(
+    name: Text,
+    # This is separate from `Union[None, _ET, Text]` to avoid a Pytype issue
+    # inferring the return value to FlagHolder[List[Union[_ET, enum.Enum]]]
+    # when an iterable of concrete enum subclasses are used.
+    default: Iterable[_ET],
+    enum_class: Type[_ET],
+    help: Text,
+    flag_values: _flagvalues.FlagValues = ...,
+    module_name: Optional[Text] = ...,
+    required: bool = ...,
+    **args: Any) -> _flagvalues.FlagHolder[List[_ET]]:
+  ...
+
+@overload
+def DEFINE_multi_enum_class(
+    name: Text,
+    default: Union[_ET, Text],
+    enum_class: Type[_ET],
+    help: Text,
+    flag_values: _flagvalues.FlagValues = ...,
+    module_name: Optional[Text] = ...,
+    required: bool = ...,
+    **args: Any) -> _flagvalues.FlagHolder[List[_ET]]:
+  ...
+
+
+def DEFINE_alias(
+    name: Text,
+    original_name: Text,
+    flag_values: _flagvalues.FlagValues = ...,
+    module_name: Optional[Text] = ...) -> _flagvalues.FlagHolder[Any]:
+  ...
+
+
+def set_default(flag_holder: _flagvalues.FlagHolder[_T], value: _T) -> None:
+  ...
+
+
+def declare_key_flag(flag_name: Union[Text, _flagvalues.FlagHolder],
+                     flag_values: _flagvalues.FlagValues = ...) -> None:
+  ...
+
+
+
+def adopt_module_key_flags(module: Any,
+                           flag_values: _flagvalues.FlagValues = ...) -> None:
+  ...
+
+
+
+def disclaim_key_flags() -> None:
+  ...
