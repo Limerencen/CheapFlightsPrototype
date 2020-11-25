@@ -14,4 +14,16 @@
 
 """Exception classes in ABSL flags library.
 
-Do NOT import this module directly. Import
+Do NOT import this module directly. Import the flags package and use the
+aliases defined at the package level instead.
+"""
+
+import sys
+
+from absl.flags import _helpers
+
+
+_helpers.disclaim_module_ids.add(id(sys.modules[__name__]))
+
+
+class Error(Exception):
