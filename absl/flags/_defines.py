@@ -923,4 +923,11 @@ def DEFINE_alias(  # pylint: disable=invalid-name
 
   help_msg = 'Alias for --%s.' % flag.name
   # If alias_name has been used, flags.DuplicatedFlag will be raised.
-  return DE
+  return DEFINE_flag(
+      _FlagAlias(
+          flag.parser,
+          flag.serializer,
+          name,
+          flag.default,
+          help_msg,
+          boolean=flag.boolean), flag_values, modu
