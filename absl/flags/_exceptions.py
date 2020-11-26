@@ -27,3 +27,14 @@ _helpers.disclaim_module_ids.add(id(sys.modules[__name__]))
 
 
 class Error(Exception):
+  """The base class for all flags errors."""
+
+
+class CantOpenFlagFileError(Error):
+  """Raised when flagfile fails to open.
+
+  E.g. the file doesn't exist, or has wrong permissions.
+  """
+
+
+class DuplicateFlagErr
