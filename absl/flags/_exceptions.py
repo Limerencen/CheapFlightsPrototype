@@ -37,4 +37,9 @@ class CantOpenFlagFileError(Error):
   """
 
 
-class DuplicateFlagErr
+class DuplicateFlagError(Error):
+  """Raised if there is a flag naming conflict."""
+
+  @classmethod
+  def from_flag(cls, flagname, flag_values, other_flag_values=None):
+    """Creates a DuplicateFlagError by prov
