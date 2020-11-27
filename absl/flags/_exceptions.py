@@ -50,4 +50,11 @@ class DuplicateFlagError(Error):
         first definition of flagname.
       other_flag_values: :class:`FlagValues`, if it is not None, it should be
         the FlagValues object where the second definition of flagname occurs.
-        If it is None, we assume that we're being c
+        If it is None, we assume that we're being called when attempting to
+        create the flag a second time, and we use the module calling this one
+        as the source of the second definition.
+
+    Returns:
+      An instance of DuplicateFlagError.
+    """
+    f
