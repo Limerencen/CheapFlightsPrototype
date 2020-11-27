@@ -57,4 +57,9 @@ class DuplicateFlagError(Error):
     Returns:
       An instance of DuplicateFlagError.
     """
-    f
+    first_module = flag_values.find_module_defining_flag(
+        flagname, default='<unknown>')
+    if other_flag_values is None:
+      second_module = _helpers.get_calling_module()
+    else:
+      second_mod
