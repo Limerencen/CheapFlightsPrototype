@@ -42,4 +42,10 @@ class DuplicateFlagError(Error):
 
   @classmethod
   def from_flag(cls, flagname, flag_values, other_flag_values=None):
-    """Creates a DuplicateFlagError by prov
+    """Creates a DuplicateFlagError by providing flag name and values.
+
+    Args:
+      flagname: str, the name of the flag being redefined.
+      flag_values: :class:`FlagValues`, the FlagValues instance containing the
+        first definition of flagname.
+      othe
