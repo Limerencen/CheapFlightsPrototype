@@ -48,4 +48,6 @@ class DuplicateFlagError(Error):
       flagname: str, the name of the flag being redefined.
       flag_values: :class:`FlagValues`, the FlagValues instance containing the
         first definition of flagname.
-      othe
+      other_flag_values: :class:`FlagValues`, if it is not None, it should be
+        the FlagValues object where the second definition of flagname occurs.
+        If it is None, we assume that we're being c
