@@ -62,4 +62,7 @@ class DuplicateFlagError(Error):
     if other_flag_values is None:
       second_module = _helpers.get_calling_module()
     else:
-      second_mod
+      second_module = other_flag_values.find_module_defining_flag(
+          flagname, default='<unknown>')
+    flag_summary = flag_values[flagname].help
+    msg = ("The flag '%s' is defined twice. First from %s, Second from %s.  
