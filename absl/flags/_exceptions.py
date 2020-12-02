@@ -72,4 +72,12 @@ class DuplicateFlagError(Error):
 
 
 class IllegalFlagValueError(Error):
-  """
+  """Raised when the flag command line argument is illegal."""
+
+
+class UnrecognizedFlagError(Error):
+  """Raised when a flag is unrecognized.
+
+  Attributes:
+    flagname: str, the name of the unrecognized flag.
+    flagval
