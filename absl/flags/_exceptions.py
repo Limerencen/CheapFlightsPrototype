@@ -80,4 +80,9 @@ class UnrecognizedFlagError(Error):
 
   Attributes:
     flagname: str, the name of the unrecognized flag.
-    flagval
+    flagvalue: The value of the flag, empty if the flag is not defined.
+  """
+
+  def __init__(self, flagname, flagvalue='', suggestions=None):
+    self.flagname = flagname
+    self.flagvalu
