@@ -65,4 +65,11 @@ class DuplicateFlagError(Error):
       second_module = other_flag_values.find_module_defining_flag(
           flagname, default='<unknown>')
     flag_summary = flag_values[flagname].help
-    msg = ("The flag '%s' is defined twice. First from %s, Second from %s.  
+    msg = ("The flag '%s' is defined twice. First from %s, Second from %s.  "
+           "Description from first occurrence: %s") % (
+               flagname, first_module, second_module, flag_summary)
+    return cls(msg)
+
+
+class IllegalFlagValueError(Error):
+  """
