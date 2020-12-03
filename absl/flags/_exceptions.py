@@ -89,4 +89,11 @@ class UnrecognizedFlagError(Error):
     if suggestions:
       # Space before the question mark is intentional to not include it in the
       # selection when copy-pasting the suggestion from (some) terminals.
-      tip = '. Did you mean: %s ?' % '
+      tip = '. Did you mean: %s ?' % ', '.join(suggestions)
+    else:
+      tip = ''
+    super(UnrecognizedFlagError, self).__init__(
+        'Unknown command line flag \'%s\'%s' % (flagname, tip))
+
+
+class UnparsedFlagAccessError(Error
