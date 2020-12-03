@@ -85,4 +85,8 @@ class UnrecognizedFlagError(Error):
 
   def __init__(self, flagname, flagvalue='', suggestions=None):
     self.flagname = flagname
-    self.flagvalu
+    self.flagvalue = flagvalue
+    if suggestions:
+      # Space before the question mark is intentional to not include it in the
+      # selection when copy-pasting the suggestion from (some) terminals.
+      tip = '. Did you mean: %s ?' % '
