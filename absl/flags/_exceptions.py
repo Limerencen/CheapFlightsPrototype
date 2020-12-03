@@ -96,4 +96,12 @@ class UnrecognizedFlagError(Error):
         'Unknown command line flag \'%s\'%s' % (flagname, tip))
 
 
-class UnparsedFlagAccessError(Error
+class UnparsedFlagAccessError(Error):
+  """Raised when accessing the flag value from unparsed :class:`FlagValues`."""
+
+
+class ValidationError(Error):
+  """Raised when flag validator constraint is not satisfied."""
+
+
+class FlagNameConflictsWithMethodError(Error):
