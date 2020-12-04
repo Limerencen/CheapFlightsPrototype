@@ -133,3 +133,188 @@ class Flag(object):
 
   def __getstate__(self):
     raise TypeError("can't pickle Flag objects")
+
+  def __copy__(self):
+    raise TypeError('%s does not support shallow copies. '
+                    'Use copy.deepcopy instead.' % type(self).__name__)
+
+  def __deepcopy__(self, memo):
+    result = object.__new__(type(self))
+    result.__dict__ = copy.deepcopy(self.__dict__, memo)
+    return result
+
+  def _get_parsed_value_as_string(self, value):
+    """Returns parsed flag value as string."""
+    if value is None:
+      return None
+    if self.serializer:
+      return repr(self.serializer.serialize(value))
+    if self.boolean:
+      if value:
+        return repr('true')
+      else:
+        return repr('false')
+    return repr(str(value))
+
+  def parse(self, argument):
+    """Parses string and sets flag value.
+
+    Args:
+      argument: str or the correct flag value type, argument to be parsed.
+    """
+    if self.present and not self.allow_overwrite:
+      raise _exceptions.IllegalFlagValueError(
+          'flag --%s=%s: already defined as %s' % (
+              self.name, argument, self.value))
+    self.value = self._parse(argument)
+    self.present += 1
+
+  def _parse(self, argument):
+    """Internal parse function.
+
+    It returns the parsed value, and does not modify class states.
+
+    Args:
+      argument: str or the correct flag value type, argument to be parsed.
+
+    Returns:
+      The parsed value.
+    """
+    try:
+      return self.parser.parse(argument)
+    except (TypeError, ValueError) as e:  # Recast as IllegalFlagValueError.
+      raise _exceptions.IllegalFlagValueError(
+          'flag --%s=%s: %s' % (self.name, argument, e))
+
+  def unparse(self):
+    self.value = self.default
+    self.using_default_value = True
+    self.present = 0
+
+  def serialize(self):
+    """Serializes the flag."""
+    return self._serialize(self.value)
+
+  def _serialize(self, value):
+    """Internal serialize function."""
+    if value is None:
+      return ''
+    if self.boolean:
+      if value:
+        return '--%s' % self.name
+      else:
+        return '--no%s' % self.name
+    else:
+      if not self.serializer:
+        raise _exceptions.Error(
+            'Serializer not present for flag %s' % self.name)
+      return '--%s=%s' % (self.name, self.serializer.serialize(value))
+
+  def _set_default(self, value):
+    """Changes the default value (and current value too) for this Flag."""
+    self.default_unparsed = value
+    if value is None:
+      self.default = None
+    else:
+      self.default = self._parse_from_default(value)
+    self.default_as_str = self._get_parsed_value_as_string(self.default)
+    if self.using_default_value:
+      self.value = self.default
+
+  # This is split out so that aliases can skip regular parsing of the default
+  # value.
+  def _parse_from_default(self, value):
+    return self._parse(value)
+
+  def flag_type(self):
+    """Returns a str that describes the type of the flag.
+
+    NOTE: we use strings, and not the types.*Type constants because
+    our flags can have more exotic types, e.g., 'comma separated list
+    of strings', 'whitespace separated list of strings', etc.
+    """
+    return self.parser.flag_type()
+
+  def _create_xml_dom_element(self, doc, module_name, is_key=False):
+    """Returns an XML element that contains this flag's information.
+
+    This is information that is relevant to all flags (e.g., name,
+    meaning, etc.).  If you defined a flag that has some other pieces of
+    info, then please override _ExtraXMLInfo.
+
+    Please do NOT override this method.
+
+    Args:
+      doc: minidom.Document, the DOM document it should create nodes from.
+      module_name: str,, the name of the module that defines this flag.
+      is_key: boolean, True iff this flag is key for main module.
+
+    Returns:
+      A minidom.Element instance.
+    """
+    element = doc.createElement('flag')
+    if is_key:
+      element.appendChild(_helpers.create_xml_dom_element(doc, 'key', 'yes'))
+    element.appendChild(_helpers.create_xml_dom_element(
+        doc, 'file', module_name))
+    # Adds flag features that are relevant for all flags.
+    element.appendChild(_helpers.create_xml_dom_element(doc, 'name', self.name))
+    if self.short_name:
+      element.appendChild(_helpers.create_xml_dom_element(
+          doc, 'short_name', self.short_name))
+    if self.help:
+      element.appendChild(_helpers.create_xml_dom_element(
+          doc, 'meaning', self.help))
+    # The default flag value can either be represented as a string like on the
+    # command line, or as a Python object.  We serialize this value in the
+    # latter case in order to remain consistent.
+    if self.serializer and not isinstance(self.default, str):
+      if self.default is not None:
+        default_serialized = self.serializer.serialize(self.default)
+      else:
+        default_serialized = ''
+    else:
+      default_serialized = self.default
+    element.appendChild(_helpers.create_xml_dom_element(
+        doc, 'default', default_serialized))
+    value_serialized = self._serialize_value_for_xml(self.value)
+    element.appendChild(_helpers.create_xml_dom_element(
+        doc, 'current', value_serialized))
+    element.appendChild(_helpers.create_xml_dom_element(
+        doc, 'type', self.flag_type()))
+    # Adds extra flag features this flag may have.
+    for e in self._extra_xml_dom_elements(doc):
+      element.appendChild(e)
+    return element
+
+  def _serialize_value_for_xml(self, value):
+    """Returns the serialized value, for use in an XML help text."""
+    return value
+
+  def _extra_xml_dom_elements(self, doc):
+    """Returns extra info about this flag in XML.
+
+    "Extra" means "not already included by _create_xml_dom_element above."
+
+    Args:
+      doc: minidom.Document, the DOM document it should create nodes from.
+
+    Returns:
+      A list of minidom.Element.
+    """
+    # Usually, the parser knows the extra details about the flag, so
+    # we just forward the call to it.
+    return self.parser._custom_xml_dom_elements(doc)  # pylint: disable=protected-access
+
+
+class BooleanFlag(Flag):
+  """Basic boolean flag.
+
+  Boolean flags do not take any arguments, and their value is either
+  ``True`` (1) or ``False`` (0).  The false value is specified on the command
+  line by prepending the word ``'no'`` to either the long or the short flag
+  name.
+
+  For example, if a Boolean flag was created whose long name was
+  ``'update'`` and whose short name was ``'x'``, then this flag could be
+  explicitly unset through either ``--noupdate`` or ``--nox``.
