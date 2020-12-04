@@ -105,3 +105,4 @@ class ValidationError(Error):
 
 
 class FlagNameConflictsWithMethodError(Error):
+  """Raised when a flag name conflicts with :class:`FlagValues` methods."""
