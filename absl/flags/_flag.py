@@ -318,3 +318,172 @@ class BooleanFlag(Flag):
   For example, if a Boolean flag was created whose long name was
   ``'update'`` and whose short name was ``'x'``, then this flag could be
   explicitly unset through either ``--noupdate`` or ``--nox``.
+  """
+
+  def __init__(self, name, default, help, short_name=None, **args):  # pylint: disable=redefined-builtin
+    p = _argument_parser.BooleanParser()
+    super(BooleanFlag, self).__init__(
+        p, None, name, default, help, short_name, 1, **args)
+
+
+class EnumFlag(Flag):
+  """Basic enum flag; its value can be any string from list of enum_values."""
+
+  def __init__(self, name, default, help, enum_values,  # pylint: disable=redefined-builtin
+               short_name=None, case_sensitive=True, **args):
+    p = _argument_parser.EnumParser(enum_values, case_sensitive)
+    g = _argument_parser.ArgumentSerializer()
+    super(EnumFlag, self).__init__(
+        p, g, name, default, help, short_name, **args)
+    self.help = '<%s>: %s' % ('|'.join(enum_values), self.help)
+
+  def _extra_xml_dom_elements(self, doc):
+    elements = []
+    for enum_value in self.parser.enum_values:
+      elements.append(_helpers.create_xml_dom_element(
+          doc, 'enum_value', enum_value))
+    return elements
+
+
+class EnumClassFlag(Flag):
+  """Basic enum flag; its value is an enum class's member."""
+
+  def __init__(
+      self,
+      name,
+      default,
+      help,  # pylint: disable=redefined-builtin
+      enum_class,
+      short_name=None,
+      case_sensitive=False,
+      **args):
+    p = _argument_parser.EnumClassParser(
+        enum_class, case_sensitive=case_sensitive)
+    g = _argument_parser.EnumClassSerializer(lowercase=not case_sensitive)
+    super(EnumClassFlag, self).__init__(
+        p, g, name, default, help, short_name, **args)
+    self.help = '<%s>: %s' % ('|'.join(p.member_names), self.help)
+
+  def _extra_xml_dom_elements(self, doc):
+    elements = []
+    for enum_value in self.parser.enum_class.__members__.keys():
+      elements.append(_helpers.create_xml_dom_element(
+          doc, 'enum_value', enum_value))
+    return elements
+
+
+class MultiFlag(Flag):
+  """A flag that can appear multiple time on the command-line.
+
+  The value of such a flag is a list that contains the individual values
+  from all the appearances of that flag on the command-line.
+
+  See the __doc__ for Flag for most behavior of this class.  Only
+  differences in behavior are described here:
+
+    * The default value may be either a single value or an iterable of values.
+      A single value is transformed into a single-item list of that value.
+
+    * The value of the flag is always a list, even if the option was
+      only supplied once, and even if the default value is a single
+      value
+  """
+
+  def __init__(self, *args, **kwargs):
+    super(MultiFlag, self).__init__(*args, **kwargs)
+    self.help += ';\n    repeat this option to specify a list of values'
+
+  def parse(self, arguments):
+    """Parses one or more arguments with the installed parser.
+
+    Args:
+      arguments: a single argument or a list of arguments (typically a
+        list of default values); a single argument is converted
+        internally into a list containing one item.
+    """
+    new_values = self._parse(arguments)
+    if self.present:
+      self.value.extend(new_values)
+    else:
+      self.value = new_values
+    self.present += len(new_values)
+
+  def _parse(self, arguments):
+    if (isinstance(arguments, abc.Iterable) and
+        not isinstance(arguments, str)):
+      arguments = list(arguments)
+
+    if not isinstance(arguments, list):
+      # Default value may be a list of values.  Most other arguments
+      # will not be, so convert them into a single-item list to make
+      # processing simpler below.
+      arguments = [arguments]
+
+    return [super(MultiFlag, self)._parse(item) for item in arguments]
+
+  def _serialize(self, value):
+    """See base class."""
+    if not self.serializer:
+      raise _exceptions.Error(
+          'Serializer not present for flag %s' % self.name)
+    if value is None:
+      return ''
+
+    serialized_items = [
+        super(MultiFlag, self)._serialize(value_item) for value_item in value
+    ]
+
+    return '\n'.join(serialized_items)
+
+  def flag_type(self):
+    """See base class."""
+    return 'multi ' + self.parser.flag_type()
+
+  def _extra_xml_dom_elements(self, doc):
+    elements = []
+    if hasattr(self.parser, 'enum_values'):
+      for enum_value in self.parser.enum_values:
+        elements.append(_helpers.create_xml_dom_element(
+            doc, 'enum_value', enum_value))
+    return elements
+
+
+class MultiEnumClassFlag(MultiFlag):
+  """A multi_enum_class flag.
+
+  See the __doc__ for MultiFlag for most behaviors of this class.  In addition,
+  this class knows how to handle enum.Enum instances as values for this flag
+  type.
+  """
+
+  def __init__(self,
+               name,
+               default,
+               help_string,
+               enum_class,
+               case_sensitive=False,
+               **args):
+    p = _argument_parser.EnumClassParser(
+        enum_class, case_sensitive=case_sensitive)
+    g = _argument_parser.EnumClassListSerializer(
+        list_sep=',', lowercase=not case_sensitive)
+    super(MultiEnumClassFlag, self).__init__(
+        p, g, name, default, help_string, **args)
+    self.help = (
+        '<%s>: %s;\n    repeat this option to specify a list of values' %
+        ('|'.join(p.member_names), help_string or '(no help available)'))
+
+  def _extra_xml_dom_elements(self, doc):
+    elements = []
+    for enum_value in self.parser.enum_class.__members__.keys():
+      elements.append(_helpers.create_xml_dom_element(
+          doc, 'enum_value', enum_value))
+    return elements
+
+  def _serialize_value_for_xml(self, value):
+    """See base class."""
+    if value is not None:
+      value_serialized = self.serializer.serialize(value)
+    else:
+      value_serialized = ''
+    return value_serialized
