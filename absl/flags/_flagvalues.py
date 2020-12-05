@@ -544,3 +544,199 @@ class FlagValues:
       except _exceptions.ValidationError as e:
         if isinstance(validator, _validators_classes.SingleFlagValidator):
           bad_flags.add(validator.flag_name)
+        elif isinstance(validator, _validators_classes.MultiFlagsValidator):
+          bad_flags.update(set(validator.flag_names))
+        message = validator.print_flags_with_values(self)
+        messages.append('%s: %s' % (message, str(e)))
+    if messages:
+      raise _exceptions.IllegalFlagValueError('\n'.join(messages))
+
+  def __delattr__(self, flag_name):
+    """Deletes a previously-defined flag from a flag object.
+
+    This method makes sure we can delete a flag by using
+
+      del FLAGS.<flag_name>
+
+    E.g.,
+
+      flags.DEFINE_integer('foo', 1, 'Integer flag.')
+      del flags.FLAGS.foo
+
+    If a flag is also registered by its the other name (long name or short
+    name), the other name won't be deleted.
+
+    Args:
+      flag_name: str, the name of the flag to be deleted.
+
+    Raises:
+      AttributeError: Raised when there is no registered flag named flag_name.
+    """
+    fl = self._flags()
+    if flag_name not in fl:
+      raise AttributeError(flag_name)
+
+    flag_obj = fl[flag_name]
+    del fl[flag_name]
+
+    self._cleanup_unregistered_flag_from_module_dicts(flag_obj)
+
+  def set_default(self, name, value):
+    """Changes the default value of the named flag object.
+
+    The flag's current value is also updated if the flag is currently using
+    the default value, i.e. not specified in the command line, and not set
+    by FLAGS.name = value.
+
+    Args:
+      name: str, the name of the flag to modify.
+      value: The new default value.
+
+    Raises:
+      UnrecognizedFlagError: Raised when there is no registered flag named name.
+      IllegalFlagValueError: Raised when value is not valid.
+    """
+    fl = self._flags()
+    if name not in fl:
+      self._set_unknown_flag(name, value)
+      return
+    fl[name]._set_default(value)  # pylint: disable=protected-access
+    self._assert_validators(fl[name].validators)
+
+  def __contains__(self, name):
+    """Returns True if name is a value (flag) in the dict."""
+    return name in self._flags()
+
+  def __len__(self):
+    return len(self.__dict__['__flags'])
+
+  def __iter__(self):
+    return iter(self._flags())
+
+  def __call__(self, argv, known_only=False):
+    """Parses flags from argv; stores parsed flags into this FlagValues object.
+
+    All unparsed arguments are returned.
+
+    Args:
+       argv: a tuple/list of strings.
+       known_only: bool, if True, parse and remove known flags; return the rest
+         untouched. Unknown flags specified by --undefok are not returned.
+
+    Returns:
+       The list of arguments not parsed as options, including argv[0].
+
+    Raises:
+       Error: Raised on any parsing error.
+       TypeError: Raised on passing wrong type of arguments.
+       ValueError: Raised on flag value parsing error.
+    """
+    if isinstance(argv, (str, bytes)):
+      raise TypeError(
+          'argv should be a tuple/list of strings, not bytes or string.')
+    if not argv:
+      raise ValueError(
+          'argv cannot be an empty list, and must contain the program name as '
+          'the first element.')
+
+    # This pre parses the argv list for --flagfile=<> options.
+    program_name = argv[0]
+    args = self.read_flags_from_files(argv[1:], force_gnu=False)
+
+    # Parse the arguments.
+    unknown_flags, unparsed_args = self._parse_args(args, known_only)
+
+    # Handle unknown flags by raising UnrecognizedFlagError.
+    # Note some users depend on us raising this particular error.
+    for name, value in unknown_flags:
+      suggestions = _helpers.get_flag_suggestions(name, list(self))
+      raise _exceptions.UnrecognizedFlagError(
+          name, value, suggestions=suggestions)
+
+    self.mark_as_parsed()
+    self.validate_all_flags()
+    return [program_name] + unparsed_args
+
+  def __getstate__(self):
+    raise TypeError("can't pickle FlagValues")
+
+  def __copy__(self):
+    raise TypeError('FlagValues does not support shallow copies. '
+                    'Use absl.testing.flagsaver or copy.deepcopy instead.')
+
+  def __deepcopy__(self, memo):
+    result = object.__new__(type(self))
+    result.__dict__.update(copy.deepcopy(self.__dict__, memo))
+    return result
+
+  def _set_is_retired_flag_func(self, is_retired_flag_func):
+    """Sets a function for checking retired flags.
+
+    Do not use it. This is a private absl API used to check retired flags
+    registered by the absl C++ flags library.
+
+    Args:
+      is_retired_flag_func: Callable(str) -> (bool, bool), a function takes flag
+        name as parameter, returns a tuple (is_retired, type_is_bool).
+    """
+    self.__dict__['__is_retired_flag_func'] = is_retired_flag_func
+
+  def _parse_args(self, args, known_only):
+    """Helper function to do the main argument parsing.
+
+    This function goes through args and does the bulk of the flag parsing.
+    It will find the corresponding flag in our flag dictionary, and call its
+    .parse() method on the flag value.
+
+    Args:
+      args: [str], a list of strings with the arguments to parse.
+      known_only: bool, if True, parse and remove known flags; return the rest
+        untouched. Unknown flags specified by --undefok are not returned.
+
+    Returns:
+      A tuple with the following:
+          unknown_flags: List of (flag name, arg) for flags we don't know about.
+          unparsed_args: List of arguments we did not parse.
+
+    Raises:
+       Error: Raised on any parsing error.
+       ValueError: Raised on flag value parsing error.
+    """
+    unparsed_names_and_args = []  # A list of (flag name or None, arg).
+    undefok = set()
+    retired_flag_func = self.__dict__['__is_retired_flag_func']
+
+    flag_dict = self._flags()
+    args = iter(args)
+    for arg in args:
+      value = None
+
+      def get_value():
+        # pylint: disable=cell-var-from-loop
+        try:
+          return next(args) if value is None else value
+        except StopIteration:
+          raise _exceptions.Error('Missing value for flag ' + arg)  # pylint: disable=undefined-loop-variable
+
+      if not arg.startswith('-'):
+        # A non-argument: default is break, GNU is skip.
+        unparsed_names_and_args.append((None, arg))
+        if self.is_gnu_getopt():
+          continue
+        else:
+          break
+
+      if arg == '--':
+        if known_only:
+          unparsed_names_and_args.append((None, arg))
+        break
+
+      # At this point, arg must start with '-'.
+      if arg.startswith('--'):
+        arg_without_dashes = arg[2:]
+      else:
+        arg_without_dashes = arg[1:]
+
+      if '=' in arg_without_dashes:
+        name, value = arg_without_dashes.split('=', 1)
+      else:
