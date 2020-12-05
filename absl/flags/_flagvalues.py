@@ -939,3 +939,198 @@ class FlagValues:
     """
     helplist = []
     self._render_our_module_key_flags(module, helplist)
+    return '\n'.join(helplist)
+
+  def main_module_help(self):
+    """Describes the key flags of the main module.
+
+    Returns:
+      str, describing the key flags of the main module.
+    """
+    return self.module_help(sys.argv[0])
+
+  def _render_flag_list(self, flaglist, output_lines, prefix='  '):
+    fl = self._flags()
+    special_fl = _helpers.SPECIAL_FLAGS._flags()  # pylint: disable=protected-access
+    flaglist = [(flag.name, flag) for flag in flaglist]
+    flaglist.sort()
+    flagset = {}
+    for (name, flag) in flaglist:
+      # It's possible this flag got deleted or overridden since being
+      # registered in the per-module flaglist.  Check now against the
+      # canonical source of current flag information, the _flags.
+      if fl.get(name, None) != flag and special_fl.get(name, None) != flag:
+        # a different flag is using this name now
+        continue
+      # only print help once
+      if flag in flagset:
+        continue
+      flagset[flag] = 1
+      flaghelp = ''
+      if flag.short_name:
+        flaghelp += '-%s,' % flag.short_name
+      if flag.boolean:
+        flaghelp += '--[no]%s:' % flag.name
+      else:
+        flaghelp += '--%s:' % flag.name
+      flaghelp += ' '
+      if flag.help:
+        flaghelp += flag.help
+      flaghelp = _helpers.text_wrap(
+          flaghelp, indent=prefix + '  ', firstline_indent=prefix)
+      if flag.default_as_str:
+        flaghelp += '\n'
+        flaghelp += _helpers.text_wrap(
+            '(default: %s)' % flag.default_as_str, indent=prefix + '  ')
+      if flag.parser.syntactic_help:
+        flaghelp += '\n'
+        flaghelp += _helpers.text_wrap(
+            '(%s)' % flag.parser.syntactic_help, indent=prefix + '  ')
+      output_lines.append(flaghelp)
+
+  def get_flag_value(self, name, default):  # pylint: disable=invalid-name
+    """Returns the value of a flag (if not None) or a default value.
+
+    Args:
+      name: str, the name of a flag.
+      default: Default value to use if the flag value is None.
+
+    Returns:
+      Requested flag value or default.
+    """
+
+    value = self.__getattr__(name)
+    if value is not None:  # Can't do if not value, b/c value might be '0' or ""
+      return value
+    else:
+      return default
+
+  def _is_flag_file_directive(self, flag_string):
+    """Checks whether flag_string contain a --flagfile=<foo> directive."""
+    if isinstance(flag_string, str):
+      if flag_string.startswith('--flagfile='):
+        return 1
+      elif flag_string == '--flagfile':
+        return 1
+      elif flag_string.startswith('-flagfile='):
+        return 1
+      elif flag_string == '-flagfile':
+        return 1
+      else:
+        return 0
+    return 0
+
+  def _extract_filename(self, flagfile_str):
+    """Returns filename from a flagfile_str of form -[-]flagfile=filename.
+
+    The cases of --flagfile foo and -flagfile foo shouldn't be hitting
+    this function, as they are dealt with in the level above this
+    function.
+
+    Args:
+      flagfile_str: str, the flagfile string.
+
+    Returns:
+      str, the filename from a flagfile_str of form -[-]flagfile=filename.
+
+    Raises:
+      Error: Raised when illegal --flagfile is provided.
+    """
+    if flagfile_str.startswith('--flagfile='):
+      return os.path.expanduser((flagfile_str[(len('--flagfile=')):]).strip())
+    elif flagfile_str.startswith('-flagfile='):
+      return os.path.expanduser((flagfile_str[(len('-flagfile=')):]).strip())
+    else:
+      raise _exceptions.Error('Hit illegal --flagfile type: %s' % flagfile_str)
+
+  def _get_flag_file_lines(self, filename, parsed_file_stack=None):
+    """Returns the useful (!=comments, etc) lines from a file with flags.
+
+    Args:
+      filename: str, the name of the flag file.
+      parsed_file_stack: [str], a list of the names of the files that we have
+        recursively encountered at the current depth. MUTATED BY THIS FUNCTION
+        (but the original value is preserved upon successfully returning from
+        function call).
+
+    Returns:
+      List of strings. See the note below.
+
+    NOTE(springer): This function checks for a nested --flagfile=<foo>
+    tag and handles the lower file recursively. It returns a list of
+    all the lines that _could_ contain command flags. This is
+    EVERYTHING except whitespace lines and comments (lines starting
+    with '#' or '//').
+    """
+    # For consistency with the cpp version, ignore empty values.
+    if not filename:
+      return []
+    if parsed_file_stack is None:
+      parsed_file_stack = []
+    # We do a little safety check for reparsing a file we've already encountered
+    # at a previous depth.
+    if filename in parsed_file_stack:
+      sys.stderr.write('Warning: Hit circular flagfile dependency. Ignoring'
+                       ' flagfile: %s\n' % (filename,))
+      return []
+    else:
+      parsed_file_stack.append(filename)
+
+    line_list = []  # All line from flagfile.
+    flag_line_list = []  # Subset of lines w/o comments, blanks, flagfile= tags.
+    try:
+      file_obj = open(filename, 'r')
+    except IOError as e_msg:
+      raise _exceptions.CantOpenFlagFileError(
+          'ERROR:: Unable to open flagfile: %s' % e_msg)
+
+    with file_obj:
+      line_list = file_obj.readlines()
+
+    # This is where we check each line in the file we just read.
+    for line in line_list:
+      if line.isspace():
+        pass
+      # Checks for comment (a line that starts with '#').
+      elif line.startswith('#') or line.startswith('//'):
+        pass
+      # Checks for a nested "--flagfile=<bar>" flag in the current file.
+      # If we find one, recursively parse down into that file.
+      elif self._is_flag_file_directive(line):
+        sub_filename = self._extract_filename(line)
+        included_flags = self._get_flag_file_lines(
+            sub_filename, parsed_file_stack=parsed_file_stack)
+        flag_line_list.extend(included_flags)
+      else:
+        # Any line that's not a comment or a nested flagfile should get
+        # copied into 2nd position.  This leaves earlier arguments
+        # further back in the list, thus giving them higher priority.
+        flag_line_list.append(line.strip())
+
+    parsed_file_stack.pop()
+    return flag_line_list
+
+  def read_flags_from_files(self, argv, force_gnu=True):
+    """Processes command line args, but also allow args to be read from file.
+
+    Args:
+      argv: [str], a list of strings, usually sys.argv[1:], which may contain
+        one or more flagfile directives of the form --flagfile="./filename".
+        Note that the name of the program (sys.argv[0]) should be omitted.
+      force_gnu: bool, if False, --flagfile parsing obeys the
+        FLAGS.is_gnu_getopt() value. If True, ignore the value and always follow
+        gnu_getopt semantics.
+
+    Returns:
+      A new list which has the original list combined with what we read
+      from any flagfile(s).
+
+    Raises:
+      IllegalFlagValueError: Raised when --flagfile is provided with no
+          argument.
+
+    This function is called by FLAGS(argv).
+    It scans the input list for a flag that looks like:
+    --flagfile=<somefile>. Then it opens <somefile>, reads all valid key
+    and value pairs and inserts them into the input list in exactly the
+    place where the --flagfile arg is found.
