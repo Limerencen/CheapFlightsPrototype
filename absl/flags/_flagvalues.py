@@ -740,3 +740,202 @@ class FlagValues:
       if '=' in arg_without_dashes:
         name, value = arg_without_dashes.split('=', 1)
       else:
+        name, value = arg_without_dashes, None
+
+      if not name:
+        # The argument is all dashes (including one dash).
+        unparsed_names_and_args.append((None, arg))
+        if self.is_gnu_getopt():
+          continue
+        else:
+          break
+
+      # --undefok is a special case.
+      if name == 'undefok':
+        value = get_value()
+        undefok.update(v.strip() for v in value.split(','))
+        undefok.update('no' + v.strip() for v in value.split(','))
+        continue
+
+      flag = flag_dict.get(name)
+      if flag is not None:
+        if flag.boolean and value is None:
+          value = 'true'
+        else:
+          value = get_value()
+      elif name.startswith('no') and len(name) > 2:
+        # Boolean flags can take the form of --noflag, with no value.
+        noflag = flag_dict.get(name[2:])
+        if noflag is not None and noflag.boolean:
+          if value is not None:
+            raise ValueError(arg + ' does not take an argument')
+          flag = noflag
+          value = 'false'
+
+      if retired_flag_func and flag is None:
+        is_retired, is_bool = retired_flag_func(name)
+
+        # If we didn't recognize that flag, but it starts with
+        # "no" then maybe it was a boolean flag specified in the
+        # --nofoo form.
+        if not is_retired and name.startswith('no'):
+          is_retired, is_bool = retired_flag_func(name[2:])
+          is_retired = is_retired and is_bool
+
+        if is_retired:
+          if not is_bool and value is None:
+            # This happens when a non-bool retired flag is specified
+            # in format of "--flag value".
+            get_value()
+          logging.error(
+              'Flag "%s" is retired and should no longer '
+              'be specified. See go/totw/90.', name)
+          continue
+
+      if flag is not None:
+        # LINT.IfChange
+        flag.parse(value)
+        flag.using_default_value = False
+        # LINT.ThenChange(../testing/flagsaver.py:flag_override_parsing)
+      else:
+        unparsed_names_and_args.append((name, arg))
+
+    unknown_flags = []
+    unparsed_args = []
+    for name, arg in unparsed_names_and_args:
+      if name is None:
+        # Positional arguments.
+        unparsed_args.append(arg)
+      elif name in undefok:
+        # Remove undefok flags.
+        continue
+      else:
+        # This is an unknown flag.
+        if known_only:
+          unparsed_args.append(arg)
+        else:
+          unknown_flags.append((name, arg))
+
+    unparsed_args.extend(list(args))
+    return unknown_flags, unparsed_args
+
+  def is_parsed(self):
+    """Returns whether flags were parsed."""
+    return self.__dict__['__flags_parsed']
+
+  def mark_as_parsed(self):
+    """Explicitly marks flags as parsed.
+
+    Use this when the caller knows that this FlagValues has been parsed as if
+    a ``__call__()`` invocation has happened.  This is only a public method for
+    use by things like appcommands which do additional command like parsing.
+    """
+    self.__dict__['__flags_parsed'] = True
+
+  def unparse_flags(self):
+    """Unparses all flags to the point before any FLAGS(argv) was called."""
+    for f in self._flags().values():
+      f.unparse()
+    # We log this message before marking flags as unparsed to avoid a
+    # problem when the logging library causes flags access.
+    logging.info('unparse_flags() called; flags access will now raise errors.')
+    self.__dict__['__flags_parsed'] = False
+    self.__dict__['__unparse_flags_called'] = True
+
+  def flag_values_dict(self):
+    """Returns a dictionary that maps flag names to flag values."""
+    return {name: flag.value for name, flag in self._flags().items()}
+
+  def __str__(self):
+    """Returns a help string for all known flags."""
+    return self.get_help()
+
+  def get_help(self, prefix='', include_special_flags=True):
+    """Returns a help string for all known flags.
+
+    Args:
+      prefix: str, per-line output prefix.
+      include_special_flags: bool, whether to include description of
+        SPECIAL_FLAGS, i.e. --flagfile and --undefok.
+
+    Returns:
+      str, formatted help message.
+    """
+    flags_by_module = self.flags_by_module_dict()
+    if flags_by_module:
+      modules = sorted(flags_by_module)
+      # Print the help for the main module first, if possible.
+      main_module = sys.argv[0]
+      if main_module in modules:
+        modules.remove(main_module)
+        modules = [main_module] + modules
+      return self._get_help_for_modules(modules, prefix, include_special_flags)
+    else:
+      output_lines = []
+      # Just print one long list of flags.
+      values = self._flags().values()
+      if include_special_flags:
+        values = itertools.chain(
+            values, _helpers.SPECIAL_FLAGS._flags().values())  # pylint: disable=protected-access
+      self._render_flag_list(values, output_lines, prefix)
+      return '\n'.join(output_lines)
+
+  def _get_help_for_modules(self, modules, prefix, include_special_flags):
+    """Returns the help string for a list of modules.
+
+    Private to absl.flags package.
+
+    Args:
+      modules: List[str], a list of modules to get the help string for.
+      prefix: str, a string that is prepended to each generated help line.
+      include_special_flags: bool, whether to include description of
+        SPECIAL_FLAGS, i.e. --flagfile and --undefok.
+    """
+    output_lines = []
+    for module in modules:
+      self._render_our_module_flags(module, output_lines, prefix)
+    if include_special_flags:
+      self._render_module_flags(
+          'absl.flags',
+          _helpers.SPECIAL_FLAGS._flags().values(),  # pylint: disable=protected-access
+          output_lines,
+          prefix)
+    return '\n'.join(output_lines)
+
+  def _render_module_flags(self, module, flags, output_lines, prefix=''):
+    """Returns a help string for a given module."""
+    if not isinstance(module, str):
+      module = module.__name__
+    output_lines.append('\n%s%s:' % (prefix, module))
+    self._render_flag_list(flags, output_lines, prefix + '  ')
+
+  def _render_our_module_flags(self, module, output_lines, prefix=''):
+    """Returns a help string for a given module."""
+    flags = self.get_flags_for_module(module)
+    if flags:
+      self._render_module_flags(module, flags, output_lines, prefix)
+
+  def _render_our_module_key_flags(self, module, output_lines, prefix=''):
+    """Returns a help string for the key flags of a given module.
+
+    Args:
+      module: module|str, the module to render key flags for.
+      output_lines: [str], a list of strings.  The generated help message lines
+        will be appended to this list.
+      prefix: str, a string that is prepended to each generated help line.
+    """
+    key_flags = self.get_key_flags_for_module(module)
+    if key_flags:
+      self._render_module_flags(module, key_flags, output_lines, prefix)
+
+  def module_help(self, module):
+    """Describes the key flags of a module.
+
+    Args:
+      module: module|str, the module to describe the key flags for.
+
+    Returns:
+      str, describing the key flags of a module.
+    """
+    helplist = []
+    self._render_our_module_key_flags(module, helplist)
