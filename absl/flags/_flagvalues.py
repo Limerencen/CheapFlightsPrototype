@@ -1339,3 +1339,85 @@ class FlagHolder(Generic[_T]):
     # - We want FlagHolder[T] to be generic container
     # - flag_values contains all flags, so has no reference to T.
     # - typecheckers don't like to see a generic class where none of the ctor
+    #   arguments refer to the generic type.
+    self._name = flag.name
+    # We intentionally do NOT check if the default value is None.
+    # This allows future use of this for "required flags with None default"
+    self._ensure_non_none_value = ensure_non_none_value
+
+  def __eq__(self, other):
+    raise TypeError(
+        "unsupported operand type(s) for ==: '{0}' and '{1}' "
+        "(did you mean to use '{0}.value' instead?)".format(
+            type(self).__name__, type(other).__name__))
+
+  def __bool__(self):
+    raise TypeError(
+        "bool() not supported for instances of type '{0}' "
+        "(did you mean to use '{0}.value' instead?)".format(
+            type(self).__name__))
+
+  __nonzero__ = __bool__
+
+  @property
+  def name(self):
+    return self._name
+
+  @property
+  def value(self):
+    """Returns the value of the flag.
+
+    If ``_ensure_non_none_value`` is ``True``, then return value is not
+    ``None``.
+
+    Raises:
+      UnparsedFlagAccessError: if flag parsing has not finished.
+      IllegalFlagValueError: if value is None unexpectedly.
+    """
+    val = getattr(self._flagvalues, self._name)
+    if self._ensure_non_none_value and val is None:
+      raise _exceptions.IllegalFlagValueError(
+          'Unexpected None value for flag %s' % self._name)
+    return val
+
+  @property
+  def default(self):
+    """Returns the default value of the flag."""
+    return self._flagvalues[self._name].default
+
+  @property
+  def present(self):
+    """Returns True if the flag was parsed from command-line flags."""
+    return bool(self._flagvalues[self._name].present)
+
+
+def resolve_flag_ref(flag_ref, flag_values):
+  """Helper to validate and resolve a flag reference argument."""
+  if isinstance(flag_ref, FlagHolder):
+    new_flag_values = flag_ref._flagvalues  # pylint: disable=protected-access
+    if flag_values != FLAGS and flag_values != new_flag_values:
+      raise ValueError(
+          'flag_values must not be customized when operating on a FlagHolder')
+    return flag_ref.name, new_flag_values
+  return flag_ref, flag_values
+
+
+def resolve_flag_refs(flag_refs, flag_values):
+  """Helper to validate and resolve flag reference list arguments."""
+  fv = None
+  names = []
+  for ref in flag_refs:
+    if isinstance(ref, FlagHolder):
+      newfv = ref._flagvalues  # pylint: disable=protected-access
+      name = ref.name
+    else:
+      newfv = flag_values
+      name = ref
+    if fv and fv != newfv:
+      raise ValueError(
+          'multiple FlagValues instances used in invocation. '
+          'FlagHolders must be registered to the same FlagValues instance as '
+          'do flag names, if provided.')
+    fv = newfv
+    names.append(name)
+  return names, fv
