@@ -1134,3 +1134,208 @@ class FlagValues:
     --flagfile=<somefile>. Then it opens <somefile>, reads all valid key
     and value pairs and inserts them into the input list in exactly the
     place where the --flagfile arg is found.
+
+    Note that your application's flags are still defined the usual way
+    using absl.flags DEFINE_flag() type functions.
+
+    Notes (assuming we're getting a commandline of some sort as our input):
+
+    * For duplicate flags, the last one we hit should "win".
+    * Since flags that appear later win, a flagfile's settings can be "weak"
+        if the --flagfile comes at the beginning of the argument sequence,
+        and it can be "strong" if the --flagfile comes at the end.
+    * A further "--flagfile=<otherfile.cfg>" CAN be nested in a flagfile.
+        It will be expanded in exactly the spot where it is found.
+    * In a flagfile, a line beginning with # or // is a comment.
+    * Entirely blank lines _should_ be ignored.
+    """
+    rest_of_args = argv
+    new_argv = []
+    while rest_of_args:
+      current_arg = rest_of_args[0]
+      rest_of_args = rest_of_args[1:]
+      if self._is_flag_file_directive(current_arg):
+        # This handles the case of -(-)flagfile foo.  In this case the
+        # next arg really is part of this one.
+        if current_arg == '--flagfile' or current_arg == '-flagfile':
+          if not rest_of_args:
+            raise _exceptions.IllegalFlagValueError(
+                '--flagfile with no argument')
+          flag_filename = os.path.expanduser(rest_of_args[0])
+          rest_of_args = rest_of_args[1:]
+        else:
+          # This handles the case of (-)-flagfile=foo.
+          flag_filename = self._extract_filename(current_arg)
+        new_argv.extend(self._get_flag_file_lines(flag_filename))
+      else:
+        new_argv.append(current_arg)
+        # Stop parsing after '--', like getopt and gnu_getopt.
+        if current_arg == '--':
+          break
+        # Stop parsing after a non-flag, like getopt.
+        if not current_arg.startswith('-'):
+          if not force_gnu and not self.__dict__['__use_gnu_getopt']:
+            break
+        else:
+          if ('=' not in current_arg and rest_of_args and
+              not rest_of_args[0].startswith('-')):
+            # If this is an occurrence of a legitimate --x y, skip the value
+            # so that it won't be mistaken for a standalone arg.
+            fl = self._flags()
+            name = current_arg.lstrip('-')
+            if name in fl and not fl[name].boolean:
+              current_arg = rest_of_args[0]
+              rest_of_args = rest_of_args[1:]
+              new_argv.append(current_arg)
+
+    if rest_of_args:
+      new_argv.extend(rest_of_args)
+
+    return new_argv
+
+  def flags_into_string(self):
+    """Returns a string with the flags assignments from this FlagValues object.
+
+    This function ignores flags whose value is None.  Each flag
+    assignment is separated by a newline.
+
+    NOTE: MUST mirror the behavior of the C++ CommandlineFlagsIntoString
+    from https://github.com/gflags/gflags.
+
+    Returns:
+      str, the string with the flags assignments from this FlagValues object.
+      The flags are ordered by (module_name, flag_name).
+    """
+    module_flags = sorted(self.flags_by_module_dict().items())
+    s = ''
+    for unused_module_name, flags in module_flags:
+      flags = sorted(flags, key=lambda f: f.name)
+      for flag in flags:
+        if flag.value is not None:
+          s += flag.serialize() + '\n'
+    return s
+
+  def append_flags_into_file(self, filename):
+    """Appends all flags assignments from this FlagInfo object to a file.
+
+    Output will be in the format of a flagfile.
+
+    NOTE: MUST mirror the behavior of the C++ AppendFlagsIntoFile
+    from https://github.com/gflags/gflags.
+
+    Args:
+      filename: str, name of the file.
+    """
+    with open(filename, 'a') as out_file:
+      out_file.write(self.flags_into_string())
+
+  def write_help_in_xml_format(self, outfile=None):
+    """Outputs flag documentation in XML format.
+
+    NOTE: We use element names that are consistent with those used by
+    the C++ command-line flag library, from
+    https://github.com/gflags/gflags.
+    We also use a few new elements (e.g., <key>), but we do not
+    interfere / overlap with existing XML elements used by the C++
+    library.  Please maintain this consistency.
+
+    Args:
+      outfile: File object we write to.  Default None means sys.stdout.
+    """
+    doc = minidom.Document()
+    all_flag = doc.createElement('AllFlags')
+    doc.appendChild(all_flag)
+
+    all_flag.appendChild(
+        _helpers.create_xml_dom_element(doc, 'program',
+                                        os.path.basename(sys.argv[0])))
+
+    usage_doc = sys.modules['__main__'].__doc__
+    if not usage_doc:
+      usage_doc = '\nUSAGE: %s [flags]\n' % sys.argv[0]
+    else:
+      usage_doc = usage_doc.replace('%s', sys.argv[0])
+    all_flag.appendChild(
+        _helpers.create_xml_dom_element(doc, 'usage', usage_doc))
+
+    # Get list of key flags for the main module.
+    key_flags = self.get_key_flags_for_module(sys.argv[0])
+
+    # Sort flags by declaring module name and next by flag name.
+    flags_by_module = self.flags_by_module_dict()
+    all_module_names = list(flags_by_module.keys())
+    all_module_names.sort()
+    for module_name in all_module_names:
+      flag_list = [(f.name, f) for f in flags_by_module[module_name]]
+      flag_list.sort()
+      for unused_flag_name, flag in flag_list:
+        is_key = flag in key_flags
+        all_flag.appendChild(
+            flag._create_xml_dom_element(  # pylint: disable=protected-access
+                doc,
+                module_name,
+                is_key=is_key))
+
+    outfile = outfile or sys.stdout
+    outfile.write(
+        doc.toprettyxml(indent='  ', encoding='utf-8').decode('utf-8'))
+    outfile.flush()
+
+  def _check_method_name_conflicts(self, name, flag):
+    if flag.allow_using_method_names:
+      return
+    short_name = flag.short_name
+    flag_names = {name} if short_name is None else {name, short_name}
+    for flag_name in flag_names:
+      if flag_name in self.__dict__['__banned_flag_names']:
+        raise _exceptions.FlagNameConflictsWithMethodError(
+            'Cannot define a flag named "{name}". It conflicts with a method '
+            'on class "{class_name}". To allow defining it, use '
+            'allow_using_method_names and access the flag value with '
+            "FLAGS['{name}'].value. FLAGS.{name} returns the method, "
+            'not the flag value.'.format(
+                name=flag_name, class_name=type(self).__name__))
+
+
+FLAGS = FlagValues()
+
+
+class FlagHolder(Generic[_T]):
+  """Holds a defined flag.
+
+  This facilitates a cleaner api around global state. Instead of::
+
+      flags.DEFINE_integer('foo', ...)
+      flags.DEFINE_integer('bar', ...)
+
+      def method():
+        # prints parsed value of 'bar' flag
+        print(flags.FLAGS.foo)
+        # runtime error due to typo or possibly bad coding style.
+        print(flags.FLAGS.baz)
+
+  it encourages code like::
+
+      _FOO_FLAG = flags.DEFINE_integer('foo', ...)
+      _BAR_FLAG = flags.DEFINE_integer('bar', ...)
+
+      def method():
+        print(_FOO_FLAG.value)
+        print(_BAR_FLAG.value)
+
+  since the name of the flag appears only once in the source code.
+  """
+
+  def __init__(self, flag_values, flag, ensure_non_none_value=False):
+    """Constructs a FlagHolder instance providing typesafe access to flag.
+
+    Args:
+      flag_values: The container the flag is registered to.
+      flag: The flag object for this flag.
+      ensure_non_none_value: Is the value of the flag allowed to be None.
+    """
+    self._flagvalues = flag_values
+    # We take the entire flag object, but only keep the name. Why?
+    # - We want FlagHolder[T] to be generic container
+    # - flag_values contains all flags, so has no reference to T.
+    # - typecheckers don't like to see a generic class where none of the ctor
