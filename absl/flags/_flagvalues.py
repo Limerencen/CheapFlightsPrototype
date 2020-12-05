@@ -334,3 +334,213 @@ class FlagValues:
     registered_flag = self._flags().get(flagname)
     if registered_flag is None:
       return default
+    for module_id, flags in self.flags_by_module_id_dict().items():
+      for flag in flags:
+        # It must compare the flag with the one in _flags. This is because a
+        # flag might be overridden only for its long name (or short name),
+        # and only its short name (or long name) is considered registered.
+        if (flag.name == registered_flag.name and
+            flag.short_name == registered_flag.short_name):
+          return module_id
+    return default
+
+  def _register_unknown_flag_setter(self, setter):
+    """Allow set default values for undefined flags.
+
+    Args:
+      setter: Method(name, value) to call to __setattr__ an unknown flag. Must
+        raise NameError or ValueError for invalid name/value.
+    """
+    self.__dict__['__set_unknown'] = setter
+
+  def _set_unknown_flag(self, name, value):
+    """Returns value if setting flag |name| to |value| returned True.
+
+    Args:
+      name: str, name of the flag to set.
+      value: Value to set.
+
+    Returns:
+      Flag value on successful call.
+
+    Raises:
+      UnrecognizedFlagError
+      IllegalFlagValueError
+    """
+    setter = self.__dict__['__set_unknown']
+    if setter:
+      try:
+        setter(name, value)
+        return value
+      except (TypeError, ValueError):  # Flag value is not valid.
+        raise _exceptions.IllegalFlagValueError(
+            '"{1}" is not valid for --{0}'.format(name, value))
+      except NameError:  # Flag name is not valid.
+        pass
+    raise _exceptions.UnrecognizedFlagError(name, value)
+
+  def append_flag_values(self, flag_values):
+    """Appends flags registered in another FlagValues instance.
+
+    Args:
+      flag_values: FlagValues, the FlagValues instance from which to copy flags.
+    """
+    for flag_name, flag in flag_values._flags().items():  # pylint: disable=protected-access
+      # Each flags with short_name appears here twice (once under its
+      # normal name, and again with its short name).  To prevent
+      # problems (DuplicateFlagError) with double flag registration, we
+      # perform a check to make sure that the entry we're looking at is
+      # for its normal name.
+      if flag_name == flag.name:
+        try:
+          self[flag_name] = flag
+        except _exceptions.DuplicateFlagError:
+          raise _exceptions.DuplicateFlagError.from_flag(
+              flag_name, self, other_flag_values=flag_values)
+
+  def remove_flag_values(self, flag_values):
+    """Remove flags that were previously appended from another FlagValues.
+
+    Args:
+      flag_values: FlagValues, the FlagValues instance containing flags to
+        remove.
+    """
+    for flag_name in flag_values:
+      self.__delattr__(flag_name)
+
+  def __setitem__(self, name, flag):
+    """Registers a new flag variable."""
+    fl = self._flags()
+    if not isinstance(flag, _flag.Flag):
+      raise _exceptions.IllegalFlagValueError(
+          f'Expect Flag instances, found type {type(flag)}. '
+          "Maybe you didn't mean to use FlagValue.__setitem__?")
+    if not isinstance(name, str):
+      raise _exceptions.Error('Flag name must be a string')
+    if not name:
+      raise _exceptions.Error('Flag name cannot be empty')
+    if ' ' in name:
+      raise _exceptions.Error('Flag name cannot contain a space')
+    self._check_method_name_conflicts(name, flag)
+    if name in fl and not flag.allow_override and not fl[name].allow_override:
+      module, module_name = _helpers.get_calling_module_object_and_name()
+      if (self.find_module_defining_flag(name) == module_name and
+          id(module) != self.find_module_id_defining_flag(name)):
+        # If the flag has already been defined by a module with the same name,
+        # but a different ID, we can stop here because it indicates that the
+        # module is simply being imported a subsequent time.
+        return
+      raise _exceptions.DuplicateFlagError.from_flag(name, self)
+    short_name = flag.short_name
+    # If a new flag overrides an old one, we need to cleanup the old flag's
+    # modules if it's not registered.
+    flags_to_cleanup = set()
+    if short_name is not None:
+      if (short_name in fl and not flag.allow_override and
+          not fl[short_name].allow_override):
+        raise _exceptions.DuplicateFlagError.from_flag(short_name, self)
+      if short_name in fl and fl[short_name] != flag:
+        flags_to_cleanup.add(fl[short_name])
+      fl[short_name] = flag
+    if (name not in fl  # new flag
+        or fl[name].using_default_value or not flag.using_default_value):
+      if name in fl and fl[name] != flag:
+        flags_to_cleanup.add(fl[name])
+      fl[name] = flag
+    for f in flags_to_cleanup:
+      self._cleanup_unregistered_flag_from_module_dicts(f)
+
+  def __dir__(self):
+    """Returns list of names of all defined flags.
+
+    Useful for TAB-completion in ipython.
+
+    Returns:
+      [str], a list of names of all defined flags.
+    """
+    return sorted(self.__dict__['__flags'])
+
+  def __getitem__(self, name):
+    """Returns the Flag object for the flag --name."""
+    return self._flags()[name]
+
+  def _hide_flag(self, name):
+    """Marks the flag --name as hidden."""
+    self.__dict__['__hiddenflags'].add(name)
+
+  def __getattr__(self, name):
+    """Retrieves the 'value' attribute of the flag --name."""
+    fl = self._flags()
+    if name not in fl:
+      raise AttributeError(name)
+    if name in self.__dict__['__hiddenflags']:
+      raise AttributeError(name)
+
+    if self.__dict__['__flags_parsed'] or fl[name].present:
+      return fl[name].value
+    else:
+      raise _exceptions.UnparsedFlagAccessError(
+          'Trying to access flag --%s before flags were parsed.' % name)
+
+  def __setattr__(self, name, value):
+    """Sets the 'value' attribute of the flag --name."""
+    self._set_attributes(**{name: value})
+    return value
+
+  def _set_attributes(self, **attributes):
+    """Sets multiple flag values together, triggers validators afterwards."""
+    fl = self._flags()
+    known_flags = set()
+    for name, value in attributes.items():
+      if name in self.__dict__['__hiddenflags']:
+        raise AttributeError(name)
+      if name in fl:
+        fl[name].value = value
+        known_flags.add(name)
+      else:
+        self._set_unknown_flag(name, value)
+    for name in known_flags:
+      self._assert_validators(fl[name].validators)
+      fl[name].using_default_value = False
+
+  def validate_all_flags(self):
+    """Verifies whether all flags pass validation.
+
+    Raises:
+      AttributeError: Raised if validators work with a non-existing flag.
+      IllegalFlagValueError: Raised if validation fails for at least one
+          validator.
+    """
+    all_validators = set()
+    for flag in self._flags().values():
+      all_validators.update(flag.validators)
+    self._assert_validators(all_validators)
+
+  def _assert_validators(self, validators):
+    """Asserts if all validators in the list are satisfied.
+
+    It asserts validators in the order they were created.
+
+    Args:
+      validators: Iterable(validators.Validator), validators to be verified.
+
+    Raises:
+      AttributeError: Raised if validators work with a non-existing flag.
+      IllegalFlagValueError: Raised if validation fails for at least one
+          validator.
+    """
+    messages = []
+    bad_flags = set()
+    for validator in sorted(
+        validators, key=lambda validator: validator.insertion_index):
+      try:
+        if isinstance(validator, _validators_classes.SingleFlagValidator):
+          if validator.flag_name in bad_flags:
+            continue
+        elif isinstance(validator, _validators_classes.MultiFlagsValidator):
+          if bad_flags & set(validator.flag_names):
+            continue
+        validator.verify(self)
+      except _exceptions.ValidationError as e:
+        if isinstance(validator, _validators_classes.SingleFlagValidator):
+          bad_flags.add(validator.flag_name)
