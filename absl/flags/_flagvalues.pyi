@@ -17,4 +17,13 @@
 
 from absl.flags import _flag
 
-from typing import Any, Dict, Generic, Iterable, Iterator, List, Opti
+from typing import Any, Dict, Generic, Iterable, Iterator, List, Optional, Sequence, Text, Type, TypeVar
+
+
+class FlagValues:
+
+  def __getitem__(self, name: Text) -> _flag.Flag:  ...
+
+  def __setitem__(self, name: Text, flag: _flag.Flag) -> None:  ...
+
+  def __getat
