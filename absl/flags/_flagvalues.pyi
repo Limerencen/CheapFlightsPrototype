@@ -26,4 +26,14 @@ class FlagValues:
 
   def __setitem__(self, name: Text, flag: _flag.Flag) -> None:  ...
 
-  def __getat
+  def __getattr__(self, name: Text) -> Any:  ...
+
+  def __setattr__(self, name: Text, value: Any) -> Any:  ...
+
+  def __call__(
+      self,
+      argv: Sequence[Text],
+      known_only: bool = ...,
+  ) -> List[Text]: ...
+
+  def __contains__(sel
