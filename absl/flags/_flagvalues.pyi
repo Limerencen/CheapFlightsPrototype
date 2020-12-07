@@ -69,4 +69,10 @@ class FlagValues:
   def key_flags_by_module_dict(self) -> Dict[Text, List[_flag.Flag]]: ...
 
   def register_flag_by_module(
-    self, module_name: Text, flag: _flag.Flag) -> Non
+    self, module_name: Text, flag: _flag.Flag) -> None: ...
+
+  def register_flag_by_module_id(
+    self, module_id: Text, flag: _flag.Flag) -> None: ...
+
+  def register_key_flag_for_module(
+    self, module_name: Text, flag: _flag.Flag) -> None: ..
