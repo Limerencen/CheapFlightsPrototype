@@ -116,4 +116,11 @@ class FlagValues:
 
   def append_flags_into_file(self, filename: Text) -> None:...
 
- 
+  # outfile is Optional[fileobject]
+  def write_help_in_xml_format(self, outfile: Any = ...) -> None: ...
+
+
+FLAGS = ...  # type: FlagValues
+
+
+_T = TypeVar('_T')  # The type of parsed de
