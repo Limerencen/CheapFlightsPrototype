@@ -123,4 +123,11 @@ class FlagValues:
 FLAGS = ...  # type: FlagValues
 
 
-_T = TypeVar('_T')  # The type of parsed de
+_T = TypeVar('_T')  # The type of parsed default value of the flag.
+
+# We assume that default and value are guaranteed to have the same type.
+class FlagHolder(Generic[_T]):
+  def __init__(
+    self,
+    flag_values: FlagValues,
+    # NOTE: Use Flag instead of Flag[T] is used to work around so
