@@ -130,4 +130,13 @@ class FlagHolder(Generic[_T]):
   def __init__(
     self,
     flag_values: FlagValues,
-    # NOTE: Use Flag instead of Flag[T] is used to work around so
+    # NOTE: Use Flag instead of Flag[T] is used to work around some superficial
+    # differences between Flag and FlagHolder typing.
+    flag: _flag.Flag,
+    ensure_non_none_value: bool=False) -> None: ...
+
+  @property
+  def name(self) -> Text: ...
+
+  @property
+  def value(
