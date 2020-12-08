@@ -75,4 +75,12 @@ class FlagValues:
     self, module_id: Text, flag: _flag.Flag) -> None: ...
 
   def register_key_flag_for_module(
-    self, module_name: Text, flag: _flag.Flag) -> None: ..
+    self, module_name: Text, flag: _flag.Flag) -> None: ...
+
+  def get_key_flags_for_module(self, module: Any) -> List[_flag.Flag]: ...
+
+  def find_module_defining_flag(
+    self, flagname: Text, default: Any = ...) -> Any:
+    ...
+
+  def find_module_id_defining_flag(
