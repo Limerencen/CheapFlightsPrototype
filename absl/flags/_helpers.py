@@ -92,3 +92,176 @@ def get_module_object_and_name(globals_dict):
   Returns:
     _ModuleObjectAndName - pair of module object & module name.
     Returns (None, None) if the module could not be identified.
+  """
+  name = globals_dict.get('__name__', None)
+  module = sys.modules.get(name, None)
+  # Pick a more informative name for the main module.
+  return _ModuleObjectAndName(module,
+                              (sys.argv[0] if name == '__main__' else name))
+
+
+def get_calling_module_object_and_name():
+  """Returns the module that's calling into this module.
+
+  We generally use this function to get the name of the module calling a
+  DEFINE_foo... function.
+
+  Returns:
+    The module object that called into this one.
+
+  Raises:
+    AssertionError: Raised when no calling module could be identified.
+  """
+  for depth in range(1, sys.getrecursionlimit()):
+    # sys._getframe is the right thing to use here, as it's the best
+    # way to walk up the call stack.
+    globals_for_frame = sys._getframe(depth).f_globals  # pylint: disable=protected-access
+    module, module_name = get_module_object_and_name(globals_for_frame)
+    if id(module) not in disclaim_module_ids and module_name is not None:
+      return _ModuleObjectAndName(module, module_name)
+  raise AssertionError('No module was found')
+
+
+def get_calling_module():
+  """Returns the name of the module that's calling into this module."""
+  return get_calling_module_object_and_name().module_name
+
+
+def create_xml_dom_element(doc, name, value):
+  """Returns an XML DOM element with name and text value.
+
+  Args:
+    doc: minidom.Document, the DOM document it should create nodes from.
+    name: str, the tag of XML element.
+    value: object, whose string representation will be used
+        as the value of the XML element. Illegal or highly discouraged xml 1.0
+        characters are stripped.
+
+  Returns:
+    An instance of minidom.Element.
+  """
+  s = str(value)
+  if isinstance(value, bool):
+    # Display boolean values as the C++ flag library does: no caps.
+    s = s.lower()
+  # Remove illegal xml characters.
+  s = _ILLEGAL_XML_CHARS_REGEX.sub(u'', s)
+
+  e = doc.createElement(name)
+  e.appendChild(doc.createTextNode(s))
+  return e
+
+
+def get_help_width():
+  """Returns the integer width of help lines that is used in TextWrap."""
+  if not sys.stdout.isatty() or termios is None or fcntl is None:
+    return _DEFAULT_HELP_WIDTH
+  try:
+    data = fcntl.ioctl(sys.stdout, termios.TIOCGWINSZ, '1234')
+    columns = struct.unpack('hh', data)[1]
+    # Emacs mode returns 0.
+    # Here we assume that any value below 40 is unreasonable.
+    if columns >= _MIN_HELP_WIDTH:
+      return columns
+    # Returning an int as default is fine, int(int) just return the int.
+    return int(os.getenv('COLUMNS', _DEFAULT_HELP_WIDTH))
+
+  except (TypeError, IOError, struct.error):
+    return _DEFAULT_HELP_WIDTH
+
+
+def get_flag_suggestions(attempt, longopt_list):
+  """Returns helpful similar matches for an invalid flag."""
+  # Don't suggest on very short strings, or if no longopts are specified.
+  if len(attempt) <= 2 or not longopt_list:
+    return []
+
+  option_names = [v.split('=')[0] for v in longopt_list]
+
+  # Find close approximations in flag prefixes.
+  # This also handles the case where the flag is spelled right but ambiguous.
+  distances = [(_damerau_levenshtein(attempt, option[0:len(attempt)]), option)
+               for option in option_names]
+  # t[0] is distance, and sorting by t[1] allows us to have stable output.
+  distances.sort()
+
+  least_errors, _ = distances[0]
+  # Don't suggest excessively bad matches.
+  if least_errors >= _SUGGESTION_ERROR_RATE_THRESHOLD * len(attempt):
+    return []
+
+  suggestions = []
+  for errors, name in distances:
+    if errors == least_errors:
+      suggestions.append(name)
+    else:
+      break
+  return suggestions
+
+
+def _damerau_levenshtein(a, b):
+  """Returns Damerau-Levenshtein edit distance from a to b."""
+  memo = {}
+
+  def distance(x, y):
+    """Recursively defined string distance with memoization."""
+    if (x, y) in memo:
+      return memo[x, y]
+    if not x:
+      d = len(y)
+    elif not y:
+      d = len(x)
+    else:
+      d = min(
+          distance(x[1:], y) + 1,  # correct an insertion error
+          distance(x, y[1:]) + 1,  # correct a deletion error
+          distance(x[1:], y[1:]) + (x[0] != y[0]))  # correct a wrong character
+      if len(x) >= 2 and len(y) >= 2 and x[0] == y[1] and x[1] == y[0]:
+        # Correct a transposition.
+        t = distance(x[2:], y[2:]) + 1
+        if d > t:
+          d = t
+
+    memo[x, y] = d
+    return d
+  return distance(a, b)
+
+
+def text_wrap(text, length=None, indent='', firstline_indent=None):
+  """Wraps a given text to a maximum line length and returns it.
+
+  It turns lines that only contain whitespace into empty lines, keeps new lines,
+  and expands tabs using 4 spaces.
+
+  Args:
+    text: str, text to wrap.
+    length: int, maximum length of a line, includes indentation.
+        If this is None then use get_help_width()
+    indent: str, indent for all but first line.
+    firstline_indent: str, indent for first line; if None, fall back to indent.
+
+  Returns:
+    str, the wrapped text.
+
+  Raises:
+    ValueError: Raised if indent or firstline_indent not shorter than length.
+  """
+  # Get defaults where callee used None
+  if length is None:
+    length = get_help_width()
+  if indent is None:
+    indent = ''
+  if firstline_indent is None:
+    firstline_indent = indent
+
+  if len(indent) >= length:
+    raise ValueError('Length of indent exceeds length')
+  if len(firstline_indent) >= length:
+    raise ValueError('Length of first line indent exceeds length')
+
+  text = text.expandtabs(4)
+
+  result = []
+  # Create one wrapper for the first paragraph and one for subsequent
+  # paragraphs that does not have the initial wrapping.
+  wrapper = textwrap.TextWrapper(
