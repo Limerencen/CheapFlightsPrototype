@@ -14,4 +14,11 @@
 
 """Module to enforce different constraints on flags.
 
-Flags validators can be registered using fo
+Flags validators can be registered using following functions / decorators::
+
+    flags.register_validator
+    @flags.validator
+    flags.register_multi_flags_validator
+    @flags.multi_flags_validator
+
+Three convenience functions are a
