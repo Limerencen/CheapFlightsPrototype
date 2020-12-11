@@ -265,3 +265,138 @@ def text_wrap(text, length=None, indent='', firstline_indent=None):
   # Create one wrapper for the first paragraph and one for subsequent
   # paragraphs that does not have the initial wrapping.
   wrapper = textwrap.TextWrapper(
+      width=length, initial_indent=firstline_indent, subsequent_indent=indent)
+  subsequent_wrapper = textwrap.TextWrapper(
+      width=length, initial_indent=indent, subsequent_indent=indent)
+
+  # textwrap does not have any special treatment for newlines. From the docs:
+  # "...newlines may appear in the middle of a line and cause strange output.
+  # For this reason, text should be split into paragraphs (using
+  # str.splitlines() or similar) which are wrapped separately."
+  for paragraph in (p.strip() for p in text.splitlines()):
+    if paragraph:
+      result.extend(wrapper.wrap(paragraph))
+    else:
+      result.append('')  # Keep empty lines.
+    # Replace initial wrapper with wrapper for subsequent paragraphs.
+    wrapper = subsequent_wrapper
+
+  return '\n'.join(result)
+
+
+def flag_dict_to_args(flag_map, multi_flags=None):
+  """Convert a dict of values into process call parameters.
+
+  This method is used to convert a dictionary into a sequence of parameters
+  for a binary that parses arguments using this module.
+
+  Args:
+    flag_map: dict, a mapping where the keys are flag names (strings).
+        values are treated according to their type:
+
+        * If value is ``None``, then only the name is emitted.
+        * If value is ``True``, then only the name is emitted.
+        * If value is ``False``, then only the name prepended with 'no' is
+          emitted.
+        * If value is a string then ``--name=value`` is emitted.
+        * If value is a collection, this will emit
+          ``--name=value1,value2,value3``, unless the flag name is in
+          ``multi_flags``, in which case this will emit
+          ``--name=value1 --name=value2 --name=value3``.
+        * Everything else is converted to string an passed as such.
+
+    multi_flags: set, names (strings) of flags that should be treated as
+        multi-flags.
+  Yields:
+    sequence of string suitable for a subprocess execution.
+  """
+  for key, value in flag_map.items():
+    if value is None:
+      yield '--%s' % key
+    elif isinstance(value, bool):
+      if value:
+        yield '--%s' % key
+      else:
+        yield '--no%s' % key
+    elif isinstance(value, (bytes, type(u''))):
+      # We don't want strings to be handled like python collections.
+      yield '--%s=%s' % (key, value)
+    else:
+      # Now we attempt to deal with collections.
+      try:
+        if multi_flags and key in multi_flags:
+          for item in value:
+            yield '--%s=%s' % (key, str(item))
+        else:
+          yield '--%s=%s' % (key, ','.join(str(item) for item in value))
+      except TypeError:
+        # Default case.
+        yield '--%s=%s' % (key, value)
+
+
+def trim_docstring(docstring):
+  """Removes indentation from triple-quoted strings.
+
+  This is the function specified in PEP 257 to handle docstrings:
+  https://www.python.org/dev/peps/pep-0257/.
+
+  Args:
+    docstring: str, a python docstring.
+
+  Returns:
+    str, docstring with indentation removed.
+  """
+  if not docstring:
+    return ''
+
+  # If you've got a line longer than this you have other problems...
+  max_indent = 1 << 29
+
+  # Convert tabs to spaces (following the normal Python rules)
+  # and split into a list of lines:
+  lines = docstring.expandtabs().splitlines()
+
+  # Determine minimum indentation (first line doesn't count):
+  indent = max_indent
+  for line in lines[1:]:
+    stripped = line.lstrip()
+    if stripped:
+      indent = min(indent, len(line) - len(stripped))
+  # Remove indentation (first line is special):
+  trimmed = [lines[0].strip()]
+  if indent < max_indent:
+    for line in lines[1:]:
+      trimmed.append(line[indent:].rstrip())
+  # Strip off trailing and leading blank lines:
+  while trimmed and not trimmed[-1]:
+    trimmed.pop()
+  while trimmed and not trimmed[0]:
+    trimmed.pop(0)
+  # Return a single string:
+  return '\n'.join(trimmed)
+
+
+def doc_to_help(doc):
+  """Takes a __doc__ string and reformats it as help."""
+
+  # Get rid of starting and ending white space. Using lstrip() or even
+  # strip() could drop more than maximum of first line and right space
+  # of last line.
+  doc = doc.strip()
+
+  # Get rid of all empty lines.
+  whitespace_only_line = re.compile('^[ \t]+$', re.M)
+  doc = whitespace_only_line.sub('', doc)
+
+  # Cut out common space at line beginnings.
+  doc = trim_docstring(doc)
+
+  # Just like this module's comment, comments tend to be aligned somehow.
+  # In other words they all start with the same amount of white space.
+  # 1) keep double new lines;
+  # 2) keep ws after new lines if not empty line;
+  # 3) all other new lines shall be changed to a space;
+  # Solution: Match new lines between non white space and replace with space.
+  doc = re.sub(r'(?<=\S)\n(?=\S)', ' ', doc, flags=re.M)
+
+  return doc
