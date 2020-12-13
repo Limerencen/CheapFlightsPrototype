@@ -36,4 +36,11 @@ aliases defined at the package level instead.
 
 import warnings
 
-from absl.flags i
+from absl.flags import _exceptions
+from absl.flags import _flagvalues
+from absl.flags import _validators_classes
+
+
+def register_validator(flag_name,
+                       checker,
+                       message='
