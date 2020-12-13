@@ -53,3 +53,7 @@ def register_validator(flag_name,
   Args:
     flag_name: str | FlagHolder, name or holder of the flag to be checked.
         Positional-only parameter.
+    checker: callable, a function to validate the flag.
+
+        * input - A single positional argument: The value of the corresponding
+          flag (string, boolean, etc.  This value will be passed to
