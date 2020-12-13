@@ -71,4 +71,7 @@ def register_validator(flag_name,
   Raises:
     AttributeError: Raised when flag_name is not registered as a valid flag
         name.
-    ValueError: Raised 
+    ValueError: Raised when flag_values is non-default and does not match the
+        FlagValues of the provided FlagHolder instance.
+  """
+  flag_name, flag_values = _flagvalues.resolve_flag_ref(flag_name, flag_values)
