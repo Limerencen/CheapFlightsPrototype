@@ -43,4 +43,8 @@ from absl.flags import _validators_classes
 
 def register_validator(flag_name,
                        checker,
-                       message='
+                       message='Flag validation failed',
+                       flag_values=_flagvalues.FLAGS):
+  """Adds a constraint, which will be enforced during program execution.
+
+  The constraint is validated when flags are i
