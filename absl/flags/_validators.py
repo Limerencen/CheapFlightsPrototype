@@ -28,4 +28,12 @@ Three convenience functions are also provided for common flag constraints::
     flags.mark_flags_as_mutual_exclusive
     flags.mark_bool_flags_as_mutual_exclusive
 
-See the
+See their docstring in this module for a usage manual.
+
+Do NOT import this module directly. Import the flags package and use the
+aliases defined at the package level instead.
+"""
+
+import warnings
+
+from absl.flags i
