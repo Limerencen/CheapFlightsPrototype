@@ -47,4 +47,9 @@ def register_validator(flag_name,
                        flag_values=_flagvalues.FLAGS):
   """Adds a constraint, which will be enforced during program execution.
 
-  The constraint is validated when flags are i
+  The constraint is validated when flags are initially parsed, and after each
+  change of the corresponding flag's value.
+
+  Args:
+    flag_name: str | FlagHolder, name or holder of the flag to be checked.
+        Positional-only parameter.
