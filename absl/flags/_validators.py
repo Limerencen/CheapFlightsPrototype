@@ -60,4 +60,8 @@ def register_validator(flag_name,
           by the library).
         * output - bool, True if validator constraint is satisfied.
           If constraint is not satisfied, it should either ``return False`` or
-          ``raise flag
+          ``raise flags.ValidationError(desired_error_message)``.
+
+    message: str, error text to be shown to the user if checker returns False.
+        If checker raises flags.ValidationError, message from the raised
+        error will be shown.
