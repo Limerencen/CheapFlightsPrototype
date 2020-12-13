@@ -21,4 +21,11 @@ Flags validators can be registered using following functions / decorators::
     flags.register_multi_flags_validator
     @flags.multi_flags_validator
 
-Three convenience functions are a
+Three convenience functions are also provided for common flag constraints::
+
+    flags.mark_flag_as_required
+    flags.mark_flags_as_required
+    flags.mark_flags_as_mutual_exclusive
+    flags.mark_bool_flags_as_mutual_exclusive
+
+See the
