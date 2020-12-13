@@ -65,3 +65,10 @@ def register_validator(flag_name,
     message: str, error text to be shown to the user if checker returns False.
         If checker raises flags.ValidationError, message from the raised
         error will be shown.
+    flag_values: flags.FlagValues, optional FlagValues instance to validate
+        against.
+
+  Raises:
+    AttributeError: Raised when flag_name is not registered as a valid flag
+        name.
+    ValueError: Raised 
