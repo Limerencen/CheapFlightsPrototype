@@ -102,4 +102,13 @@ def validator(flag_name, message='Flag validation failed',
   Returns:
     A function decorator that registers its function argument as a validator.
   Raises:
-    AttributeError: Raised when flag_name is not registered as a valid 
+    AttributeError: Raised when flag_name is not registered as a valid flag
+        name.
+  """
+
+  def decorate(function):
+    register_validator(flag_name, function,
+                       message=message,
+                       flag_values=flag_values)
+    return function
+  return decorat
