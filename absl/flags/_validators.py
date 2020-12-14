@@ -97,4 +97,9 @@ def validator(flag_name, message='Flag validation failed',
     message: str, error text to be shown to the user if checker returns False.
         If checker raises flags.ValidationError, message from the raised
         error will be shown.
-    flag_values: flags.FlagValues
+    flag_values: flags.FlagValues, optional FlagValues instance to validate
+        against.
+  Returns:
+    A function decorator that registers its function argument as a validator.
+  Raises:
+    AttributeError: Raised when flag_name is not registered as a valid 
