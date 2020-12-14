@@ -94,4 +94,7 @@ def validator(flag_name, message='Flag validation failed',
   Args:
     flag_name: str | FlagHolder, name or holder of the flag to be checked.
         Positional-only parameter.
-    message
+    message: str, error text to be shown to the user if checker returns False.
+        If checker raises flags.ValidationError, message from the raised
+        error will be shown.
+    flag_values: flags.FlagValues
