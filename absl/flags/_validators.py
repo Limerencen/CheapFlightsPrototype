@@ -75,3 +75,9 @@ def register_validator(flag_name,
         FlagValues of the provided FlagHolder instance.
   """
   flag_name, flag_values = _flagvalues.resolve_flag_ref(flag_name, flag_values)
+  v = _validators_classes.SingleFlagValidator(flag_name, checker, message)
+  _add_validator(flag_values, v)
+
+
+def validator(flag_name, message='Flag validation failed',
+              flag_values=_flagval
