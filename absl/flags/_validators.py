@@ -87,4 +87,11 @@ def validator(flag_name, message='Flag validation failed',
 
       @flags.validator('foo')
       def _CheckFoo(foo):
-        ..
+        ...
+
+  See :func:`register_validator` for the specification of checker function.
+
+  Args:
+    flag_name: str | FlagHolder, name or holder of the flag to be checked.
+        Positional-only parameter.
+    message
