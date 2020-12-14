@@ -111,4 +111,9 @@ def validator(flag_name, message='Flag validation failed',
                        message=message,
                        flag_values=flag_values)
     return function
-  return decorat
+  return decorate
+
+
+def register_multi_flags_validator(flag_names,
+                                   multi_flags_checker,
+                                   message='Flags validation failed
