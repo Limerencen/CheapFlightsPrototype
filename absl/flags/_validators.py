@@ -121,4 +121,9 @@ def register_multi_flags_validator(flag_names,
   """Adds a constraint to multiple flags.
 
   The constraint is validated when flags are initially parsed, and after each
-  change of the c
+  change of the corresponding flag's value.
+
+  Args:
+    flag_names: [str | FlagHolder], a list of the flag names or holders to be
+        checked. Positional-only parameter.
+    multi_flags_checker: callabl
