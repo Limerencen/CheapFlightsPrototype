@@ -80,4 +80,11 @@ def register_validator(flag_name,
 
 
 def validator(flag_name, message='Flag validation failed',
-              flag_values=_flagval
+              flag_values=_flagvalues.FLAGS):
+  """A function decorator for defining a flag validator.
+
+  Registers the decorated function as a validator for flag_name, e.g.::
+
+      @flags.validator('foo')
+      def _CheckFoo(foo):
+        ..
