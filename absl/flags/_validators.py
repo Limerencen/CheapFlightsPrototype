@@ -116,4 +116,9 @@ def validator(flag_name, message='Flag validation failed',
 
 def register_multi_flags_validator(flag_names,
                                    multi_flags_checker,
-                                   message='Flags validation failed
+                                   message='Flags validation failed',
+                                   flag_values=_flagvalues.FLAGS):
+  """Adds a constraint to multiple flags.
+
+  The constraint is validated when flags are initially parsed, and after each
+  change of the c
