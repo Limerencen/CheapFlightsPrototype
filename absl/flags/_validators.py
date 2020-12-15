@@ -134,4 +134,7 @@ def register_multi_flags_validator(flag_names,
             If constraint is not satisfied, it should either return False or
             raise flags.ValidationError.
 
-    message: s
+    message: str, error text to be shown to the user if checker returns False.
+        If checker raises flags.ValidationError, message from the raised
+        error will be shown.
+    flag_values: flags.FlagValues, optional
