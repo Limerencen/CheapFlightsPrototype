@@ -126,4 +126,7 @@ def register_multi_flags_validator(flag_names,
   Args:
     flag_names: [str | FlagHolder], a list of the flag names or holders to be
         checked. Positional-only parameter.
-    multi_flags_checker: callabl
+    multi_flags_checker: callable, a function to validate the flag.
+
+        * input - dict, with keys() being flag_names, and value for each key
+            being the value of the corresponding flag (string, bo
