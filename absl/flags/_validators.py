@@ -129,4 +129,9 @@ def register_multi_flags_validator(flag_names,
     multi_flags_checker: callable, a function to validate the flag.
 
         * input - dict, with keys() being flag_names, and value for each key
-            being the value of the corresponding flag (string, bo
+            being the value of the corresponding flag (string, boolean, etc).
+        * output - bool, True if validator constraint is satisfied.
+            If constraint is not satisfied, it should either return False or
+            raise flags.ValidationError.
+
+    message: s
