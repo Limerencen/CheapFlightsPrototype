@@ -137,4 +137,10 @@ def register_multi_flags_validator(flag_names,
     message: str, error text to be shown to the user if checker returns False.
         If checker raises flags.ValidationError, message from the raised
         error will be shown.
-    flag_values: flags.FlagValues, optional
+    flag_values: flags.FlagValues, optional FlagValues instance to validate
+        against.
+
+  Raises:
+    AttributeError: Raised when a flag is not registered as a valid flag name.
+    ValueError: Raised when multiple FlagValues are used in the same
+ 
