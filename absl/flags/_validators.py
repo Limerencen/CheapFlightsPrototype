@@ -143,4 +143,6 @@ def register_multi_flags_validator(flag_names,
   Raises:
     AttributeError: Raised when a flag is not registered as a valid flag name.
     ValueError: Raised when multiple FlagValues are used in the same
- 
+        invocation. This can occur when FlagHolders have different `_flagvalues`
+        or when str-type flag_names entries are present and the `flag_values`
+        argument does not match that of provided FlagHolder(s
