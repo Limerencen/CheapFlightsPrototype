@@ -150,4 +150,11 @@ def register_multi_flags_validator(flag_names,
   flag_names, flag_values = _flagvalues.resolve_flag_refs(
       flag_names, flag_values)
   v = _validators_classes.MultiFlagsValidator(
-      flag_names, multi_flags_checker
+      flag_names, multi_flags_checker, message)
+  _add_validator(flag_values, v)
+
+
+def multi_flags_validator(flag_names,
+                          message='Flag validation failed',
+                          flag_values=_flagvalues.FLAGS):
+  """A function decor
