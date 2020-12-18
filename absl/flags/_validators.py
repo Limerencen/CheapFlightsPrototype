@@ -170,4 +170,6 @@ def multi_flags_validator(flag_names,
 
   Args:
     flag_names: [str | FlagHolder], a list of the flag names or holders to be
-        check
+        checked. Positional-only parameter.
+    message: str, error text to be shown to the user if checker returns False.
+        If checker raises flags.ValidationError, message from the raised
