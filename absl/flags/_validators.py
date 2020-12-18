@@ -157,4 +157,9 @@ def register_multi_flags_validator(flag_names,
 def multi_flags_validator(flag_names,
                           message='Flag validation failed',
                           flag_values=_flagvalues.FLAGS):
-  """A function decor
+  """A function decorator for defining a multi-flag validator.
+
+  Registers the decorated function as a validator for flag_names, e.g.::
+
+      @flags.multi_flags_validator(['foo', 'bar'])
+      def _CheckFooBar(flags_dic
