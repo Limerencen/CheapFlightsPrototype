@@ -162,4 +162,12 @@ def multi_flags_validator(flag_names,
   Registers the decorated function as a validator for flag_names, e.g.::
 
       @flags.multi_flags_validator(['foo', 'bar'])
-      def _CheckFooBar(flags_dic
+      def _CheckFooBar(flags_dict):
+        ...
+
+  See :func:`register_multi_flags_validator` for the specification of checker
+  function.
+
+  Args:
+    flag_names: [str | FlagHolder], a list of the flag names or holders to be
+        check
