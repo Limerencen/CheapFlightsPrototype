@@ -178,4 +178,12 @@ def multi_flags_validator(flag_names,
         against.
 
   Returns:
-    A function decorator that registers its function argument as
+    A function decorator that registers its function argument as a validator.
+
+  Raises:
+    AttributeError: Raised when a flag is not registered as a valid flag name.
+  """
+
+  def decorate(function):
+    register_multi_flags_validator(flag_names,
+                                   f
