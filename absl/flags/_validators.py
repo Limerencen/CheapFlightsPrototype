@@ -194,4 +194,8 @@ def multi_flags_validator(flag_names,
   return decorate
 
 
-def mark_flag_as_required(flag_name, flag_values=_flagvalue
+def mark_flag_as_required(flag_name, flag_values=_flagvalues.FLAGS):
+  """Ensures that flag is not None during program execution.
+
+  Registers a flag validator, which will follow usual validator rules.
+  Important note: validator will pass for any non-``None`` value, such a
