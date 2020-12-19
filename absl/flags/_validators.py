@@ -186,4 +186,12 @@ def multi_flags_validator(flag_names,
 
   def decorate(function):
     register_multi_flags_validator(flag_names,
-                                   f
+                                   function,
+                                   message=message,
+                                   flag_values=flag_values)
+    return function
+
+  return decorate
+
+
+def mark_flag_as_required(flag_name, flag_values=_flagvalue
