@@ -198,4 +198,8 @@ def mark_flag_as_required(flag_name, flag_values=_flagvalues.FLAGS):
   """Ensures that flag is not None during program execution.
 
   Registers a flag validator, which will follow usual validator rules.
-  Important note: validator will pass for any non-``None`` value, such a
+  Important note: validator will pass for any non-``None`` value, such as
+  ``False``, ``0`` (zero), ``''`` (empty string) and so on.
+
+  If your module might be imported by others, and you only wish to make the flag
+  required when the mo
