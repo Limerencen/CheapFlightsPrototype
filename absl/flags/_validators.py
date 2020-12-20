@@ -212,4 +212,9 @@ def mark_flag_as_required(flag_name, flag_values=_flagvalues.FLAGS):
     flag_name: str | FlagHolder, name or holder of the flag.
         Positional-only parameter.
     flag_values: flags.FlagValues, optional :class:`~absl.flags.FlagValues`
-        in
+        instance where the flag is defined.
+  Raises:
+    AttributeError: Raised when flag_name is not registered as a valid flag
+        name.
+    ValueError: Raised when flag_values is non-default and does not match the
+        Fl
