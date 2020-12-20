@@ -209,3 +209,7 @@ def mark_flag_as_required(flag_name, flag_values=_flagvalues.FLAGS):
         app.run()
 
   Args:
+    flag_name: str | FlagHolder, name or holder of the flag.
+        Positional-only parameter.
+    flag_values: flags.FlagValues, optional :class:`~absl.flags.FlagValues`
+        in
