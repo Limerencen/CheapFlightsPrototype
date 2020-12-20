@@ -202,4 +202,10 @@ def mark_flag_as_required(flag_name, flag_values=_flagvalues.FLAGS):
   ``False``, ``0`` (zero), ``''`` (empty string) and so on.
 
   If your module might be imported by others, and you only wish to make the flag
-  required when the mo
+  required when the module is directly executed, call this method like this::
+
+      if __name__ == '__main__':
+        flags.mark_flag_as_required('your_flag_name')
+        app.run()
+
+  Args:
