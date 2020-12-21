@@ -217,4 +217,8 @@ def mark_flag_as_required(flag_name, flag_values=_flagvalues.FLAGS):
     AttributeError: Raised when flag_name is not registered as a valid flag
         name.
     ValueError: Raised when flag_values is non-default and does not match the
-        Fl
+        FlagValues of the provided FlagHolder instance.
+  """
+  flag_name, flag_values = _flagvalues.resolve_flag_ref(flag_name, flag_values)
+  if flag_values[flag_name].default is not None:
+    warn
