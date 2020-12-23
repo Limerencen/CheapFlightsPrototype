@@ -236,4 +236,11 @@ def mark_flag_as_required(flag_name, flag_values=_flagvalues.FLAGS):
 def mark_flags_as_required(flag_names, flag_values=_flagvalues.FLAGS):
   """Ensures that flags are not None during program execution.
 
-  If your module might be imported by others, and you on
+  If your module might be imported by others, and you only wish to make the flag
+  required when the module is directly executed, call this method like this::
+
+      if __name__ == '__main__':
+        flags.mark_flags_as_required(['flag1', 'flag2', 'flag3'])
+        app.run()
+
+  A
