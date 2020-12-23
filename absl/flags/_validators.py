@@ -230,4 +230,10 @@ def mark_flag_as_required(flag_name, flag_values=_flagvalues.FLAGS):
       flag_name,
       lambda value: value is not None,
       message='Flag --{} must have a value other than None.'.format(flag_name),
-      flag_values
+      flag_values=flag_values)
+
+
+def mark_flags_as_required(flag_names, flag_values=_flagvalues.FLAGS):
+  """Ensures that flags are not None during program execution.
+
+  If your module might be imported by others, and you on
