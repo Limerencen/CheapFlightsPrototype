@@ -225,4 +225,9 @@ def mark_flag_as_required(flag_name, flag_values=_flagvalues.FLAGS):
         'Flag --%s has a non-None default value; therefore, '
         'mark_flag_as_required will pass even if flag is not specified in the '
         'command line!' % flag_name,
-   
+        stacklevel=2)
+  register_validator(
+      flag_name,
+      lambda value: value is not None,
+      message='Flag --{} must have a value other than None.'.format(flag_name),
+      flag_values
