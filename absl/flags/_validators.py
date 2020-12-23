@@ -248,4 +248,10 @@ def mark_flags_as_required(flag_names, flag_values=_flagvalues.FLAGS):
     flag_values: flags.FlagValues, optional FlagValues instance where the flags
         are defined.
   Raises:
-    AttributeError: 
+    AttributeError: If any of flag name has not already been defined as a flag.
+  """
+  for flag_name in flag_names:
+    mark_flag_as_required(flag_name, flag_values)
+
+
+def mark_flags_as_mutual_exclusive(flag_names,
