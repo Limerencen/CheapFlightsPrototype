@@ -258,4 +258,7 @@ def mark_flags_as_mutual_exclusive(flag_names, required=False,
                                    flag_values=_flagvalues.FLAGS):
   """Ensures that only one flag among flag_names is not None.
 
-  Important note: This validator checks if flag values are ``None``, 
+  Important note: This validator checks if flag values are ``None``, and it does
+  not distinguish between default and explicit values. Therefore, this validator
+  does not make sense when applied to flags with default values other than None,
+  including other false v
