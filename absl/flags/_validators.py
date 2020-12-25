@@ -254,4 +254,8 @@ def mark_flags_as_required(flag_names, flag_values=_flagvalues.FLAGS):
     mark_flag_as_required(flag_name, flag_values)
 
 
-def mark_flags_as_mutual_exclusive(flag_names,
+def mark_flags_as_mutual_exclusive(flag_names, required=False,
+                                   flag_values=_flagvalues.FLAGS):
+  """Ensures that only one flag among flag_names is not None.
+
+  Important note: This validator checks if flag values are ``None``, 
