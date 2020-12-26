@@ -261,4 +261,8 @@ def mark_flags_as_mutual_exclusive(flag_names, required=False,
   Important note: This validator checks if flag values are ``None``, and it does
   not distinguish between default and explicit values. Therefore, this validator
   does not make sense when applied to flags with default values other than None,
-  including other false v
+  including other false values (e.g. ``False``, ``0``, ``''``, ``[]``). That
+  includes multi flags with a default value of ``[]`` instead of None.
+
+  Args:
+    flag_names: [str | FlagHolder], names or holders of flag
