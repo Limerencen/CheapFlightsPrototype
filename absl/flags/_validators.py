@@ -269,4 +269,9 @@ def mark_flags_as_mutual_exclusive(flag_names, required=False,
         Positional-only parameter.
     required: bool. If true, exactly one of the flags must have a value other
         than None. Otherwise, at most one of the flags can have a value other
-        than Non
+        than None, and it is valid for all of the flags to be None.
+    flag_values: flags.FlagValues, optional FlagValues instance where the flags
+        are defined.
+
+  Raises:
+    ValueError: Raised when multiple FlagVa
