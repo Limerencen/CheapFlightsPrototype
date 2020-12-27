@@ -265,4 +265,8 @@ def mark_flags_as_mutual_exclusive(flag_names, required=False,
   includes multi flags with a default value of ``[]`` instead of None.
 
   Args:
-    flag_names: [str | FlagHolder], names or holders of flag
+    flag_names: [str | FlagHolder], names or holders of flags.
+        Positional-only parameter.
+    required: bool. If true, exactly one of the flags must have a value other
+        than None. Otherwise, at most one of the flags can have a value other
+        than Non
