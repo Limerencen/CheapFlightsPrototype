@@ -277,4 +277,9 @@ def mark_flags_as_mutual_exclusive(flag_names, required=False,
     ValueError: Raised when multiple FlagValues are used in the same
         invocation. This can occur when FlagHolders have different `_flagvalues`
         or when str-type flag_names entries are present and the `flag_values`
-        ar
+        argument does not match that of provided FlagHolder(s).
+  """
+  flag_names, flag_values = _flagvalues.resolve_flag_refs(
+      flag_names, flag_values)
+  for flag_name in flag_names:
+    if flag_values[flag_na
