@@ -301,4 +301,9 @@ def mark_flags_as_mutual_exclusive(flag_names, required=False,
       flag_names, validate_mutual_exclusion, flag_values=flag_values)
 
 
-def mark_bool_flags_as_mutua
+def mark_bool_flags_as_mutual_exclusive(flag_names, required=False,
+                                        flag_values=_flagvalues.FLAGS):
+  """Ensures that only one flag among flag_names is True.
+
+  Args:
+    flag_names: [str | FlagH
