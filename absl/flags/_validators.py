@@ -291,4 +291,8 @@ def mark_flags_as_mutual_exclusive(flag_names, required=False,
 
   def validate_mutual_exclusion(flags_dict):
     flag_count = sum(1 for val in flags_dict.values() if val is not None)
-  
+    if flag_count == 1 or (not required and flag_count == 0):
+      return True
+    raise _exceptions.ValidationError(
+        '{} one of ({}) must have a value other than None.'.format(
+            'Exactly' i
