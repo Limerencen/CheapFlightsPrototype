@@ -306,4 +306,7 @@ def mark_bool_flags_as_mutual_exclusive(flag_names, required=False,
   """Ensures that only one flag among flag_names is True.
 
   Args:
-    flag_names: [str | FlagH
+    flag_names: [str | FlagHolder], names or holders of flags.
+        Positional-only parameter.
+    required: bool. If true, exactly one flag must be True. Otherwise, at most
+        one flag can be True, and it is valid for all flags to be False.
