@@ -295,4 +295,10 @@ def mark_flags_as_mutual_exclusive(flag_names, required=False,
       return True
     raise _exceptions.ValidationError(
         '{} one of ({}) must have a value other than None.'.format(
-            'Exactly' i
+            'Exactly' if required else 'At most', ', '.join(flag_names)))
+
+  register_multi_flags_validator(
+      flag_names, validate_mutual_exclusion, flag_values=flag_values)
+
+
+def mark_bool_flags_as_mutua
