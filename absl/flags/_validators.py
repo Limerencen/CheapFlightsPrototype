@@ -282,4 +282,8 @@ def mark_flags_as_mutual_exclusive(flag_names, required=False,
   flag_names, flag_values = _flagvalues.resolve_flag_refs(
       flag_names, flag_values)
   for flag_name in flag_names:
-    if flag_values[flag_na
+    if flag_values[flag_name].default is not None:
+      warnings.warn(
+          'Flag --{} has a non-None default value. That does not make sense '
+          'with mark_flags_as_mutual_exclusive, which checks whether the '
+         
