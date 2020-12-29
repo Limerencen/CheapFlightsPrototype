@@ -319,4 +319,9 @@ def mark_bool_flags_as_mutual_exclusive(flag_names, required=False,
         or when str-type flag_names entries are present and the `flag_values`
         argument does not match that of provided FlagHolder(s).
   """
-  
+  flag_names, flag_values = _flagvalues.resolve_flag_refs(
+      flag_names, flag_values)
+  for flag_name in flag_names:
+    if not flag_values[flag_name].boolean:
+      raise _exceptions.ValidationError(
+          'Flag --
