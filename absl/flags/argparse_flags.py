@@ -203,3 +203,187 @@ class ArgumentParser(argparse.ArgumentParser):
       # Each flags with short_name appears in FLAGS twice, so only define
       # when the dictionary key is equal to the regular name.
       if name == flag_instance.name:
+        # Suppress the flag in the help short message if it's not a main
+        # module's key flag.
+        suppress = flag_instance not in key_flags
+        self._define_absl_flag(flag_instance, suppress)
+
+  def _define_absl_flag(self, flag_instance, suppress):
+    """Defines a flag from the flag_instance."""
+    flag_name = flag_instance.name
+    short_name = flag_instance.short_name
+    argument_names = ['--' + flag_name]
+    if short_name:
+      argument_names.insert(0, '-' + short_name)
+    if suppress:
+      helptext = argparse.SUPPRESS
+    else:
+      # argparse help string uses %-formatting. Escape the literal %'s.
+      helptext = flag_instance.help.replace('%', '%%')
+    if flag_instance.boolean:
+      # Only add the `no` form to the long name.
+      argument_names.append('--no' + flag_name)
+      self.add_argument(
+          *argument_names, action=_BooleanFlagAction, help=helptext,
+          metavar=flag_instance.name.upper(),
+          flag_instance=flag_instance)
+    else:
+      self.add_argument(
+          *argument_names, action=_FlagAction, help=helptext,
+          metavar=flag_instance.name.upper(),
+          flag_instance=flag_instance)
+
+
+class _FlagAction(argparse.Action):
+  """Action class for Abseil non-boolean flags."""
+
+  def __init__(
+      self,
+      option_strings,
+      dest,
+      help,  # pylint: disable=redefined-builtin
+      metavar,
+      flag_instance,
+      default=argparse.SUPPRESS):
+    """Initializes _FlagAction.
+
+    Args:
+      option_strings: See argparse.Action.
+      dest: Ignored. The flag is always defined with dest=argparse.SUPPRESS.
+      help: See argparse.Action.
+      metavar: See argparse.Action.
+      flag_instance: absl.flags.Flag, the absl flag instance.
+      default: Ignored. The flag always uses dest=argparse.SUPPRESS so it
+          doesn't affect the parsing result.
+    """
+    del dest
+    self._flag_instance = flag_instance
+    super(_FlagAction, self).__init__(
+        option_strings=option_strings,
+        dest=argparse.SUPPRESS,
+        help=help,
+        metavar=metavar)
+
+  def __call__(self, parser, namespace, values, option_string=None):
+    """See https://docs.python.org/3/library/argparse.html#action-classes."""
+    self._flag_instance.parse(values)
+    self._flag_instance.using_default_value = False
+
+
+class _BooleanFlagAction(argparse.Action):
+  """Action class for Abseil boolean flags."""
+
+  def __init__(
+      self,
+      option_strings,
+      dest,
+      help,  # pylint: disable=redefined-builtin
+      metavar,
+      flag_instance,
+      default=argparse.SUPPRESS):
+    """Initializes _BooleanFlagAction.
+
+    Args:
+      option_strings: See argparse.Action.
+      dest: Ignored. The flag is always defined with dest=argparse.SUPPRESS.
+      help: See argparse.Action.
+      metavar: See argparse.Action.
+      flag_instance: absl.flags.Flag, the absl flag instance.
+      default: Ignored. The flag always uses dest=argparse.SUPPRESS so it
+          doesn't affect the parsing result.
+    """
+    del dest, default
+    self._flag_instance = flag_instance
+    flag_names = [self._flag_instance.name]
+    if self._flag_instance.short_name:
+      flag_names.append(self._flag_instance.short_name)
+    self._flag_names = frozenset(flag_names)
+    super(_BooleanFlagAction, self).__init__(
+        option_strings=option_strings,
+        dest=argparse.SUPPRESS,
+        nargs=0,  # Does not accept values, only `--bool` or `--nobool`.
+        help=help,
+        metavar=metavar)
+
+  def __call__(self, parser, namespace, values, option_string=None):
+    """See https://docs.python.org/3/library/argparse.html#action-classes."""
+    if not isinstance(values, list) or values:
+      raise ValueError('values must be an empty list.')
+    if option_string.startswith('--'):
+      option = option_string[2:]
+    else:
+      option = option_string[1:]
+    if option in self._flag_names:
+      self._flag_instance.parse('true')
+    else:
+      if not option.startswith('no') or option[2:] not in self._flag_names:
+        raise ValueError('invalid option_string: ' + option_string)
+      self._flag_instance.parse('false')
+    self._flag_instance.using_default_value = False
+
+
+class _HelpFullAction(argparse.Action):
+  """Action class for --helpfull flag."""
+
+  def __init__(self, option_strings, dest, default, help):  # pylint: disable=redefined-builtin
+    """Initializes _HelpFullAction.
+
+    Args:
+      option_strings: See argparse.Action.
+      dest: Ignored. The flag is always defined with dest=argparse.SUPPRESS.
+      default: Ignored.
+      help: See argparse.Action.
+    """
+    del dest, default
+    super(_HelpFullAction, self).__init__(
+        option_strings=option_strings,
+        dest=argparse.SUPPRESS,
+        default=argparse.SUPPRESS,
+        nargs=0,
+        help=help)
+
+  def __call__(self, parser, namespace, values, option_string=None):
+    """See https://docs.python.org/3/library/argparse.html#action-classes."""
+    # This only prints flags when help is not argparse.SUPPRESS.
+    # It includes user defined argparse flags, as well as main module's
+    # key absl flags. Other absl flags use argparse.SUPPRESS, so they aren't
+    # printed here.
+    parser.print_help()
+
+    absl_flags = parser._inherited_absl_flags  # pylint: disable=protected-access
+    if absl_flags:
+      modules = sorted(absl_flags.flags_by_module_dict())
+      main_module = sys.argv[0]
+      if main_module in modules:
+        # The main module flags are already printed in parser.print_help().
+        modules.remove(main_module)
+      print(absl_flags._get_help_for_modules(  # pylint: disable=protected-access
+          modules, prefix='', include_special_flags=True))
+    parser.exit()
+
+
+def _strip_undefok_args(undefok, args):
+  """Returns a new list of args after removing flags in --undefok."""
+  if undefok:
+    undefok_names = set(name.strip() for name in undefok.split(','))
+    undefok_names |= set('no' + name for name in undefok_names)
+    # Remove undefok flags.
+    args = [arg for arg in args if not _is_undefok(arg, undefok_names)]
+  return args
+
+
+def _is_undefok(arg, undefok_names):
+  """Returns whether we can ignore arg based on a set of undefok flag names."""
+  if not arg.startswith('-'):
+    return False
+  if arg.startswith('--'):
+    arg_without_dash = arg[2:]
+  else:
+    arg_without_dash = arg[1:]
+  if '=' in arg_without_dash:
+    name, _ = arg_without_dash.split('=', 1)
+  else:
+    name = arg_without_dash
+  if name in undefok_names:
+    return True
+  return False
