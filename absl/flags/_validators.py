@@ -339,4 +339,9 @@ def mark_bool_flags_as_mutual_exclusive(flag_names, required=False,
       flag_names, validate_boolean_mutual_exclusion, flag_values=flag_values)
 
 
-def
+def _add_validator(fv, validator_instance):
+  """Register new flags validator to be checked.
+
+  Args:
+    fv: flags.FlagValues, the FlagValues instance to add the validator.
+    validator_instance: validators
