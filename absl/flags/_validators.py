@@ -324,4 +324,8 @@ def mark_bool_flags_as_mutual_exclusive(flag_names, required=False,
   for flag_name in flag_names:
     if not flag_values[flag_name].boolean:
       raise _exceptions.ValidationError(
-          'Flag --
+          'Flag --{} is not Boolean, which is required for flags used in '
+          'mark_bool_flags_as_mutual_exclusive.'.format(flag_name))
+
+  def validate_boolean_mutual_exclusion(flags_dict):
+    flag_
