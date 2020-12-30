@@ -170,3 +170,4 @@ class MultiFlagsValidator(Validator):
     return prefix + ', '.join(flags_with_values)
 
   def get_flags_names(self):
+    return self.flag_names
