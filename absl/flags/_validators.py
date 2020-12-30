@@ -332,4 +332,11 @@ def mark_bool_flags_as_mutual_exclusive(flag_names, required=False,
     if flag_count == 1 or (not required and flag_count == 0):
       return True
     raise _exceptions.ValidationError(
-        '{} one of ({}) must 
+        '{} one of ({}) must be True.'.format(
+            'Exactly' if required else 'At most', ', '.join(flag_names)))
+
+  register_multi_flags_validator(
+      flag_names, validate_boolean_mutual_exclusion, flag_values=flag_values)
+
+
+def
