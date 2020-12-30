@@ -344,4 +344,9 @@ def _add_validator(fv, validator_instance):
 
   Args:
     fv: flags.FlagValues, the FlagValues instance to add the validator.
-    validator_instance: validators
+    validator_instance: validators.Validator, the validator to add.
+  Raises:
+    KeyError: Raised when validators work with a non-existing flag.
+  """
+  for flag_name in validator_instance.get_flags_names():
+    fv[flag_name].validators.append(valid
