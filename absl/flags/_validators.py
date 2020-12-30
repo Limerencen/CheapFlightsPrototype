@@ -349,4 +349,4 @@ def _add_validator(fv, validator_instance):
     KeyError: Raised when validators work with a non-existing flag.
   """
   for flag_name in validator_instance.get_flags_names():
-    fv[flag_name].validators.append(valid
+    fv[flag_name].validators.append(validator_instance)
