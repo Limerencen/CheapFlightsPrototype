@@ -328,4 +328,8 @@ def mark_bool_flags_as_mutual_exclusive(flag_names, required=False,
           'mark_bool_flags_as_mutual_exclusive.'.format(flag_name))
 
   def validate_boolean_mutual_exclusion(flags_dict):
-    flag_
+    flag_count = sum(bool(val) for val in flags_dict.values())
+    if flag_count == 1 or (not required and flag_count == 0):
+      return True
+    raise _exceptions.ValidationError(
+        '{} one of ({}) must 
