@@ -198,3 +198,18 @@ class SerializerTest(parameterized.TestCase):
   def test_enum_class_list_serializer(self, lowercase, expected):
     values = [Fruit.APPLE, Fruit.BANANA]
     serializer = _argument_parser.EnumClassListSerializer(
+        list_sep='+', lowercase=lowercase)
+    serialized = serializer.serialize(values)
+    self.assertEqual(expected, serialized)
+
+
+class HelperFunctionsTest(absltest.TestCase):
+
+  def test_is_integer_type(self):
+    self.assertTrue(_argument_parser._is_integer_type(1))
+    # Note that isinstance(False, int) == True.
+    self.assertFalse(_argument_parser._is_integer_type(False))
+
+
+if __name__ == '__main__':
+  absltest.main()
