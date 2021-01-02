@@ -33,4 +33,10 @@ class FlagTest(absltest.TestCase):
   def setUp(self):
     super().setUp()
     self.flag = _flag.Flag(
-   
+        _argument_parser.ArgumentParser(),
+        _argument_parser.ArgumentSerializer(),
+        'fruit', 'apple', 'help')
+
+  def test_default_unparsed(self):
+    flag = _flag.Flag(
+        
