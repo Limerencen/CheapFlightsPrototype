@@ -22,4 +22,15 @@ import enum
 import pickle
 
 from absl.flags import _argument_parser
-from absl.flags impor
+from absl.flags import _exceptions
+from absl.flags import _flag
+from absl.testing import absltest
+from absl.testing import parameterized
+
+
+class FlagTest(absltest.TestCase):
+
+  def setUp(self):
+    super().setUp()
+    self.flag = _flag.Flag(
+   
