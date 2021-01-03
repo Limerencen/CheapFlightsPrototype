@@ -39,4 +39,10 @@ class FlagTest(absltest.TestCase):
 
   def test_default_unparsed(self):
     flag = _flag.Flag(
-        
+        _argument_parser.ArgumentParser(),
+        _argument_parser.ArgumentSerializer(),
+        'fruit', 'apple', 'help')
+    self.assertEqual('apple', flag.default_unparsed)
+
+    flag = _flag.Flag(
+       
