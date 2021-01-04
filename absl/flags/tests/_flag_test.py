@@ -57,4 +57,9 @@ class FlagTest(absltest.TestCase):
     self.assertEqual(1, flag.default_unparsed)
 
   def test_no_truthiness(self):
-    with self
+    with self.assertRaises(TypeError):
+      if self.flag:
+        self.fail('Flag instances must raise rather than be truthy.')
+
+  def test_set_default_overrides_current_value(self):
+    self.assertEqual('apple', self.flag.v
