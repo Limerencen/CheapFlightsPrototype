@@ -51,4 +51,10 @@ class FlagTest(absltest.TestCase):
     self.assertEqual('1', flag.default_unparsed)
 
     flag = _flag.Flag(
-        _argument_pa
+        _argument_parser.IntegerParser(),
+        _argument_parser.ArgumentSerializer(),
+        'number', 1, 'help')
+    self.assertEqual(1, flag.default_unparsed)
+
+  def test_no_truthiness(self):
+    with self
