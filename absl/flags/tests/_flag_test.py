@@ -45,4 +45,10 @@ class FlagTest(absltest.TestCase):
     self.assertEqual('apple', flag.default_unparsed)
 
     flag = _flag.Flag(
-       
+        _argument_parser.IntegerParser(),
+        _argument_parser.ArgumentSerializer(),
+        'number', '1', 'help')
+    self.assertEqual('1', flag.default_unparsed)
+
+    flag = _flag.Flag(
+        _argument_pa
