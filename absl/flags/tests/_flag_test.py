@@ -62,4 +62,9 @@ class FlagTest(absltest.TestCase):
         self.fail('Flag instances must raise rather than be truthy.')
 
   def test_set_default_overrides_current_value(self):
-    self.assertEqual('apple', self.flag.v
+    self.assertEqual('apple', self.flag.value)
+    self.flag._set_default('orange')
+    self.assertEqual('orange', self.flag.value)
+
+  def test_set_default_overrides_current_value_when_not_using_default(self):
+    self.flag.using_default_v
