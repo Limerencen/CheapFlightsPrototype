@@ -73,4 +73,11 @@ class FlagTest(absltest.TestCase):
     self.assertEqual('apple', self.flag.value)
 
   def test_pickle(self):
-    with self.ass
+    with self.assertRaisesRegex(TypeError, "can't pickle Flag objects"):
+      pickle.dumps(self.flag)
+
+  def test_copy(self):
+    self.flag.value = 'orange'
+
+    with self.assertRaisesRegex(TypeError,
+                         
