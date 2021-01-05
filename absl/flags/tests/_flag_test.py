@@ -67,4 +67,10 @@ class FlagTest(absltest.TestCase):
     self.assertEqual('orange', self.flag.value)
 
   def test_set_default_overrides_current_value_when_not_using_default(self):
-    self.flag.using_default_v
+    self.flag.using_default_value = False
+    self.assertEqual('apple', self.flag.value)
+    self.flag._set_default('orange')
+    self.assertEqual('apple', self.flag.value)
+
+  def test_pickle(self):
+    with self.ass
