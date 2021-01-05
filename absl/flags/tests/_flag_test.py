@@ -80,4 +80,11 @@ class FlagTest(absltest.TestCase):
     self.flag.value = 'orange'
 
     with self.assertRaisesRegex(TypeError,
-                         
+                                'Flag does not support shallow copies'):
+      copy.copy(self.flag)
+
+    flag2 = copy.deepcopy(self.flag)
+    self.assertEqual(flag2.value, 'orange')
+
+    flag2.value = 'mango'
+    self.
