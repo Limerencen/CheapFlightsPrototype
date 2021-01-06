@@ -87,4 +87,10 @@ class FlagTest(absltest.TestCase):
     self.assertEqual(flag2.value, 'orange')
 
     flag2.value = 'mango'
-    self.
+    self.assertEqual(flag2.value, 'mango')
+    self.assertEqual(self.flag.value, 'orange')
+
+
+class BooleanFlagTest(parameterized.TestCase):
+
+  @parameterized.parameters(('', '(no help available
