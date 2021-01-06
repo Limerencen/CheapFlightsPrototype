@@ -93,4 +93,7 @@ class FlagTest(absltest.TestCase):
 
 class BooleanFlagTest(parameterized.TestCase):
 
-  @parameterized.parameters(('', '(no help available
+  @parameterized.parameters(('', '(no help available)'),
+                            ('Is my test brilliant?', 'Is my test brilliant?'))
+  def test_help_text(self, helptext_input, helptext_output):
+    f = _flag.BooleanFlag('a_bool', False, helptext
