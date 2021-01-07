@@ -96,4 +96,12 @@ class BooleanFlagTest(parameterized.TestCase):
   @parameterized.parameters(('', '(no help available)'),
                             ('Is my test brilliant?', 'Is my test brilliant?'))
   def test_help_text(self, helptext_input, helptext_output):
-    f = _flag.BooleanFlag('a_bool', False, helptext
+    f = _flag.BooleanFlag('a_bool', False, helptext_input)
+    self.assertEqual(helptext_output, f.help)
+
+
+class EnumFlagTest(parameterized.TestCase):
+
+  @parameterized.parameters(
+      ('', '<apple|orange>: (no help available)'),
+      ('Type
