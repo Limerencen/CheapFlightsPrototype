@@ -107,4 +107,11 @@ class EnumFlagTest(parameterized.TestCase):
       ('Type of fruit.', '<apple|orange>: Type of fruit.'))
   def test_help_text(self, helptext_input, helptext_output):
     f = _flag.EnumFlag('fruit', 'apple', helptext_input, ['apple', 'orange'])
-    self
+    self.assertEqual(helptext_output, f.help)
+
+  def test_empty_values(self):
+    with self.assertRaises(ValueError):
+      _flag.EnumFlag('fruit', None, 'help', [])
+
+
+class Fruit(enu
