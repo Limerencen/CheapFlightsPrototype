@@ -114,4 +114,16 @@ class EnumFlagTest(parameterized.TestCase):
       _flag.EnumFlag('fruit', None, 'help', [])
 
 
-class Fruit(enu
+class Fruit(enum.Enum):
+  APPLE = 1
+  ORANGE = 2
+
+
+class EmptyEnum(enum.Enum):
+  pass
+
+
+class EnumClassFlagTest(parameterized.TestCase):
+
+  @parameterized.parameters(
+      ('', '<apple|orange>: (no help available)')
