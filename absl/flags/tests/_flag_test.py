@@ -135,4 +135,8 @@ class EnumClassFlagTest(parameterized.TestCase):
   @parameterized.parameters(
       ('', '<APPLE|ORANGE>: (no help available)'),
       ('Type of fruit.', '<APPLE|ORANGE>: Type of fruit.'))
-  def 
+  def test_help_text_case_sensitive(self, helptext_input, helptext_output):
+    f = _flag.EnumClassFlag(
+        'fruit', None, helptext_input, Fruit, case_sensitive=True)
+    self.assertEqual(helptext_output, f.help)
+
