@@ -145,4 +145,9 @@ class EnumClassFlagTest(parameterized.TestCase):
       _flag.EnumClassFlag('fruit', None, 'help', ['apple', 'orange'])
 
   def test_requires_non_empty_enum_class(self):
-    with self.assertRaises(Va
+    with self.assertRaises(ValueError):
+      _flag.EnumClassFlag('empty', None, 'help', EmptyEnum)
+
+  def test_accepts_literal_default(self):
+    f = _flag.EnumClassFlag('fruit', Fruit.APPLE, 'A sample enum flag.', Fruit)
+    self.assertEqual(Fruit
