@@ -140,3 +140,9 @@ class EnumClassFlagTest(parameterized.TestCase):
         'fruit', None, helptext_input, Fruit, case_sensitive=True)
     self.assertEqual(helptext_output, f.help)
 
+  def test_requires_enum(self):
+    with self.assertRaises(TypeError):
+      _flag.EnumClassFlag('fruit', None, 'help', ['apple', 'orange'])
+
+  def test_requires_non_empty_enum_class(self):
+    with self.assertRaises(Va
