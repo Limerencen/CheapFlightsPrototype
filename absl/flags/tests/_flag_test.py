@@ -156,4 +156,9 @@ class EnumClassFlagTest(parameterized.TestCase):
     f = _flag.EnumClassFlag('fruit', 'ORANGE', 'A sample enum flag.', Fruit)
     self.assertEqual(Fruit.ORANGE, f.value)
 
-  def test_case_sensitive_rej
+  def test_case_sensitive_rejects_default_with_wrong_case(self):
+    with self.assertRaises(_exceptions.IllegalFlagValueError):
+      _flag.EnumClassFlag(
+          'fruit', 'oranGe', 'A sample enum flag.', Fruit, case_sensitive=True)
+
+  def
