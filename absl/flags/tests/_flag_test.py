@@ -171,4 +171,8 @@ class EnumClassFlagTest(parameterized.TestCase):
       _flag.EnumClassFlag('fruit', 'BANANA', 'help', Fruit)
 
 
-class MultiEnumClassFlagTest
+class MultiEnumClassFlagTest(parameterized.TestCase):
+
+  @parameterized.named_parameters(
+      ('NoHelpSupplied', '', '<apple|orange>: (no help available);\n    ' +
+       'repeat this option to specify a list of v
