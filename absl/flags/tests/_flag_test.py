@@ -166,4 +166,9 @@ class EnumClassFlagTest(parameterized.TestCase):
         'fruit', 'oranGe', 'A sample enum flag.', Fruit, case_sensitive=False)
     self.assertEqual(Fruit.ORANGE, f.value)
 
-  d
+  def test_default_value_does_not_exist(self):
+    with self.assertRaises(_exceptions.IllegalFlagValueError):
+      _flag.EnumClassFlag('fruit', 'BANANA', 'help', Fruit)
+
+
+class MultiEnumClassFlagTest
