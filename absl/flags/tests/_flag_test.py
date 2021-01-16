@@ -175,4 +175,8 @@ class MultiEnumClassFlagTest(parameterized.TestCase):
 
   @parameterized.named_parameters(
       ('NoHelpSupplied', '', '<apple|orange>: (no help available);\n    ' +
-       'repeat this option to specify a list of v
+       'repeat this option to specify a list of values', False),
+      ('WithHelpSupplied', 'Type of fruit.',
+       '<APPLE|ORANGE>: Type of fruit.;\n    ' +
+       'repeat this option to specify a list of values', True))
+  def test_help_te
