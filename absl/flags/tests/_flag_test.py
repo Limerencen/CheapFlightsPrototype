@@ -179,4 +179,6 @@ class MultiEnumClassFlagTest(parameterized.TestCase):
       ('WithHelpSupplied', 'Type of fruit.',
        '<APPLE|ORANGE>: Type of fruit.;\n    ' +
        'repeat this option to specify a list of values', True))
-  def test_help_te
+  def test_help_text(self, helptext_input, helptext_output, case_sensitive):
+    f = _flag.MultiEnumClassFlag(
+        'fruit', None, helptext_input, Fruit, case_sensitive=case_sensitive)
