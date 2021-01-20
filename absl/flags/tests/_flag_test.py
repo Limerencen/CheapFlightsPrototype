@@ -188,4 +188,9 @@ class MultiEnumClassFlagTest(parameterized.TestCase):
     with self.assertRaises(TypeError):
       _flag.MultiEnumClassFlag('fruit', None, 'help', ['apple', 'orange'])
 
-  def test_requires_no
+  def test_requires_non_empty_enum_class(self):
+    with self.assertRaises(ValueError):
+      _flag.MultiEnumClassFlag('empty', None, 'help', EmptyEnum)
+
+  def test_rejects_wrong_case_when_case_sensitive(self):
+    with self.assertRaisesRege
