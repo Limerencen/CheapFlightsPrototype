@@ -193,4 +193,9 @@ class MultiEnumClassFlagTest(parameterized.TestCase):
       _flag.MultiEnumClassFlag('empty', None, 'help', EmptyEnum)
 
   def test_rejects_wrong_case_when_case_sensitive(self):
-    with self.assertRaisesRege
+    with self.assertRaisesRegex(_exceptions.IllegalFlagValueError,
+                                '<APPLE|ORANGE>'):
+      _flag.MultiEnumClassFlag(
+          'fruit', ['APPLE', 'Orange'],
+          'A sample enum flag.',
+        
