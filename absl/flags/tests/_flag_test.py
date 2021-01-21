@@ -198,4 +198,10 @@ class MultiEnumClassFlagTest(parameterized.TestCase):
       _flag.MultiEnumClassFlag(
           'fruit', ['APPLE', 'Orange'],
           'A sample enum flag.',
-        
+          Fruit,
+          case_sensitive=True)
+
+  def test_accepts_case_insensitive(self):
+    f = _flag.MultiEnumClassFlag('fruit', ['apple', 'APPLE'],
+                                 'A sample enum flag.', Fruit)
+ 
