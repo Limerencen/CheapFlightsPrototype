@@ -227,4 +227,10 @@ class MultiEnumClassFlagTest(parameterized.TestCase):
     self.assertListEqual([Fruit.ORANGE, Fruit.APPLE], f.value)
 
   def test_default_value_does_not_exist(self):
-    with self.assertRaisesRegex(_excepti
+    with self.assertRaisesRegex(_exceptions.IllegalFlagValueError,
+                                '<apple|banana>'):
+      _flag.MultiEnumClassFlag('fruit', 'BANANA', 'help', Fruit)
+
+
+if __name__ == '__main__':
+  absltest.main()
