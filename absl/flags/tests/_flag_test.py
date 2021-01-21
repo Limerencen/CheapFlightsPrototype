@@ -209,4 +209,8 @@ class MultiEnumClassFlagTest(parameterized.TestCase):
   def test_accepts_literal_default(self):
     f = _flag.MultiEnumClassFlag('fruit', Fruit.APPLE, 'A sample enum flag.',
                                  Fruit)
-    sel
+    self.assertListEqual([Fruit.APPLE], f.value)
+
+  def test_accepts_list_of_literal_default(self):
+    f = _flag.MultiEnumClassFlag('fruit', [Fruit.APPLE, Fruit.ORANGE],
+                                 'A sample 
