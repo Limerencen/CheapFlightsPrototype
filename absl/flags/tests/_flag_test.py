@@ -204,4 +204,9 @@ class MultiEnumClassFlagTest(parameterized.TestCase):
   def test_accepts_case_insensitive(self):
     f = _flag.MultiEnumClassFlag('fruit', ['apple', 'APPLE'],
                                  'A sample enum flag.', Fruit)
- 
+    self.assertListEqual([Fruit.APPLE, Fruit.APPLE], f.value)
+
+  def test_accepts_literal_default(self):
+    f = _flag.MultiEnumClassFlag('fruit', Fruit.APPLE, 'A sample enum flag.',
+                                 Fruit)
+    sel
