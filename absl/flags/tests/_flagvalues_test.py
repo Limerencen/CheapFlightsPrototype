@@ -26,3 +26,11 @@ from absl.flags import _exceptions
 from absl.flags import _flagvalues
 from absl.flags import _helpers
 from absl.flags import _validators
+from absl.flags.tests import module_foo
+from absl.testing import absltest
+from absl.testing import parameterized
+
+
+class FlagValuesTest(absltest.TestCase):
+
+  def test_bo
