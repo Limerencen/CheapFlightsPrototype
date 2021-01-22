@@ -33,4 +33,8 @@ from absl.testing import parameterized
 
 class FlagValuesTest(absltest.TestCase):
 
-  def test_bo
+  def test_bool_flags(self):
+    for arg, expected in (('--nothing', True),
+                          ('--nothing=true', True),
+                          ('--nothing=false', False),
+                          ('--
