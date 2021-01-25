@@ -37,4 +37,8 @@ class FlagValuesTest(absltest.TestCase):
     for arg, expected in (('--nothing', True),
                           ('--nothing=true', True),
                           ('--nothing=false', False),
-                          ('--
+                          ('--nonothing', False)):
+      fv = _flagvalues.FlagValues()
+      _defines.DEFINE_boolean('nothing', None, '', flag_values=fv)
+      fv(('./program', arg))
+      self.assertIs(expected, fv.nothi
