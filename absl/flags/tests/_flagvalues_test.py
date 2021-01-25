@@ -47,4 +47,9 @@ class FlagValuesTest(absltest.TestCase):
       fv = _flagvalues.FlagValues()
       _defines.DEFINE_boolean('nothing', None, '', flag_values=fv)
       with self.assertRaises(ValueError):
-   
+        fv(('./program', arg))
+
+  def test_boolean_flag_parser_gets_string_argument(self):
+    for arg, expected in (('--nothing', 'true'),
+                          ('--nothing=true', 'true'),
+            
