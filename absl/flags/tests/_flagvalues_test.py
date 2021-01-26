@@ -88,4 +88,12 @@ class FlagValuesTest(absltest.TestCase):
     # not automatically added because it must be registered explicitly.
     self.assertEqual(fv.key_flags_by_module_dict(), {module_name: []})
 
-    # Define a new flag but w
+    # Define a new flag but with the same short_name.
+    _defines.DEFINE_integer(
+        'changelist',
+        0,
+        '',
+        flag_values=fv,
+        short_name='c',
+        allow_override=True)
+    old_changeli
