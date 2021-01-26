@@ -96,4 +96,7 @@ class FlagValuesTest(absltest.TestCase):
         flag_values=fv,
         short_name='c',
         allow_override=True)
-    old_changeli
+    old_changelist_flag = fv['changelist']
+    fv.register_key_flag_for_module(module_name, old_changelist_flag)
+    # The short named flag -c is overridden to be the old_changelist_flag.
+    self.assertEqual(fv['c'], o
