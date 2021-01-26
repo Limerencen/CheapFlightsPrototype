@@ -76,4 +76,8 @@ class FlagValuesTest(absltest.TestCase):
                      {module_name: [old_cores_flag]})
 
     # Redefine the same flag.
-    _defi
+    _defines.DEFINE_integer(
+        'cores', 4, '', flag_values=fv, short_name='c', allow_override=True)
+    new_cores_flag = fv['cores']
+    self.assertNotEqual(old_cores_flag, new_cores_flag)
+    self.assertEqual(fv.flags_
