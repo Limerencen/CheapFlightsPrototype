@@ -61,4 +61,9 @@ class FlagValuesTest(absltest.TestCase):
         mock_parse.assert_called_once_with(expected)
 
   def test_unregistered_flags_are_cleaned_up(self):
-    fv = _flagvalues.
+    fv = _flagvalues.FlagValues()
+    module, module_name = _helpers.get_calling_module_object_and_name()
+
+    # Define first flag.
+    _defines.DEFINE_integer('cores', 4, '', flag_values=fv, short_name='c')
+    old
