@@ -66,4 +66,8 @@ class FlagValuesTest(absltest.TestCase):
 
     # Define first flag.
     _defines.DEFINE_integer('cores', 4, '', flag_values=fv, short_name='c')
-    old
+    old_cores_flag = fv['cores']
+    fv.register_key_flag_for_module(module_name, old_cores_flag)
+    self.assertEqual(fv.flags_by_module_dict(),
+                     {module_name: [old_cores_flag]})
+    self.assertEqual(fv.flags_by_modul
