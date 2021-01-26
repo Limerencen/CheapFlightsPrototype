@@ -70,4 +70,10 @@ class FlagValuesTest(absltest.TestCase):
     fv.register_key_flag_for_module(module_name, old_cores_flag)
     self.assertEqual(fv.flags_by_module_dict(),
                      {module_name: [old_cores_flag]})
-    self.assertEqual(fv.flags_by_modul
+    self.assertEqual(fv.flags_by_module_id_dict(),
+                     {id(module): [old_cores_flag]})
+    self.assertEqual(fv.key_flags_by_module_dict(),
+                     {module_name: [old_cores_flag]})
+
+    # Redefine the same flag.
+    _defi
