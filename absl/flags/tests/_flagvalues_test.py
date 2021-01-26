@@ -56,4 +56,9 @@ class FlagValuesTest(absltest.TestCase):
                           ('--nonothing', 'false')):
       fv = _flagvalues.FlagValues()
       _defines.DEFINE_boolean('nothing', None, '', flag_values=fv)
-      with m
+      with mock.patch.object(fv['nothing'].parser, 'parse') as mock_parse:
+        fv(('./program', arg))
+        mock_parse.assert_called_once_with(expected)
+
+  def test_unregistered_flags_are_cleaned_up(self):
+    fv = _flagvalues.
