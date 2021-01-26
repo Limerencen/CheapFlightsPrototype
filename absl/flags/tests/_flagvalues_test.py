@@ -84,4 +84,8 @@ class FlagValuesTest(absltest.TestCase):
                      {module_name: [new_cores_flag]})
     self.assertEqual(fv.flags_by_module_id_dict(),
                      {id(module): [new_cores_flag]})
-    # old_cores_flag
+    # old_cores_flag is removed from key flags, and the new_cores_flag is
+    # not automatically added because it must be registered explicitly.
+    self.assertEqual(fv.key_flags_by_module_dict(), {module_name: []})
+
+    # Define a new flag but w
