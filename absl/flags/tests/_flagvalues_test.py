@@ -80,4 +80,8 @@ class FlagValuesTest(absltest.TestCase):
         'cores', 4, '', flag_values=fv, short_name='c', allow_override=True)
     new_cores_flag = fv['cores']
     self.assertNotEqual(old_cores_flag, new_cores_flag)
-    self.assertEqual(fv.flags_
+    self.assertEqual(fv.flags_by_module_dict(),
+                     {module_name: [new_cores_flag]})
+    self.assertEqual(fv.flags_by_module_id_dict(),
+                     {id(module): [new_cores_flag]})
+    # old_cores_flag
