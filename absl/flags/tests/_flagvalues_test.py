@@ -99,4 +99,7 @@ class FlagValuesTest(absltest.TestCase):
     old_changelist_flag = fv['changelist']
     fv.register_key_flag_for_module(module_name, old_changelist_flag)
     # The short named flag -c is overridden to be the old_changelist_flag.
-    self.assertEqual(fv['c'], o
+    self.assertEqual(fv['c'], old_changelist_flag)
+    self.assertNotEqual(fv['c'], new_cores_flag)
+    self.assertEqual(fv.flags_by_module_dict(),
+                     {module_name: [new_cores_flag, old_changelist_flag
