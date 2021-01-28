@@ -106,4 +106,14 @@ class FlagValuesTest(absltest.TestCase):
     self.assertEqual(fv.flags_by_module_id_dict(),
                      {id(module): [new_cores_flag, old_changelist_flag]})
     self.assertEqual(fv.key_flags_by_module_dict(),
-                     {module_
+                     {module_name: [old_changelist_flag]})
+
+    # Define a flag only with the same long name.
+    _defines.DEFINE_integer(
+        'changelist',
+        0,
+        '',
+        flag_values=fv,
+        short_name='l',
+        allow_override=True)
+ 
