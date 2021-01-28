@@ -120,4 +120,8 @@ class FlagValuesTest(absltest.TestCase):
     self.assertNotEqual(old_changelist_flag, new_changelist_flag)
     self.assertEqual(fv.flags_by_module_dict(),
                      {module_name: [new_cores_flag,
-                 
+                                    old_changelist_flag,
+                                    new_changelist_flag]})
+    self.assertEqual(fv.flags_by_module_id_dict(),
+                     {id(module): [new_cores_flag,
+    
