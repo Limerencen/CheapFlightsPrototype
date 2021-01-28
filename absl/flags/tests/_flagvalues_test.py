@@ -116,4 +116,8 @@ class FlagValuesTest(absltest.TestCase):
         flag_values=fv,
         short_name='l',
         allow_override=True)
- 
+    new_changelist_flag = fv['changelist']
+    self.assertNotEqual(old_changelist_flag, new_changelist_flag)
+    self.assertEqual(fv.flags_by_module_dict(),
+                     {module_name: [new_cores_flag,
+                 
