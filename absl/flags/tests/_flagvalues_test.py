@@ -127,4 +127,10 @@ class FlagValuesTest(absltest.TestCase):
                                    old_changelist_flag,
                                    new_changelist_flag]})
     self.assertEqual(fv.key_flags_by_module_dict(),
-                     {module_name: [old_changelist_flag
+                     {module_name: [old_changelist_flag]})
+
+    # Delete the new changelist's long name, it should still be registered
+    # because of its short name.
+    del fv.changelist
+    self.assertNotIn('changelist', fv)
+    self.assertEqual(fv.flags_by_module_dict(
