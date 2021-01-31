@@ -173,4 +173,10 @@ class FlagValuesTest(absltest.TestCase):
       alt_module_or_id = id(_flagvalues)
       testing_fn = fv.find_module_id_defining_flag
     else:
-      current_mod
+      current_module_or_id = current_module_name
+      alt_module_or_id = alt_module_name
+      testing_fn = fv.find_module_defining_flag
+
+    # Define first flag.
+    _defines.DEFINE_integer('cores', 4, '', flag_values=fv, short_name='c')
+    mo
