@@ -156,4 +156,8 @@ class FlagValuesTest(absltest.TestCase):
     self.assertEqual(fv.key_flags_by_module_dict(),
                      {module_name: [old_changelist_flag]})
 
-  
+  def _test_find_module_or_id_defining_flag(self, test_id):
+    """Tests for find_module_defining_flag and find_module_id_defining_flag.
+
+    Args:
+      test_id: True to test find_module_id_defining_f
