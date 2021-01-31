@@ -141,4 +141,10 @@ class FlagValuesTest(absltest.TestCase):
                      {id(module): [new_cores_flag,
                                    old_changelist_flag,
                                    new_changelist_flag]})
-    self.assertEqual(fv.key_
+    self.assertEqual(fv.key_flags_by_module_dict(),
+                     {module_name: [old_changelist_flag]})
+
+    # Delete the new changelist's short name, it should be removed.
+    del fv.l
+    self.assertNotIn('l', fv)
+    self.assertEqual(fv.fla
