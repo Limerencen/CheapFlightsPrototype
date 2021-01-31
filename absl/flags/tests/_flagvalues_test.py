@@ -179,4 +179,9 @@ class FlagValuesTest(absltest.TestCase):
 
     # Define first flag.
     _defines.DEFINE_integer('cores', 4, '', flag_values=fv, short_name='c')
-    mo
+    module_or_id_cores = testing_fn('cores')
+    self.assertEqual(module_or_id_cores, current_module_or_id)
+    module_or_id_c = testing_fn('c')
+    self.assertEqual(module_or_id_c, current_module_or_id)
+
+    # Red
