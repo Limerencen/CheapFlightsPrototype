@@ -166,4 +166,11 @@ class FlagValuesTest(absltest.TestCase):
     fv = _flagvalues.FlagValues()
     current_module, current_module_name = (
         _helpers.get_calling_module_object_and_name())
-    alt_mod
+    alt_module_name = _flagvalues.__name__
+
+    if test_id:
+      current_module_or_id = id(current_module)
+      alt_module_or_id = id(_flagvalues)
+      testing_fn = fv.find_module_id_defining_flag
+    else:
+      current_mod
