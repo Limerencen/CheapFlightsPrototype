@@ -184,4 +184,13 @@ class FlagValuesTest(absltest.TestCase):
     module_or_id_c = testing_fn('c')
     self.assertEqual(module_or_id_c, current_module_or_id)
 
-    # Red
+    # Redefine the same flag in another module.
+    _defines.DEFINE_integer(
+        'cores',
+        4,
+        '',
+        flag_values=fv,
+        module_name=alt_module_name,
+        short_name='c',
+        allow_override=True)
+ 
