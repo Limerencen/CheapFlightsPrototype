@@ -198,4 +198,11 @@ class FlagValuesTest(absltest.TestCase):
     module_or_id_c = testing_fn('c')
     self.assertEqual(module_or_id_c, alt_module_or_id)
 
-    #
+    # Define a new flag but with the same short_name.
+    _defines.DEFINE_integer(
+        'changelist',
+        0,
+        '',
+        flag_values=fv,
+        short_name='c',
+        allow_ov
