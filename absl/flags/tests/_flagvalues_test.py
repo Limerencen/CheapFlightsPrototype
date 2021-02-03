@@ -213,4 +213,13 @@ class FlagValuesTest(absltest.TestCase):
     module_or_id_c = testing_fn('c')
     self.assertEqual(module_or_id_c, current_module_or_id)
 
-    # Define a flag in another module only with the same lo
+    # Define a flag in another module only with the same long name.
+    _defines.DEFINE_integer(
+        'changelist',
+        0,
+        '',
+        flag_values=fv,
+        module_name=alt_module_name,
+        short_name='l',
+        allow_override=True)
+    module_or_id
