@@ -222,4 +222,7 @@ class FlagValuesTest(absltest.TestCase):
         module_name=alt_module_name,
         short_name='l',
         allow_override=True)
-    module_or_id
+    module_or_id_cores = testing_fn('cores')
+    self.assertEqual(module_or_id_cores, alt_module_or_id)
+    module_or_id_changelist = testing_fn('changelist')
+    self.assertEqual(modu
