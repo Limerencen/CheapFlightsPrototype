@@ -229,4 +229,10 @@ class FlagValuesTest(absltest.TestCase):
     module_or_id_c = testing_fn('c')
     self.assertEqual(module_or_id_c, current_module_or_id)
     module_or_id_l = testing_fn('l')
-    self.assertEqual(module_or_id_l, alt
+    self.assertEqual(module_or_id_l, alt_module_or_id)
+
+    # Delete the changelist flag, its short name should still be registered.
+    del fv.changelist
+    module_or_id_changelist = testing_fn('changelist')
+    self.assertIsNone(module_or_id_changelist)
+    module
