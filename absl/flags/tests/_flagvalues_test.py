@@ -254,4 +254,11 @@ class FlagValuesTest(absltest.TestCase):
     _defines.DEFINE_integer('changelist', 0, 'help', flag_values=fv)
     self.assertEqual(0, fv.changelist)
     fv.set_default('changelist', 2)
-    self.assertEqual(2, fv.chan
+    self.assertEqual(2, fv.changelist)
+
+  def test_default_gnu_getopt_value(self):
+    self.assertTrue(_flagvalues.FlagValues().is_gnu_getopt())
+
+  def test_known_only_flags_in_gnustyle(self):
+
+    def run_test(argv, defined_
