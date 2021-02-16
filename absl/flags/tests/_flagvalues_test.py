@@ -244,4 +244,10 @@ class FlagValuesTest(absltest.TestCase):
     self._test_find_module_or_id_defining_flag(test_id=False)
 
   def test_find_module_id_defining_flag(self):
-    self._test_find_module_or_id_de
+    self._test_find_module_or_id_defining_flag(test_id=True)
+
+  def test_set_default(self):
+    fv = _flagvalues.FlagValues()
+    fv.mark_as_parsed()
+    with self.assertRaises(_exceptions.UnrecognizedFlagError):
+      fv.set_defa
