@@ -250,4 +250,8 @@ class FlagValuesTest(absltest.TestCase):
     fv = _flagvalues.FlagValues()
     fv.mark_as_parsed()
     with self.assertRaises(_exceptions.UnrecognizedFlagError):
-      fv.set_defa
+      fv.set_default('changelist', 1)
+    _defines.DEFINE_integer('changelist', 0, 'help', flag_values=fv)
+    self.assertEqual(0, fv.changelist)
+    fv.set_default('changelist', 2)
+    self.assertEqual(2, fv.chan
