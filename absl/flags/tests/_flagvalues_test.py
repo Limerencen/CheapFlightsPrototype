@@ -239,3 +239,9 @@ class FlagValuesTest(absltest.TestCase):
     self.assertEqual(module_or_id_c, current_module_or_id)
     module_or_id_l = testing_fn('l')
     self.assertEqual(module_or_id_l, alt_module_or_id)
+
+  def test_find_module_defining_flag(self):
+    self._test_find_module_or_id_defining_flag(test_id=False)
+
+  def test_find_module_id_defining_flag(self):
+    self._test_find_module_or_id_de
