@@ -261,4 +261,9 @@ class FlagValuesTest(absltest.TestCase):
 
   def test_known_only_flags_in_gnustyle(self):
 
-    def run_test(argv, defined_
+    def run_test(argv, defined_py_flags, expected_argv):
+      fv = _flagvalues.FlagValues()
+      fv.set_gnu_getopt(True)
+      for f in defined_py_flags:
+        if f.startswith('b'):
+          _defines.DEFINE_boolean(f, False,
