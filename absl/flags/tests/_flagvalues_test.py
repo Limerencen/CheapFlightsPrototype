@@ -266,4 +266,11 @@ class FlagValuesTest(absltest.TestCase):
       fv.set_gnu_getopt(True)
       for f in defined_py_flags:
         if f.startswith('b'):
-          _defines.DEFINE_boolean(f, False,
+          _defines.DEFINE_boolean(f, False, 'help', flag_values=fv)
+        else:
+          _defines.DEFINE_string(f, 'default', 'help', flag_values=fv)
+      output_argv = fv(argv, known_only=True)
+      self.assertEqual(expected_argv, output_argv)
+
+    run_test(
+       
