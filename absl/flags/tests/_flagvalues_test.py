@@ -273,4 +273,8 @@ class FlagValuesTest(absltest.TestCase):
       self.assertEqual(expected_argv, output_argv)
 
     run_test(
-       
+        argv='0 --f1=v1 cmd --f2 v2 --b1 --f3 v3 --nob2'.split(' '),
+        defined_py_flags=[],
+        expected_argv='0 --f1=v1 cmd --f2 v2 --b1 --f3 v3 --nob2'.split(' '))
+    run_test(
+        argv='0 --f1=v1
