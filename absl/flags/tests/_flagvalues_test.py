@@ -285,4 +285,8 @@ class FlagValuesTest(absltest.TestCase):
         defined_py_flags=['f2'],
         expected_argv='0 --f1=v1 cmd --b1 --f3 v3 --nob2'.split(' '))
     run_test(
-        argv='0 --f1=v1 cmd --f2 v2 --b1 --f3 v3 --nob2'.spl
+        argv='0 --f1=v1 cmd --f2 v2 --b1 --f3 v3 --nob2'.split(' '),
+        defined_py_flags=['b1'],
+        expected_argv='0 --f1=v1 cmd --f2 v2 --f3 v3 --nob2'.split(' '))
+    run_test(
+        argv='0 --f1=v1 cmd --f2 v2 --b1 --f3 v3 --nob2'.split(' 
