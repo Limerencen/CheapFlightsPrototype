@@ -309,4 +309,9 @@ class FlagValuesTest(absltest.TestCase):
         # specified in the form of --flag=value.
         expected_argv='0 cmd v2 --b1 --f3 v3'.split(' '))
 
-  de
+  def test_invalid_flag_name(self):
+    with self.assertRaises(_exceptions.Error):
+      _defines.DEFINE_boolean('test ', 0, '')
+
+    with self.assertRaises(_exceptions.Error):
+      _defines.DEF
