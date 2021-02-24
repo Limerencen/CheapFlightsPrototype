@@ -314,4 +314,10 @@ class FlagValuesTest(absltest.TestCase):
       _defines.DEFINE_boolean('test ', 0, '')
 
     with self.assertRaises(_exceptions.Error):
-      _defines.DEF
+      _defines.DEFINE_boolean(' test', 0, '')
+
+    with self.assertRaises(_exceptions.Error):
+      _defines.DEFINE_boolean('te st', 0, '')
+
+    with self.assertRaises(_exceptions.Error):
+      _defines.DEFINE_boolean('', 0, '')
