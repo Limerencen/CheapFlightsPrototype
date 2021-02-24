@@ -304,4 +304,9 @@ class FlagValuesTest(absltest.TestCase):
     run_test(
         argv=('0 --f1=v1 cmd --undefok f1,f2 --f2 v2 --b1 '
               '--f3 v3 --nob2').split(' '),
-        defined_
+        defined_py_flags=['b2'],
+        # Note v2 is preserved here, since undefok requires the flag being
+        # specified in the form of --flag=value.
+        expected_argv='0 cmd v2 --b1 --f3 v3'.split(' '))
+
+  de
