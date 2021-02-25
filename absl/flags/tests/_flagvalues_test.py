@@ -321,3 +321,13 @@ class FlagValuesTest(absltest.TestCase):
 
     with self.assertRaises(_exceptions.Error):
       _defines.DEFINE_boolean('', 0, '')
+
+    with self.assertRaises(_exceptions.Error):
+      _defines.DEFINE_boolean(1, 0, '')
+
+  def test_len(self):
+    fv = _flagvalues.FlagValues()
+    self.assertEmpty(fv)
+    self.assertFalse(fv)
+
+    _defines.DEFINE_bool
