@@ -330,4 +330,10 @@ class FlagValuesTest(absltest.TestCase):
     self.assertEmpty(fv)
     self.assertFalse(fv)
 
-    _defines.DEFINE_bool
+    _defines.DEFINE_boolean('boolean', False, 'help', flag_values=fv)
+    self.assertLen(fv, 1)
+    self.assertTrue(fv)
+
+    _defines.DEFINE_boolean(
+        'bool', False, 'help', short_name='b', flag_values=fv)
+    self.
