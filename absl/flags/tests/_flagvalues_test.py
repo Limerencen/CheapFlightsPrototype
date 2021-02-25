@@ -336,4 +336,13 @@ class FlagValuesTest(absltest.TestCase):
 
     _defines.DEFINE_boolean(
         'bool', False, 'help', short_name='b', flag_values=fv)
-    self.
+    self.assertLen(fv, 3)
+    self.assertTrue(fv)
+
+  def test_pickle(self):
+    fv = _flagvalues.FlagValues()
+    with self.assertRaisesRegex(TypeError, "can't pickle FlagValues"):
+      pickle.dumps(fv)
+
+  def test_copy(self):
+    fv = _fl
