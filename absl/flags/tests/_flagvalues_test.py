@@ -350,4 +350,14 @@ class FlagValuesTest(absltest.TestCase):
     fv(['', '--answer=1'])
 
     with self.assertRaisesRegex(TypeError,
-                                'FlagValues does
+                                'FlagValues does not support shallow copies'):
+      copy.copy(fv)
+
+    fv2 = copy.deepcopy(fv)
+    self.assertEqual(fv2.answer, 1)
+
+    fv2.answer = 42
+    self.assertEqual(fv2.answer, 42)
+    self.assertEqual(fv.answer, 1)
+
+  def test
