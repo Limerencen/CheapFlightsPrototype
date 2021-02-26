@@ -360,4 +360,7 @@ class FlagValuesTest(absltest.TestCase):
     self.assertEqual(fv2.answer, 42)
     self.assertEqual(fv.answer, 1)
 
-  def test
+  def test_conflicting_flags(self):
+    fv = _flagvalues.FlagValues()
+    with self.assertRaises(_exceptions.FlagNameConflictsWithMethodError):
+      _defines.DEFINE_boolean('is_gnu_getopt', Fa
