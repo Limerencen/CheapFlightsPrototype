@@ -363,4 +363,11 @@ class FlagValuesTest(absltest.TestCase):
   def test_conflicting_flags(self):
     fv = _flagvalues.FlagValues()
     with self.assertRaises(_exceptions.FlagNameConflictsWithMethodError):
-      _defines.DEFINE_boolean('is_gnu_getopt', Fa
+      _defines.DEFINE_boolean('is_gnu_getopt', False, 'help', flag_values=fv)
+    _defines.DEFINE_boolean(
+        'is_gnu_getopt',
+        False,
+        'help',
+        flag_values=fv,
+        allow_using_method_names=True)
+    self.assertFalse(fv['is_gnu
