@@ -370,4 +370,9 @@ class FlagValuesTest(absltest.TestCase):
         'help',
         flag_values=fv,
         allow_using_method_names=True)
-    self.assertFalse(fv['is_gnu
+    self.assertFalse(fv['is_gnu_getopt'].value)
+    self.assertIsInstance(fv.is_gnu_getopt, types.MethodType)
+
+  def test_get_flags_for_module(self):
+    fv = _flagvalues.FlagValues()
+    _defines.DEFINE_string('foo', None, 'help', flag_valu
