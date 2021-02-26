@@ -345,4 +345,9 @@ class FlagValuesTest(absltest.TestCase):
       pickle.dumps(fv)
 
   def test_copy(self):
-    fv = _fl
+    fv = _flagvalues.FlagValues()
+    _defines.DEFINE_integer('answer', 0, 'help', flag_values=fv)
+    fv(['', '--answer=1'])
+
+    with self.assertRaisesRegex(TypeError,
+                                'FlagValues does
