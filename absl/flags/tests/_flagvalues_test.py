@@ -375,4 +375,10 @@ class FlagValuesTest(absltest.TestCase):
 
   def test_get_flags_for_module(self):
     fv = _flagvalues.FlagValues()
-    _defines.DEFINE_string('foo', None, 'help', flag_valu
+    _defines.DEFINE_string('foo', None, 'help', flag_values=fv)
+    module_foo.define_flags(fv)
+    flags = fv.get_flags_for_module('__main__')
+
+    self.assertEqual({'foo'}, {flag.name for flag in flags})
+
+    flags = fv.get_flags_
