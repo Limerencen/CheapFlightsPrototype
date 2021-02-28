@@ -386,4 +386,9 @@ class FlagValuesTest(absltest.TestCase):
                      {flag.name for flag in flags})
 
   def test_get_help(self):
-    fv = _flagvalues.Flag
+    fv = _flagvalues.FlagValues()
+    self.assertMultiLineEqual('''\
+--flagfile: Insert flag definitions from the given file into the command line.
+  (default: '')
+--undefok: comma-separated list of flag names that it is okay to specify on the
+  comm
