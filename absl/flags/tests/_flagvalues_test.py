@@ -391,4 +391,9 @@ class FlagValuesTest(absltest.TestCase):
 --flagfile: Insert flag definitions from the given file into the command line.
   (default: '')
 --undefok: comma-separated list of flag names that it is okay to specify on the
-  comm
+  command line even if the program does not define a flag with that name.
+  IMPORTANT: flags in this list that have arguments MUST use the --flag=value
+  format.
+  (default: '')''', fv.get_help())
+
+    module_foo.define_fla
