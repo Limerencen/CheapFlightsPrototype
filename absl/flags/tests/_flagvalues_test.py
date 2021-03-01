@@ -405,4 +405,11 @@ absl.flags.tests.module_bar:
   --tmod_bar_u: Sample int flag.
     (default: '5')
     (an integer)
-  --tmod_
+  --tmod_bar_v: Sample int flag.
+    (default: '6')
+    (an integer)
+  --[no]tmod_bar_x: Boolean flag.
+    (default: 'true')
+  --tmod_bar_y: String flag.
+    (default: 'default')
+  --[no]tmod_bar_z: Another boolean fl
