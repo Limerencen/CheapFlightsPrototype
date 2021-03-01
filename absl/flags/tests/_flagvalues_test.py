@@ -412,4 +412,12 @@ absl.flags.tests.module_bar:
     (default: 'true')
   --tmod_bar_y: String flag.
     (default: 'default')
-  --[no]tmod_bar_z: Another boolean fl
+  --[no]tmod_bar_z: Another boolean flag from module bar.
+    (default: 'false')
+
+absl.flags.tests.module_foo:
+  --[no]tmod_foo_bool: Boolean flag from module foo.
+    (default: 'true')
+  --tmod_foo_int: Sample int flag.
+    (default: '3')
+    (an 
