@@ -396,4 +396,13 @@ class FlagValuesTest(absltest.TestCase):
   format.
   (default: '')''', fv.get_help())
 
-    module_foo.define_fla
+    module_foo.define_flags(fv)
+    self.assertMultiLineEqual('''
+absl.flags.tests.module_bar:
+  --tmod_bar_t: Sample int flag.
+    (default: '4')
+    (an integer)
+  --tmod_bar_u: Sample int flag.
+    (default: '5')
+    (an integer)
+  --tmod_
