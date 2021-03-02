@@ -438,4 +438,10 @@ xxxxabsl.flags.tests.module_bar:
 xxxx  --tmod_bar_t: Sample int flag.
 xxxx    (default: '4')
 xxxx    (an integer)
-x
+xxxx  --tmod_bar_u: Sample int flag.
+xxxx    (default: '5')
+xxxx    (an integer)
+xxxx  --tmod_bar_v: Sample int flag.
+xxxx    (default: '6')
+xxxx    (an integer)
+xxxx  --[no]tmod_bar_x: Bool
