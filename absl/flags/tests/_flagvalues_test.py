@@ -430,4 +430,12 @@ absl.flags:
   --undefok: comma-separated list of flag names that it is okay to specify on
     the command line even if the program does not define a flag with that name.
     IMPORTANT: flags in this list that have arguments MUST use the --flag=value
-    fo
+    format.
+    (default: '')''', fv.get_help())
+
+    self.assertMultiLineEqual('''
+xxxxabsl.flags.tests.module_bar:
+xxxx  --tmod_bar_t: Sample int flag.
+xxxx    (default: '4')
+xxxx    (an integer)
+x
