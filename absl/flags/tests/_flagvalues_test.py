@@ -420,4 +420,11 @@ absl.flags.tests.module_foo:
     (default: 'true')
   --tmod_foo_int: Sample int flag.
     (default: '3')
-    (an 
+    (an integer)
+  --tmod_foo_str: String flag.
+    (default: 'default')
+
+absl.flags:
+  --flagfile: Insert flag definitions from the given file into the command line.
+    (default: '')
+  --undefok: comma-separated list 
