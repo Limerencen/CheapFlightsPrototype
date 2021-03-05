@@ -489,4 +489,10 @@ absl.flags.tests.module_bar:
     (default: 'false')
 
 absl.flags.tests.module_foo:
-  --[no]tmod_foo_bool: B
+  --[no]tmod_foo_bool: Boolean flag from module foo.
+    (default: 'true')
+  --tmod_foo_int: Sample int flag.
+    (default: '3')
+    (an integer)
+  --tmod_foo_str: String flag.
+    (default: 'default')''', fv.get_help(include_specia
