@@ -457,4 +457,11 @@ xxxx    (default: 'true')
 xxxx  --tmod_foo_int: Sample int flag.
 xxxx    (default: '3')
 xxxx    (an integer)
-xxxx  --tmod_foo_str: Stri
+xxxx  --tmod_foo_str: String flag.
+xxxx    (default: 'default')
+
+xxxxabsl.flags:
+xxxx  --flagfile: Insert flag definitions from the given file into the command
+xxxx    line.
+xxxx    (default: '')
+xxxx  --undefok: comma-separated list of 
