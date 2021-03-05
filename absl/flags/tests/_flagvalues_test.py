@@ -467,4 +467,10 @@ xxxx    (default: '')
 xxxx  --undefok: comma-separated list of flag names that it is okay to specify
 xxxx    on the command line even if the program does not define a flag with that
 xxxx    name.  IMPORTANT: flags in this list that have arguments MUST use the
-xxxx    --flag=value 
+xxxx    --flag=value format.
+xxxx    (default: '')''', fv.get_help(prefix='xxxx'))
+
+    self.assertMultiLineEqual('''
+absl.flags.tests.module_bar:
+  --tmod_bar_t: Sample int flag.
+    (default: '4')
