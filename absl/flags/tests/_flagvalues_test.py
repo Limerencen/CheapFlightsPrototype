@@ -482,4 +482,11 @@ absl.flags.tests.module_bar:
     (default: '6')
     (an integer)
   --[no]tmod_bar_x: Boolean flag.
-    (default: 't
+    (default: 'true')
+  --tmod_bar_y: String flag.
+    (default: 'default')
+  --[no]tmod_bar_z: Another boolean flag from module bar.
+    (default: 'false')
+
+absl.flags.tests.module_foo:
+  --[no]tmod_foo_bool: B
