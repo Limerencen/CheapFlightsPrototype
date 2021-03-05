@@ -444,4 +444,11 @@ xxxx    (an integer)
 xxxx  --tmod_bar_v: Sample int flag.
 xxxx    (default: '6')
 xxxx    (an integer)
-xxxx  --[no]tmod_bar_x: Bool
+xxxx  --[no]tmod_bar_x: Boolean flag.
+xxxx    (default: 'true')
+xxxx  --tmod_bar_y: String flag.
+xxxx    (default: 'default')
+xxxx  --[no]tmod_bar_z: Another boolean flag from module bar.
+xxxx    (default: 'false')
+
+xxxxabsl.flags.test
