@@ -451,4 +451,10 @@ xxxx    (default: 'default')
 xxxx  --[no]tmod_bar_z: Another boolean flag from module bar.
 xxxx    (default: 'false')
 
-xxxxabsl.flags.test
+xxxxabsl.flags.tests.module_foo:
+xxxx  --[no]tmod_foo_bool: Boolean flag from module foo.
+xxxx    (default: 'true')
+xxxx  --tmod_foo_int: Sample int flag.
+xxxx    (default: '3')
+xxxx    (an integer)
+xxxx  --tmod_foo_str: Stri
