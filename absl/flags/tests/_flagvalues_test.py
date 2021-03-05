@@ -474,3 +474,12 @@ xxxx    (default: '')''', fv.get_help(prefix='xxxx'))
 absl.flags.tests.module_bar:
   --tmod_bar_t: Sample int flag.
     (default: '4')
+    (an integer)
+  --tmod_bar_u: Sample int flag.
+    (default: '5')
+    (an integer)
+  --tmod_bar_v: Sample int flag.
+    (default: '6')
+    (an integer)
+  --[no]tmod_bar_x: Boolean flag.
+    (default: 't
