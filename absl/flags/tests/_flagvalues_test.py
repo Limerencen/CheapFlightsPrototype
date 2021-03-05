@@ -464,4 +464,7 @@ xxxxabsl.flags:
 xxxx  --flagfile: Insert flag definitions from the given file into the command
 xxxx    line.
 xxxx    (default: '')
-xxxx  --undefok: comma-separated list of 
+xxxx  --undefok: comma-separated list of flag names that it is okay to specify
+xxxx    on the command line even if the program does not define a flag with that
+xxxx    name.  IMPORTANT: flags in this list that have arguments MUST use the
+xxxx    --flag=value 
