@@ -511,4 +511,11 @@ absl.flags.tests.module_foo:
   def test_invalid_argv(self):
     fv = _flagvalues.FlagValues()
     with self.assertRaises(TypeError):
-      
+      fv('./program')
+    with self.assertRaises(TypeError):
+      fv(b'./program')
+    with self.assertRaises(TypeError):
+      fv(u'./program')
+
+  def test_flags_dir(self):
+    flag_values = _flagvalues.FlagVal
