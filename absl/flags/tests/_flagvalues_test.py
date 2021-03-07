@@ -495,4 +495,12 @@ absl.flags.tests.module_foo:
     (default: '3')
     (an integer)
   --tmod_foo_str: String flag.
-    (default: 'default')''', fv.get_help(include_specia
+    (default: 'default')''', fv.get_help(include_special_flags=False))
+
+  def test_str(self):
+    fv = _flagvalues.FlagValues()
+    self.assertEqual(str(fv), fv.get_help())
+    module_foo.define_flags(fv)
+    self.assertEqual(str(fv), fv.get_help())
+
+  def test_empty_ar
