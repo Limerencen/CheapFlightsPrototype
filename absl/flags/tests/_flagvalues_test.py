@@ -518,4 +518,10 @@ absl.flags.tests.module_foo:
       fv(u'./program')
 
   def test_flags_dir(self):
-    flag_values = _flagvalues.FlagVal
+    flag_values = _flagvalues.FlagValues()
+    flag_name1 = 'bool_flag'
+    flag_name2 = 'string_flag'
+    flag_name3 = 'float_flag'
+    description = 'Description'
+    _defines.DEFINE_boolean(
+        flag_name1, None, descri
