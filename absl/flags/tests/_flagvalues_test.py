@@ -503,4 +503,12 @@ absl.flags.tests.module_foo:
     module_foo.define_flags(fv)
     self.assertEqual(str(fv), fv.get_help())
 
-  def test_empty_ar
+  def test_empty_argv(self):
+    fv = _flagvalues.FlagValues()
+    with self.assertRaises(ValueError):
+      fv([])
+
+  def test_invalid_argv(self):
+    fv = _flagvalues.FlagValues()
+    with self.assertRaises(TypeError):
+      
