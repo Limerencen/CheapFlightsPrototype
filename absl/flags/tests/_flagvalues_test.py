@@ -524,4 +524,7 @@ absl.flags.tests.module_foo:
     flag_name3 = 'float_flag'
     description = 'Description'
     _defines.DEFINE_boolean(
-        flag_name1, None, descri
+        flag_name1, None, description, flag_values=flag_values)
+    _defines.DEFINE_string(
+        flag_name2, None, description, flag_values=flag_values)
+    self.assertEqual(sorted([flag_name1, flag_name2]), dir(fla
