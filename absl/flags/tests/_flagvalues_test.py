@@ -538,4 +538,8 @@ absl.flags.tests.module_foo:
     flag_values = _flagvalues.FlagValues()
     _defines.DEFINE_string(
         'fa', 'x', '', flag_values=flag_values, module_name='mb')
-    _d
+    _defines.DEFINE_string(
+        'fb', 'x', '', flag_values=flag_values, module_name='mb')
+    _defines.DEFINE_string(
+        'fc', 'x', '', flag_values=flag_values, module_name='ma')
+    _defines.DEFINE_str
