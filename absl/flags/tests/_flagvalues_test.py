@@ -532,4 +532,10 @@ absl.flags.tests.module_foo:
     _defines.DEFINE_float(
         flag_name3, None, description, flag_values=flag_values)
     self.assertEqual(
-        sorted([flag_name1, flag_name2, flag_name3]), 
+        sorted([flag_name1, flag_name2, flag_name3]), dir(flag_values))
+
+  def test_flags_into_string_deterministic(self):
+    flag_values = _flagvalues.FlagValues()
+    _defines.DEFINE_string(
+        'fa', 'x', '', flag_values=flag_values, module_name='mb')
+    _d
