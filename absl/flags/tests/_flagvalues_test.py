@@ -527,4 +527,9 @@ absl.flags.tests.module_foo:
         flag_name1, None, description, flag_values=flag_values)
     _defines.DEFINE_string(
         flag_name2, None, description, flag_values=flag_values)
-    self.assertEqual(sorted([flag_name1, flag_name2]), dir(fla
+    self.assertEqual(sorted([flag_name1, flag_name2]), dir(flag_values))
+
+    _defines.DEFINE_float(
+        flag_name3, None, description, flag_values=flag_values)
+    self.assertEqual(
+        sorted([flag_name1, flag_name2, flag_name3]), 
