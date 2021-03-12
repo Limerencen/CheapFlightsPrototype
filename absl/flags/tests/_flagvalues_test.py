@@ -542,4 +542,12 @@ absl.flags.tests.module_foo:
         'fb', 'x', '', flag_values=flag_values, module_name='mb')
     _defines.DEFINE_string(
         'fc', 'x', '', flag_values=flag_values, module_name='ma')
-    _defines.DEFINE_str
+    _defines.DEFINE_string(
+        'fd', 'x', '', flag_values=flag_values, module_name='ma')
+
+    expected = ('--fc=x\n'
+                '--fd=x\n'
+                '--fa=x\n'
+                '--fb=x\n')
+
+    flags
