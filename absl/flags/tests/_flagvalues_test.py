@@ -562,4 +562,8 @@ absl.flags.tests.module_foo:
     self.assertEqual(expected, actual)
 
   def test_validate_all_flags(self):
-    fv = _flagvalues.FlagVal
+    fv = _flagvalues.FlagValues()
+    _defines.DEFINE_string('name', None, '', flag_values=fv)
+    _validators.mark_flag_as_required('name', flag_values=fv)
+    with self.assertRaises(_exceptions.IllegalFlagValueError):
+   
