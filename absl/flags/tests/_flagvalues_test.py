@@ -555,4 +555,11 @@ absl.flags.tests.module_foo:
     for _, module_flags in flags_by_module_items:
       module_flags.sort(reverse=True)
 
-    flag_values.__dict__['__flags_by_module'] = coll
+    flag_values.__dict__['__flags_by_module'] = collections.OrderedDict(
+        flags_by_module_items)
+
+    actual = flag_values.flags_into_string()
+    self.assertEqual(expected, actual)
+
+  def test_validate_all_flags(self):
+    fv = _flagvalues.FlagVal
