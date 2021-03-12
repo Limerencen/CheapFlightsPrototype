@@ -566,4 +566,12 @@ absl.flags.tests.module_foo:
     _defines.DEFINE_string('name', None, '', flag_values=fv)
     _validators.mark_flag_as_required('name', flag_values=fv)
     with self.assertRaises(_exceptions.IllegalFlagValueError):
-   
+      fv.validate_all_flags()
+    fv.name = 'test'
+    fv.validate_all_flags()
+
+
+class FlagValuesLoggingTest(absltest.TestCase):
+  """Test to make sure logging.* functions won't recurse.
+
+  Logging may and does h
