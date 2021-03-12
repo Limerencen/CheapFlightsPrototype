@@ -550,4 +550,9 @@ absl.flags.tests.module_foo:
                 '--fa=x\n'
                 '--fb=x\n')
 
-    flags
+    flags_by_module_items = sorted(
+        flag_values.flags_by_module_dict().items(), reverse=True)
+    for _, module_flags in flags_by_module_items:
+      module_flags.sort(reverse=True)
+
+    flag_values.__dict__['__flags_by_module'] = coll
