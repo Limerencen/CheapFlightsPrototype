@@ -588,4 +588,10 @@ class FlagValuesLoggingTest(absltest.TestCase):
 
 
 class FlagSubstrMatchingTests(parameterized.TestCase):
-  """Tests related to flag substring ma
+  """Tests related to flag substring matching."""
+
+  def _get_test_flag_values(self):
+    """Get a _flagvalues.FlagValues() instance, set up for tests."""
+    flag_values = _flagvalues.FlagValues()
+
+    _defines.DEFINE_string('strf', '', '', flag_values=flag_v
