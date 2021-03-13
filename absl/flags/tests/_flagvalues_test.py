@@ -574,4 +574,10 @@ absl.flags.tests.module_foo:
 class FlagValuesLoggingTest(absltest.TestCase):
   """Test to make sure logging.* functions won't recurse.
 
-  Logging may and does h
+  Logging may and does happen before flags initialization. We need to make
+  sure that any warnings trown by flagvalues do not result in unlimited
+  recursion.
+  """
+
+  def test_logging_do_not_recurse(self):
+    logging.info(
