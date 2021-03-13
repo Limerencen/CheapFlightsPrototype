@@ -580,4 +580,12 @@ class FlagValuesLoggingTest(absltest.TestCase):
   """
 
   def test_logging_do_not_recurse(self):
-    logging.info(
+    logging.info('test info')
+    try:
+      raise ValueError('test exception')
+    except ValueError:
+      logging.exception('test message')
+
+
+class FlagSubstrMatchingTests(parameterized.TestCase):
+  """Tests related to flag substring ma
