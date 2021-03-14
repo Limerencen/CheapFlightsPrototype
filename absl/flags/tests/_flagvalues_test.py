@@ -594,4 +594,10 @@ class FlagSubstrMatchingTests(parameterized.TestCase):
     """Get a _flagvalues.FlagValues() instance, set up for tests."""
     flag_values = _flagvalues.FlagValues()
 
-    _defines.DEFINE_string('strf', '', '', flag_values=flag_v
+    _defines.DEFINE_string('strf', '', '', flag_values=flag_values)
+    _defines.DEFINE_boolean('boolf', 0, '', flag_values=flag_values)
+
+    return flag_values
+
+  # Test cases that should always make parsing raise an error.
+  # Tuples of strings wi
