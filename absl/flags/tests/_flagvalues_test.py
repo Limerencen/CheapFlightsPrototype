@@ -600,4 +600,10 @@ class FlagSubstrMatchingTests(parameterized.TestCase):
     return flag_values
 
   # Test cases that should always make parsing raise an error.
-  # Tuples of strings wi
+  # Tuples of strings with the argv to use.
+  FAIL_TEST_CASES = [
+      ('./program', '--boo', '0'),
+      ('./program', '--boo=true', '0'),
+      ('./program', '--boo=0'),
+      ('./program', '--noboo'),
+     
