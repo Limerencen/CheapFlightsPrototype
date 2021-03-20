@@ -624,4 +624,7 @@ class FlagSubstrMatchingTests(parameterized.TestCase):
   @parameterized.parameters(
       FAIL_TEST_CASES + [('./program', 'unused', '--st=blah')])
   def test_gnu_getopt_raise(self, *argv):
-    ""
+    """Test that raising works when combined with GNU-style getopt."""
+    fv = self._get_test_flag_values()
+    fv.set_gnu_getopt()
+    with self.assertRaises(_exceptions.UnrecognizedFla
