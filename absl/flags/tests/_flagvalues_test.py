@@ -611,4 +611,11 @@ class FlagSubstrMatchingTests(parameterized.TestCase):
       ('./program', '--st=blah', '--boo'),
       ('./program', '--st=blah', 'unused'),
       ('./program', '--st=--blah'),
-      ('./program', '--st', '--
+      ('./program', '--st', '--blah'),
+  ]
+
+  @parameterized.parameters(FAIL_TEST_CASES)
+  def test_raise(self, *argv):
+    """Test that raising works."""
+    fv = self._get_test_flag_values()
+    with self.assertRaises(_except
