@@ -618,4 +618,10 @@ class FlagSubstrMatchingTests(parameterized.TestCase):
   def test_raise(self, *argv):
     """Test that raising works."""
     fv = self._get_test_flag_values()
-    with self.assertRaises(_except
+    with self.assertRaises(_exceptions.UnrecognizedFlagError):
+      fv(argv)
+
+  @parameterized.parameters(
+      FAIL_TEST_CASES + [('./program', 'unused', '--st=blah')])
+  def test_gnu_getopt_raise(self, *argv):
+    ""
