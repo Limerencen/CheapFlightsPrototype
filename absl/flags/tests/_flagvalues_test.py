@@ -606,4 +606,9 @@ class FlagSubstrMatchingTests(parameterized.TestCase):
       ('./program', '--boo=true', '0'),
       ('./program', '--boo=0'),
       ('./program', '--noboo'),
-     
+      ('./program', '--st=blah'),
+      ('./program', '--st=de'),
+      ('./program', '--st=blah', '--boo'),
+      ('./program', '--st=blah', 'unused'),
+      ('./program', '--st=--blah'),
+      ('./program', '--st', '--
