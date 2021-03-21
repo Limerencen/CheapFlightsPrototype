@@ -638,4 +638,11 @@ class SettingUnknownFlagTest(absltest.TestCase):
     self.setter_called = 0
 
   def set_undef(self, unused_name, unused_val):
-    se
+    self.setter_called += 1
+
+  def test_raise_on_undefined(self):
+    new_flags = _flagvalues.FlagValues()
+    with self.assertRaises(_exceptions.UnrecognizedFlagError):
+      new_flags.undefined_flag = 0
+
+  def test_
