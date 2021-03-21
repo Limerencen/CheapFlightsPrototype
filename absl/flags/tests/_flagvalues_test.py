@@ -655,4 +655,10 @@ class SettingUnknownFlagTest(absltest.TestCase):
     new_flags = _flagvalues.FlagValues()
     args = ['0', '--foo', '--bar=1', '--undefok=foo,bar']
     unparsed = new_flags(args, known_only=True)
-    self.assertEqua
+    self.assertEqual(['0'], unparsed)
+
+  def test_re_raise_undefined(self):
+    def setter(unused_name, unused_val):
+      raise NameError()
+    new_flags = _flagvalues.FlagValues()
+    new_flags._register_unknown_flag
