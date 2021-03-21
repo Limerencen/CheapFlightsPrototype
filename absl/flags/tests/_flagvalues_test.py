@@ -651,4 +651,8 @@ class SettingUnknownFlagTest(absltest.TestCase):
     new_flags.undefined_flag = 0
     self.assertEqual(self.setter_called, 1)
 
-  d
+  def test_not_raise_on_undefined_if_undefok(self):
+    new_flags = _flagvalues.FlagValues()
+    args = ['0', '--foo', '--bar=1', '--undefok=foo,bar']
+    unparsed = new_flags(args, known_only=True)
+    self.assertEqua
