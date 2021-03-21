@@ -627,4 +627,15 @@ class FlagSubstrMatchingTests(parameterized.TestCase):
     """Test that raising works when combined with GNU-style getopt."""
     fv = self._get_test_flag_values()
     fv.set_gnu_getopt()
-    with self.assertRaises(_exceptions.UnrecognizedFla
+    with self.assertRaises(_exceptions.UnrecognizedFlagError):
+      fv(argv)
+
+
+class SettingUnknownFlagTest(absltest.TestCase):
+
+  def setUp(self):
+    super(SettingUnknownFlagTest, self).setUp()
+    self.setter_called = 0
+
+  def set_undef(self, unused_name, unused_val):
+    se
