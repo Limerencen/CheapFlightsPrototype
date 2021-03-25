@@ -668,4 +668,10 @@ class SettingUnknownFlagTest(absltest.TestCase):
   def test_re_raise_invalid(self):
     def setter(unused_name, unused_val):
       raise ValueError()
-    ne
+    new_flags = _flagvalues.FlagValues()
+    new_flags._register_unknown_flag_setter(setter)
+    with self.assertRaises(_exceptions.IllegalFlagValueError):
+      new_flags.undefined_flag = 0
+
+
+class SetAt
