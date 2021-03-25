@@ -674,4 +674,10 @@ class SettingUnknownFlagTest(absltest.TestCase):
       new_flags.undefined_flag = 0
 
 
-class SetAt
+class SetAttributesTest(absltest.TestCase):
+
+  def setUp(self):
+    super(SetAttributesTest, self).setUp()
+    self.new_flags = _flagvalues.FlagValues()
+    _defines.DEFINE_boolean(
+        'defined_flag', None, '', flag_values=self.ne
