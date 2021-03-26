@@ -708,4 +708,9 @@ class FlagsDashSyntaxTest(absltest.TestCase):
   def setUp(self):
     super(FlagsDashSyntaxTest, self).setUp()
     self.fv = _flagvalues.FlagValues()
-    _defines.DE
+    _defines.DEFINE_string(
+        'long_name', 'default', 'help', flag_values=self.fv, short_name='s')
+
+  def test_long_name_one_dash(self):
+    self.fv(['./program', '-long_name=new'])
+    self.assertEqual('new', se
