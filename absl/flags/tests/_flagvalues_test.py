@@ -685,4 +685,10 @@ class SetAttributesTest(absltest.TestCase):
         'another_defined_flag', None, '', flag_values=self.new_flags)
     self.setter_called = 0
 
-  def set_undef(self, unused_name, unus
+  def set_undef(self, unused_name, unused_val):
+    self.setter_called += 1
+
+  def test_two_defined_flags(self):
+    self.new_flags._set_attributes(
+        defined_flag=False, another_defined_flag=False)
+    self.assertEqual(self.setter_c
