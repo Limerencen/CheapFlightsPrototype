@@ -713,4 +713,11 @@ class FlagsDashSyntaxTest(absltest.TestCase):
 
   def test_long_name_one_dash(self):
     self.fv(['./program', '-long_name=new'])
-    self.assertEqual('new', se
+    self.assertEqual('new', self.fv.long_name)
+
+  def test_long_name_two_dashes(self):
+    self.fv(['./program', '--long_name=new'])
+    self.assertEqual('new', self.fv.long_name)
+
+  def test_long_name_three_dashes(self):
+ 
