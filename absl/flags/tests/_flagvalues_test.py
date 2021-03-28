@@ -720,4 +720,9 @@ class FlagsDashSyntaxTest(absltest.TestCase):
     self.assertEqual('new', self.fv.long_name)
 
   def test_long_name_three_dashes(self):
- 
+    with self.assertRaises(_exceptions.UnrecognizedFlagError):
+      self.fv(['./program', '---long_name=new'])
+
+  def test_short_name_one_dash(self):
+    self.fv(['./program', '-s=new'])
+    self.assertEqual('
