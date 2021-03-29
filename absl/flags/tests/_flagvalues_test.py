@@ -725,4 +725,11 @@ class FlagsDashSyntaxTest(absltest.TestCase):
 
   def test_short_name_one_dash(self):
     self.fv(['./program', '-s=new'])
-    self.assertEqual('
+    self.assertEqual('new', self.fv.s)
+
+  def test_short_name_two_dashes(self):
+    self.fv(['./program', '--s=new'])
+    self.assertEqual('new', self.fv.s)
+
+  def test_short_name_three_dashes(self):
+    with self.assertRaises(_excepti
