@@ -732,4 +732,12 @@ class FlagsDashSyntaxTest(absltest.TestCase):
     self.assertEqual('new', self.fv.s)
 
   def test_short_name_three_dashes(self):
-    with self.assertRaises(_excepti
+    with self.assertRaises(_exceptions.UnrecognizedFlagError):
+      self.fv(['./program', '---s=new'])
+
+
+class UnparseFlagsTest(absltest.TestCase):
+
+  def test_using_default_value_none(self):
+    fv = _flagvalues.FlagValues()
+    _
