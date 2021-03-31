@@ -747,4 +747,10 @@ class UnparseFlagsTest(absltest.TestCase):
     fv.unparse_flags()
     self.assertTrue(fv['default_none'].using_default_value)
     fv(['', '--default_none=alsoNotNone'])
-    self.assertFalse(fv['default_none']
+    self.assertFalse(fv['default_none'].using_default_value)
+    fv.unparse_flags()
+    self.assertTrue(fv['default_none'].using_default_value)
+
+  def test_using_default_value_not_none(self):
+    fv = _flagvalues.FlagValues()
+    _defines.DEFINE_string(
