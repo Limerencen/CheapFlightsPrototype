@@ -753,4 +753,10 @@ class UnparseFlagsTest(absltest.TestCase):
 
   def test_using_default_value_not_none(self):
     fv = _flagvalues.FlagValues()
-    _defines.DEFINE_string(
+    _defines.DEFINE_string('default_foo', 'foo', 'help', flag_values=fv)
+
+    fv.mark_as_parsed()
+    self.assertTrue(fv['default_foo'].using_default_value)
+
+    fv(['', '--default_foo=foo'])
+    self.assertFalse(fv['default_foo'].using_default_val
