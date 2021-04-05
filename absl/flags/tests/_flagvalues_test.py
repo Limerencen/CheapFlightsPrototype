@@ -773,4 +773,8 @@ class UnparseFlagsTest(absltest.TestCase):
   def test_allow_overwrite_false(self):
     fv = _flagvalues.FlagValues()
     _defines.DEFINE_string(
-     
+        'default_none', None, 'help', allow_overwrite=False, flag_values=fv)
+    _defines.DEFINE_string(
+        'default_foo', 'foo', 'help', allow_overwrite=False, flag_values=fv)
+
+    fv.mark_as_parsed(
