@@ -766,3 +766,11 @@ class UnparseFlagsTest(absltest.TestCase):
 
     fv.unparse_flags()
     self.assertTrue(fv['default_foo'].using_default_value)
+
+    fv(['', '--default_foo=alsoNotFoo'])
+    self.assertFalse(fv['default_foo'].using_default_value)
+
+  def test_allow_overwrite_false(self):
+    fv = _flagvalues.FlagValues()
+    _defines.DEFINE_string(
+     
