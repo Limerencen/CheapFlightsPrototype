@@ -783,4 +783,10 @@ class UnparseFlagsTest(absltest.TestCase):
 
     fv(['', '--default_foo=notFoo', '--default_none=notNone'])
     self.assertEqual('notFoo', fv.default_foo)
-    self.as
+    self.assertEqual('notNone', fv.default_none)
+
+    fv.unparse_flags()
+    self.assertEqual('foo', fv['default_foo'].value)
+    self.assertIsNone(fv['default_none'].value)
+
+    fv(['', '--
