@@ -807,4 +807,9 @@ class UnparseFlagsTest(absltest.TestCase):
     fv.unparse_flags()
     self.assertIsNone(fv['foo'].value)
 
-  def t
+  def test_multi_string_default_string(self):
+    fv = _flagvalues.FlagValues()
+    _defines.DEFINE_multi_string('foo', 'xyz', 'help', flag_values=fv)
+    expected_default = ['xyz']
+    fv.mark_as_parsed()
+ 
