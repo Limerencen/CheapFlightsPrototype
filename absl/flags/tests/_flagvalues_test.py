@@ -794,4 +794,10 @@ class UnparseFlagsTest(absltest.TestCase):
     self.assertEqual('alsoNotNone', fv.default_none)
 
   def test_multi_string_default_none(self):
-    fv = _f
+    fv = _flagvalues.FlagValues()
+    _defines.DEFINE_multi_string('foo', None, 'help', flag_values=fv)
+    fv.mark_as_parsed()
+    self.assertIsNone(fv.foo)
+    fv(['', '--foo=aa'])
+    self.assertEqual(['aa'], fv.foo)
+    fv.unp
