@@ -800,4 +800,11 @@ class UnparseFlagsTest(absltest.TestCase):
     self.assertIsNone(fv.foo)
     fv(['', '--foo=aa'])
     self.assertEqual(['aa'], fv.foo)
-    fv.unp
+    fv.unparse_flags()
+    self.assertIsNone(fv['foo'].value)
+    fv(['', '--foo=bb', '--foo=cc'])
+    self.assertEqual(['bb', 'cc'], fv.foo)
+    fv.unparse_flags()
+    self.assertIsNone(fv['foo'].value)
+
+  def t
