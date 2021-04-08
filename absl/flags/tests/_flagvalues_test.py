@@ -824,4 +824,9 @@ class UnparseFlagsTest(absltest.TestCase):
 
   def test_multi_string_default_list(self):
     fv = _flagvalues.FlagValues()
-    _defines
+    _defines.DEFINE_multi_string(
+        'foo', ['xx', 'yy', 'zz'], 'help', flag_values=fv)
+    expected_default = ['xx', 'yy', 'zz']
+    fv.mark_as_parsed()
+    self.assertEqual(expected_default, fv.foo)
+    fv(['', '--foo=aa']
