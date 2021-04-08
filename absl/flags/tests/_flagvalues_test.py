@@ -812,4 +812,9 @@ class UnparseFlagsTest(absltest.TestCase):
     _defines.DEFINE_multi_string('foo', 'xyz', 'help', flag_values=fv)
     expected_default = ['xyz']
     fv.mark_as_parsed()
- 
+    self.assertEqual(expected_default, fv.foo)
+    fv(['', '--foo=aa'])
+    self.assertEqual(['aa'], fv.foo)
+    fv.unparse_flags()
+    self.assertEqual(expected_default, fv['foo'].value)
+    fv(['', '--foo=bb', '--foo=cc
