@@ -834,4 +834,12 @@ class UnparseFlagsTest(absltest.TestCase):
     fv.unparse_flags()
     self.assertEqual(expected_default, fv['foo'].value)
     fv(['', '--foo=bb', '--foo=cc'])
-    self.assertEqual(['bb', 'cc'], fv.fo
+    self.assertEqual(['bb', 'cc'], fv.foo)
+    fv.unparse_flags()
+    self.assertEqual(expected_default, fv['foo'].value)
+
+
+class UnparsedFlagAccessTest(absltest.TestCase):
+
+  def test_unparsed_flag_access(self):
+    fv = _flagvalues.FlagValues(
