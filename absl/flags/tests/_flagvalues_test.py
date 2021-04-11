@@ -829,4 +829,9 @@ class UnparseFlagsTest(absltest.TestCase):
     expected_default = ['xx', 'yy', 'zz']
     fv.mark_as_parsed()
     self.assertEqual(expected_default, fv.foo)
-    fv(['', '--foo=aa']
+    fv(['', '--foo=aa'])
+    self.assertEqual(['aa'], fv.foo)
+    fv.unparse_flags()
+    self.assertEqual(expected_default, fv['foo'].value)
+    fv(['', '--foo=bb', '--foo=cc'])
+    self.assertEqual(['bb', 'cc'], fv.fo
