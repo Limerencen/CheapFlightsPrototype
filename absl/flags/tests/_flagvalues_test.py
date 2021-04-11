@@ -857,4 +857,13 @@ class UnparsedFlagAccessTest(absltest.TestCase):
     fv = _flagvalues.FlagValues()
     _defines.DEFINE_string('a_str', 'default_value', 'help', flag_values=fv)
     fv.mark_as_parsed()
-    self.assert
+    self.assertEqual(fv.a_str, 'default_value')
+    fv.unparse_flags()
+    with self.assertRaises(_exceptions.UnparsedFlagAccessError):
+      _ = fv.a_str
+
+
+class FlagHolderTest(absltest.TestCase):
+
+  def setUp(self):
+    super(Fl
