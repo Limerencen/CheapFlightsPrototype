@@ -842,4 +842,9 @@ class UnparseFlagsTest(absltest.TestCase):
 class UnparsedFlagAccessTest(absltest.TestCase):
 
   def test_unparsed_flag_access(self):
-    fv = _flagvalues.FlagValues(
+    fv = _flagvalues.FlagValues()
+    _defines.DEFINE_string('name', 'default', 'help', flag_values=fv)
+    with self.assertRaises(_exceptions.UnparsedFlagAccessError):
+      _ = fv.name
+
+  def test_hasattr_raises_in_py3(s
