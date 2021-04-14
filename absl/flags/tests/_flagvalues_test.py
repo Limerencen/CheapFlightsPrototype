@@ -884,4 +884,10 @@ class FlagHolderTest(absltest.TestCase):
 
   def test_value_returns_default_value_if_not_explicitly_set(self):
     self.parse_flags()
-    self.assertEqual('de
+    self.assertEqual('default', self.name_flag.value)
+
+  def test_value_returns_explicitly_set_value(self):
+    self.parse_flags('--name=new_value')
+    self.assertEqual('new_value', self.name_flag.value)
+
+  def test_present_returns_false
