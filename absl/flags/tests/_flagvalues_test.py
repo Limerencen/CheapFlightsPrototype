@@ -890,4 +890,9 @@ class FlagHolderTest(absltest.TestCase):
     self.parse_flags('--name=new_value')
     self.assertEqual('new_value', self.name_flag.value)
 
-  def test_present_returns_false
+  def test_present_returns_false_before_flag_parsing(self):
+    self.assertFalse(self.name_flag.present)
+
+  def test_present_returns_false_if_not_explicitly_set(self):
+    self.parse_flags()
+    self.assertFalse(self.name_flag.present)
