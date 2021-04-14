@@ -866,4 +866,10 @@ class UnparsedFlagAccessTest(absltest.TestCase):
 class FlagHolderTest(absltest.TestCase):
 
   def setUp(self):
-    super(Fl
+    super(FlagHolderTest, self).setUp()
+    self.fv = _flagvalues.FlagValues()
+    self.name_flag = _defines.DEFINE_string(
+        'name', 'default', 'help', flag_values=self.fv)
+
+  def parse_flags(self, *argv):
+    self.fv
