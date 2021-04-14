@@ -879,4 +879,9 @@ class FlagHolderTest(absltest.TestCase):
     self.assertEqual('name', self.name_flag.name)
 
   def test_value_before_flag_parsing(self):
-    with self.assertRaises(_except
+    with self.assertRaises(_exceptions.UnparsedFlagAccessError):
+      _ = self.name_flag.value
+
+  def test_value_returns_default_value_if_not_explicitly_set(self):
+    self.parse_flags()
+    self.assertEqual('de
