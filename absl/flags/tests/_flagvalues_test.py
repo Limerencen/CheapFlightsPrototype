@@ -872,4 +872,11 @@ class FlagHolderTest(absltest.TestCase):
         'name', 'default', 'help', flag_values=self.fv)
 
   def parse_flags(self, *argv):
-    self.fv
+    self.fv.unparse_flags()
+    self.fv(['binary_name'] + list(argv))
+
+  def test_name(self):
+    self.assertEqual('name', self.name_flag.name)
+
+  def test_value_before_flag_parsing(self):
+    with self.assertRaises(_except
