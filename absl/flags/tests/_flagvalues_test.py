@@ -920,4 +920,10 @@ class FlagHolderTest(absltest.TestCase):
     with self.assertRaises(TypeError):
       'value' == self.name_flag  # pylint: disable=pointless-statement
 
-  
+  def test_bool(self):
+    with self.assertRaises(TypeError):
+      bool(self.name_flag)
+
+
+if __name__ == '__main__':
+  absltest.main()
