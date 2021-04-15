@@ -906,4 +906,11 @@ class FlagHolderTest(absltest.TestCase):
         'int_flag', 1, 'help', flag_values=self.fv, allow_override=1)
     second = _defines.DEFINE_integer(
         'int_flag', 2, 'help', flag_values=self.fv, allow_override=1)
-    self.parse_flags('--in
+    self.parse_flags('--int_flag=3')
+    self.assertEqual(3, first.value)
+    self.assertEqual(3, second.value)
+    self.assertTrue(first.present)
+    self.assertTrue(second.present)
+
+  def test_eq(self):
+    with self.assertRaises(TypeErr
