@@ -913,4 +913,11 @@ class FlagHolderTest(absltest.TestCase):
     self.assertTrue(second.present)
 
   def test_eq(self):
-    with self.assertRaises(TypeErr
+    with self.assertRaises(TypeError):
+      self.name_flag == 'value'  # pylint: disable=pointless-statement
+
+  def test_eq_reflection(self):
+    with self.assertRaises(TypeError):
+      'value' == self.name_flag  # pylint: disable=pointless-statement
+
+  
