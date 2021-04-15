@@ -902,4 +902,8 @@ class FlagHolderTest(absltest.TestCase):
     self.assertTrue(self.name_flag.present)
 
   def test_allow_override(self):
-    first = _defines.DEFINE
+    first = _defines.DEFINE_integer(
+        'int_flag', 1, 'help', flag_values=self.fv, allow_override=1)
+    second = _defines.DEFINE_integer(
+        'int_flag', 2, 'help', flag_values=self.fv, allow_override=1)
+    self.parse_flags('--in
