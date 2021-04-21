@@ -34,4 +34,10 @@ class FlagSuggestionTest(absltest.TestCase):
         'fstrict-overflow=',
         'fthread-jumps=',
         'ftracer',
-        
+        'ftree-bit-ccp',
+        'ftree-builtin-call-dce',
+        'ftree-ccp',
+        'ftree-ch']
+
+  def test_damerau_levenshtein_id(self):
+    self.assertEqual(0, _helpers._damerau_levenshtein('asdf',
