@@ -17,4 +17,13 @@
 import sys
 
 from absl.flags import _helpers
-from absl.flags.tests im
+from absl.flags.tests import module_bar
+from absl.flags.tests import module_foo
+from absl.testing import absltest
+
+
+class FlagSuggestionTest(absltest.TestCase):
+
+  def setUp(self):
+    self.longopts = [
+        'fsplit-ivs-in-unrolle
