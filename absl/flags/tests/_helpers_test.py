@@ -40,4 +40,10 @@ class FlagSuggestionTest(absltest.TestCase):
         'ftree-ch']
 
   def test_damerau_levenshtein_id(self):
-    self.assertEqual(0, _helpers._damerau_levenshtein('asdf',
+    self.assertEqual(0, _helpers._damerau_levenshtein('asdf', 'asdf'))
+
+  def test_damerau_levenshtein_empty(self):
+    self.assertEqual(5, _helpers._damerau_levenshtein('', 'kites'))
+    self.assertEqual(6, _helpers._damerau_levenshtein('kitten', ''))
+
+  def test_da
