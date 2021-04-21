@@ -26,4 +26,12 @@ class FlagSuggestionTest(absltest.TestCase):
 
   def setUp(self):
     self.longopts = [
-        'fsplit-ivs-in-unrolle
+        'fsplit-ivs-in-unroller=',
+        'fsplit-wide-types=',
+        'fstack-protector=',
+        'fstack-protector-all=',
+        'fstrict-aliasing=',
+        'fstrict-overflow=',
+        'fthread-jumps=',
+        'ftracer',
+        
