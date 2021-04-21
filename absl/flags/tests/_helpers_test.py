@@ -46,4 +46,8 @@ class FlagSuggestionTest(absltest.TestCase):
     self.assertEqual(5, _helpers._damerau_levenshtein('', 'kites'))
     self.assertEqual(6, _helpers._damerau_levenshtein('kitten', ''))
 
-  def test_da
+  def test_damerau_levenshtein_commutative(self):
+    self.assertEqual(2, _helpers._damerau_levenshtein('kitten', 'kites'))
+    self.assertEqual(2, _helpers._damerau_levenshtein('kites', 'kitten'))
+
+  def test_damerau_levenshtein
