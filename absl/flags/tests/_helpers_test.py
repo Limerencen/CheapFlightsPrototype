@@ -63,4 +63,8 @@ class FlagSuggestionTest(absltest.TestCase):
     self.assertEqual(['fstack-protector', 'fstack-protector-all'], suggestions)
 
   def test_misspelled_ambiguous_prefix_suggestion(self):
-    suggestions = _helpers.get
+    suggestions = _helpers.get_flag_suggestions('stack', self.longopts)
+    self.assertEqual(['fstack-protector', 'fstack-protector-all'], suggestions)
+
+  def test_crazy_suggestion(self):
+    suggestions = _
