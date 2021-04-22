@@ -54,4 +54,9 @@ class FlagSuggestionTest(absltest.TestCase):
     self.assertEqual(1, _helpers._damerau_levenshtein('kitten', 'ktiten'))
 
   def test_mispelled_suggestions(self):
-    suggestions = _helpers.get_flag_suggestions(
+    suggestions = _helpers.get_flag_suggestions('fstack_protector_all',
+                                                self.longopts)
+    self.assertEqual(['fstack-protector-all'], suggestions)
+
+  def test_ambiguous_prefix_suggestion(self):
+    suggestions = _helpers
