@@ -89,4 +89,8 @@ class GetCallingModuleTest(absltest.TestCase):
                      'absl.flags.tests.module_bar')
 
     # We execute the following exec statements for their side-effect
-    # (i.e., not raising an error).  They emphasize the case that no
+    # (i.e., not raising an error).  They emphasize the case that not
+    # all code resides in one of the imported modules: Python is a
+    # really dynamic language, where we can dynamically construct some
+    # code and execute it.
+    code = ('from absl.flags im
