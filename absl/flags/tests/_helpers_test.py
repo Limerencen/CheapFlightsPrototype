@@ -86,3 +86,7 @@ class GetCallingModuleTest(absltest.TestCase):
     self.assertEqual(module_foo.get_module_name(),
                      'absl.flags.tests.module_foo')
     self.assertEqual(module_bar.get_module_name(),
+                     'absl.flags.tests.module_bar')
+
+    # We execute the following exec statements for their side-effect
+    # (i.e., not raising an error).  They emphasize the case that no
