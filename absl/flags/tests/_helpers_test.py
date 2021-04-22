@@ -82,4 +82,7 @@ class GetCallingModuleTest(absltest.TestCase):
   """Test whether we correctly determine the module which defines the flag."""
 
   def test_get_calling_module(self):
-    self.assertEqual(
+    self.assertEqual(_helpers.get_calling_module(), sys.argv[0])
+    self.assertEqual(module_foo.get_module_name(),
+                     'absl.flags.tests.module_foo')
+    self.assertEqual(module_bar.get_module_name(),
