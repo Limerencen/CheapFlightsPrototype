@@ -67,4 +67,9 @@ class FlagSuggestionTest(absltest.TestCase):
     self.assertEqual(['fstack-protector', 'fstack-protector-all'], suggestions)
 
   def test_crazy_suggestion(self):
-    suggestions = _
+    suggestions = _helpers.get_flag_suggestions('asdfasdgasdfa', self.longopts)
+    self.assertEqual([], suggestions)
+
+  def test_suggestions_are_sorted(self):
+    sorted_flags = sorted(['aab', 'aac', 'aad'])
+    mis
