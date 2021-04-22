@@ -93,4 +93,9 @@ class GetCallingModuleTest(absltest.TestCase):
     # all code resides in one of the imported modules: Python is a
     # really dynamic language, where we can dynamically construct some
     # code and execute it.
-    code = ('from absl.flags im
+    code = ('from absl.flags import _helpers\n'
+            'module_name = _helpers.get_calling_module()')
+    exec(code)  # pylint: disable=exec-used
+
+    # Next two exec statements executes code with a global environment
+  
