@@ -102,4 +102,7 @@ class GetCallingModuleTest(absltest.TestCase):
     # module.
     exec(code, {})  # pylint: disable=exec-used
     # vars(self) returns a dictionary corresponding to the symbol
-    
+    # table of the self object.  dict(...) makes a distinct copy of
+    # this dictionary, such that any new symbol definition by the
+    # exec-ed code (e.g., import flags, module_name = ...) does not
+ 
