@@ -98,4 +98,8 @@ class GetCallingModuleTest(absltest.TestCase):
     exec(code)  # pylint: disable=exec-used
 
     # Next two exec statements executes code with a global environment
-  
+    # that is different from the global environment of any imported
+    # module.
+    exec(code, {})  # pylint: disable=exec-used
+    # vars(self) returns a dictionary corresponding to the symbol
+    
