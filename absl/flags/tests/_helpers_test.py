@@ -105,4 +105,8 @@ class GetCallingModuleTest(absltest.TestCase):
     # table of the self object.  dict(...) makes a distinct copy of
     # this dictionary, such that any new symbol definition by the
     # exec-ed code (e.g., import flags, module_name = ...) does not
- 
+    # affect the symbol table of self.
+    exec(code, dict(vars(self)))  # pylint: disable=exec-used
+
+    # Next test is actually more involved: it checks not only that
+    # get_calling_mod
