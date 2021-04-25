@@ -109,4 +109,7 @@ class GetCallingModuleTest(absltest.TestCase):
     exec(code, dict(vars(self)))  # pylint: disable=exec-used
 
     # Next test is actually more involved: it checks not only that
-    # get_calling_mod
+    # get_calling_module does not crash inside exec code, it also checks
+    # that it returns the expected value: the code executed via exec
+    # code is treated as being executed by the current module.  We
+    # check it twice: first
