@@ -138,4 +138,9 @@ class GetCallingModuleTest(absltest.TestCase):
 
       def iteritems(self):
         # Any dictionary method is fine, but not .iteritems().
-        rai
+        raise RuntimeError('dictionary changed size during iteration')
+
+    sys.modules = SysModulesMock(orig_sys_modules)
+    try:
+      # _get_calling_module should still work as expected:
+      self.asser
