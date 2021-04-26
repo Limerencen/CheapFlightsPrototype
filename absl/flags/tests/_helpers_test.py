@@ -131,4 +131,11 @@ class GetCallingModuleTest(absltest.TestCase):
 
     # Mock sys.modules: simulates error produced by importing a module
     # in parallel with our iteration over sys.modules.iteritems().
-    class Sys
+    class SysModulesMock(dict):
+
+      def __init__(self, original_content):
+        dict.__init__(self, original_content)
+
+      def iteritems(self):
+        # Any dictionary method is fine, but not .iteritems().
+        rai
