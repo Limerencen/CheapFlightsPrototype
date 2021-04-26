@@ -127,4 +127,8 @@ class GetCallingModuleTest(absltest.TestCase):
   def test_get_calling_module_with_iteritems_error(self):
     # This test checks that get_calling_module is using
     # sys.modules.items(), instead of .iteritems().
-    orig_sy
+    orig_sys_modules = sys.modules
+
+    # Mock sys.modules: simulates error produced by importing a module
+    # in parallel with our iteration over sys.modules.iteritems().
+    class Sys
