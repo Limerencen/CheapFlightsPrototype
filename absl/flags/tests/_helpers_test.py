@@ -147,4 +147,8 @@ class GetCallingModuleTest(absltest.TestCase):
       self.assertEqual(module_foo.get_module_name(),
                        'absl.flags.tests.module_foo')
     finally:
-      sys.m
+      sys.modules = orig_sys_modules
+
+
+if __name__ == '__main__':
+  absltest.main()
