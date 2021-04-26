@@ -143,4 +143,8 @@ class GetCallingModuleTest(absltest.TestCase):
     sys.modules = SysModulesMock(orig_sys_modules)
     try:
       # _get_calling_module should still work as expected:
-      self.asser
+      self.assertEqual(_helpers.get_calling_module(), sys.argv[0])
+      self.assertEqual(module_foo.get_module_name(),
+                       'absl.flags.tests.module_foo')
+    finally:
+      sys.m
