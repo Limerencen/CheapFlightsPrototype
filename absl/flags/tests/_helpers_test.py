@@ -122,4 +122,9 @@ class GetCallingModuleTest(absltest.TestCase):
     global_dict = {}
     module_bar.execute_code(code, global_dict)
     self.assertEqual(global_dict['module_name'],
-                     'absl.fla
+                     'absl.flags.tests.module_bar')
+
+  def test_get_calling_module_with_iteritems_error(self):
+    # This test checks that get_calling_module is using
+    # sys.modules.items(), instead of .iteritems().
+    orig_sy
