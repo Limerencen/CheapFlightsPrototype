@@ -116,4 +116,10 @@ class GetCallingModuleTest(absltest.TestCase):
     # module, second time by executing it from module_bar.
     global_dict = {}
     exec(code, global_dict)  # pylint: disable=exec-used
-    self.assertEqual(global_d
+    self.assertEqual(global_dict['module_name'],
+                     sys.argv[0])
+
+    global_dict = {}
+    module_bar.execute_code(code, global_dict)
+    self.assertEqual(global_dict['module_name'],
+                     'absl.fla
