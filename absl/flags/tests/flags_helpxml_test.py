@@ -480,3 +480,181 @@ EXPECTED_HELP_XML_FOR_FLAGS_FROM_MAIN_MODULE = """\
     <default>['APPLE', 'BANANA']</default>
     <current>['APPLE', 'BANANA']</current>
     <type>multi string enum</type>
+    <enum_value>APPLE</enum_value>
+    <enum_value>BANANA</enum_value>
+    <enum_value>CHERRY</enum_value>
+  </flag>
+  <flag>
+    <key>yes</key>
+    <file>%(main_module_name)s</file>
+    <name>index</name>
+    <meaning>An integer flag</meaning>
+    <default>17</default>
+    <current>17</current>
+    <type>int</type>
+  </flag>
+  <flag>
+    <key>yes</key>
+    <file>%(main_module_name)s</file>
+    <name>nb_iters</name>
+    <meaning>An integer flag</meaning>
+    <default>17</default>
+    <current>17</current>
+    <type>int</type>
+    <lower_bound>5</lower_bound>
+    <upper_bound>27</upper_bound>
+  </flag>
+  <flag>
+    <key>yes</key>
+    <file>%(main_module_name)s</file>
+    <name>to_delete</name>
+    <meaning>Files to delete;
+    repeat this option to specify a list of values</meaning>
+    <default>['a.cc', 'b.h']</default>
+    <current>['a.cc', 'b.h']</current>
+    <type>multi string</type>
+  </flag>
+  <flag>
+    <key>yes</key>
+    <file>%(main_module_name)s</file>
+    <name>use_gpu</name>
+    <meaning>Use gpu for performance.</meaning>
+    <default>false</default>
+    <current>false</current>
+    <type>bool</type>
+  </flag>
+"""
+
+EXPECTED_HELP_XML_FOR_FLAGS_FROM_MODULE_BAR = """\
+  <flag>
+    <file>%(module_bar_name)s</file>
+    <name>tmod_bar_t</name>
+    <meaning>Sample int flag.</meaning>
+    <default>4</default>
+    <current>4</current>
+    <type>int</type>
+  </flag>
+  <flag>
+    <key>yes</key>
+    <file>%(module_bar_name)s</file>
+    <name>tmod_bar_u</name>
+    <meaning>Sample int flag.</meaning>
+    <default>5</default>
+    <current>5</current>
+    <type>int</type>
+  </flag>
+  <flag>
+    <file>%(module_bar_name)s</file>
+    <name>tmod_bar_v</name>
+    <meaning>Sample int flag.</meaning>
+    <default>6</default>
+    <current>6</current>
+    <type>int</type>
+  </flag>
+  <flag>
+    <file>%(module_bar_name)s</file>
+    <name>tmod_bar_x</name>
+    <meaning>Boolean flag.</meaning>
+    <default>true</default>
+    <current>true</current>
+    <type>bool</type>
+  </flag>
+  <flag>
+    <file>%(module_bar_name)s</file>
+    <name>tmod_bar_y</name>
+    <meaning>String flag.</meaning>
+    <default>default</default>
+    <current>default</current>
+    <type>string</type>
+  </flag>
+  <flag>
+    <key>yes</key>
+    <file>%(module_bar_name)s</file>
+    <name>tmod_bar_z</name>
+    <meaning>Another boolean flag from module bar.</meaning>
+    <default>false</default>
+    <current>false</current>
+    <type>bool</type>
+  </flag>
+"""
+
+EXPECTED_HELP_XML_END = """\
+</AllFlags>
+"""
+
+
+class WriteHelpInXMLFormatTest(absltest.TestCase):
+  """Big test of FlagValues.write_help_in_xml_format, with several flags."""
+
+  def test_write_help_in_xmlformat(self):
+    fv = flags.FlagValues()
+    # Since these flags are defined by the top module, they are all key.
+    flags.DEFINE_integer('index', 17, 'An integer flag', flag_values=fv)
+    flags.DEFINE_integer('nb_iters', 17, 'An integer flag',
+                         lower_bound=5, upper_bound=27, flag_values=fv)
+    flags.DEFINE_string('file_path', '/path/to/my/dir', 'A test string flag.',
+                        flag_values=fv)
+    flags.DEFINE_boolean('use_gpu', False, 'Use gpu for performance.',
+                         flag_values=fv)
+    flags.DEFINE_enum('cc_version', 'stable', ['stable', 'experimental'],
+                      'Compiler version to use.', flag_values=fv)
+    flags.DEFINE_list('files', 'a.cc,a.h,archive/old.zip',
+                      'Files to process.', flag_values=fv)
+    flags.DEFINE_list('allow_users', ['alice', 'bob'],
+                      'Users with access.', flag_values=fv)
+    flags.DEFINE_spaceseplist('dirs', 'src libs bins',
+                              'Directories to create.', flag_values=fv)
+    flags.DEFINE_multi_string('to_delete', ['a.cc', 'b.h'],
+                              'Files to delete', flag_values=fv)
+    flags.DEFINE_multi_integer('cols', [5, 7, 23],
+                               'Columns to select', flag_values=fv)
+    flags.DEFINE_multi_enum('flavours', ['APPLE', 'BANANA'],
+                            ['APPLE', 'BANANA', 'CHERRY'],
+                            'Compilation flavour.', flag_values=fv)
+    # Define a few flags in a different module.
+    module_bar.define_flags(flag_values=fv)
+    # And declare only a few of them to be key.  This way, we have
+    # different kinds of flags, defined in different modules, and not
+    # all of them are key flags.
+    flags.declare_key_flag('tmod_bar_z', flag_values=fv)
+    flags.declare_key_flag('tmod_bar_u', flag_values=fv)
+
+    # Generate flag help in XML format in the StringIO sio.
+    sio = io.StringIO()
+    fv.write_help_in_xml_format(sio)
+
+    # Check that we got the expected result.
+    expected_output_template = EXPECTED_HELP_XML_START
+    main_module_name = sys.argv[0]
+    module_bar_name = module_bar.__name__
+
+    if main_module_name < module_bar_name:
+      expected_output_template += EXPECTED_HELP_XML_FOR_FLAGS_FROM_MAIN_MODULE
+      expected_output_template += EXPECTED_HELP_XML_FOR_FLAGS_FROM_MODULE_BAR
+    else:
+      expected_output_template += EXPECTED_HELP_XML_FOR_FLAGS_FROM_MODULE_BAR
+      expected_output_template += EXPECTED_HELP_XML_FOR_FLAGS_FROM_MAIN_MODULE
+
+    expected_output_template += EXPECTED_HELP_XML_END
+
+    # XML representation of the whitespace list separators.
+    whitespace_separators = _list_separators_in_xmlformat(string.whitespace,
+                                                          indent='    ')
+    expected_output = (
+        expected_output_template %
+        {'basename_of_argv0': os.path.basename(sys.argv[0]),
+         'usage_doc': sys.modules['__main__'].__doc__,
+         'main_module_name': main_module_name,
+         'module_bar_name': module_bar_name,
+         'whitespace_separators': whitespace_separators})
+
+    actual_output = sio.getvalue()
+    self.assertMultiLineEqual(expected_output, actual_output)
+
+    # Also check that our result is valid XML.  minidom.parseString
+    # throws an xml.parsers.expat.ExpatError in case of an error.
+    xml.dom.minidom.parseString(actual_output)
+
+
+if __name__ == '__main__':
+  absltest.main()
