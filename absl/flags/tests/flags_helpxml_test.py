@@ -282,3 +282,201 @@ class FlagCreateXMLDOMElement(absltest.TestCase):
         '</flag>\n').replace('LIST_SEPARATORS',
                              _list_separators_in_xmlformat(expected_separators,
                                                            indent='  '))
+    self._check_flag_help_in_xml('dirs', 'tool', expected_output)
+
+  def test_flag_help_in_xml_space_separated_list_with_comma_compat(self):
+    flags.DEFINE_spaceseplist('dirs', 'src libs,bin',
+                              'Directories to search.', comma_compat=True,
+                              flag_values=self.fv)
+    expected_separators = sorted(string.whitespace + ',')
+    expected_output = (
+        '<flag>\n'
+        '  <file>tool</file>\n'
+        '  <name>dirs</name>\n'
+        '  <meaning>Directories to search.</meaning>\n'
+        '  <default>src libs bin</default>\n'
+        '  <current>[\'src\', \'libs\', \'bin\']</current>\n'
+        '  <type>whitespace or comma separated list of strings</type>\n'
+        'LIST_SEPARATORS'
+        '</flag>\n').replace('LIST_SEPARATORS',
+                             _list_separators_in_xmlformat(expected_separators,
+                                                           indent='  '))
+    self._check_flag_help_in_xml('dirs', 'tool', expected_output)
+
+  def test_flag_help_in_xml_multi_string(self):
+    flags.DEFINE_multi_string('to_delete', ['a.cc', 'b.h'],
+                              'Files to delete', flag_values=self.fv)
+    expected_output = (
+        '<flag>\n'
+        '  <file>tool</file>\n'
+        '  <name>to_delete</name>\n'
+        '  <meaning>Files to delete;\n'
+        '    repeat this option to specify a list of values</meaning>\n'
+        '  <default>[\'a.cc\', \'b.h\']</default>\n'
+        '  <current>[\'a.cc\', \'b.h\']</current>\n'
+        '  <type>multi string</type>\n'
+        '</flag>\n')
+    self._check_flag_help_in_xml('to_delete', 'tool', expected_output)
+
+  def test_flag_help_in_xml_multi_int(self):
+    flags.DEFINE_multi_integer('cols', [5, 7, 23],
+                               'Columns to select', flag_values=self.fv)
+    expected_output = (
+        '<flag>\n'
+        '  <file>tool</file>\n'
+        '  <name>cols</name>\n'
+        '  <meaning>Columns to select;\n    '
+        'repeat this option to specify a list of values</meaning>\n'
+        '  <default>[5, 7, 23]</default>\n'
+        '  <current>[5, 7, 23]</current>\n'
+        '  <type>multi int</type>\n'
+        '</flag>\n')
+    self._check_flag_help_in_xml('cols', 'tool', expected_output)
+
+  def test_flag_help_in_xml_multi_enum(self):
+    flags.DEFINE_multi_enum('flavours', ['APPLE', 'BANANA'],
+                            ['APPLE', 'BANANA', 'CHERRY'],
+                            'Compilation flavour.', flag_values=self.fv)
+    expected_output = (
+        '<flag>\n'
+        '  <file>tool</file>\n'
+        '  <name>flavours</name>\n'
+        '  <meaning>&lt;APPLE|BANANA|CHERRY&gt;: Compilation flavour.;\n'
+        '    repeat this option to specify a list of values</meaning>\n'
+        '  <default>[\'APPLE\', \'BANANA\']</default>\n'
+        '  <current>[\'APPLE\', \'BANANA\']</current>\n'
+        '  <type>multi string enum</type>\n'
+        '  <enum_value>APPLE</enum_value>\n'
+        '  <enum_value>BANANA</enum_value>\n'
+        '  <enum_value>CHERRY</enum_value>\n'
+        '</flag>\n')
+    self._check_flag_help_in_xml('flavours', 'tool', expected_output)
+
+  def test_flag_help_in_xml_multi_enum_class_singleton_default(self):
+    class Fruit(enum.Enum):
+      ORANGE = 0
+      BANANA = 1
+
+    flags.DEFINE_multi_enum_class('fruit', ['ORANGE'],
+                                  Fruit,
+                                  'The fruit flag.', flag_values=self.fv)
+    expected_output = (
+        '<flag>\n'
+        '  <file>tool</file>\n'
+        '  <name>fruit</name>\n'
+        '  <meaning>&lt;orange|banana&gt;: The fruit flag.;\n'
+        '    repeat this option to specify a list of values</meaning>\n'
+        '  <default>orange</default>\n'
+        '  <current>orange</current>\n'
+        '  <type>multi enum class</type>\n'
+        '  <enum_value>ORANGE</enum_value>\n'
+        '  <enum_value>BANANA</enum_value>\n'
+        '</flag>\n')
+    self._check_flag_help_in_xml('fruit', 'tool', expected_output)
+
+  def test_flag_help_in_xml_multi_enum_class_list_default(self):
+    class Fruit(enum.Enum):
+      ORANGE = 0
+      BANANA = 1
+
+    flags.DEFINE_multi_enum_class('fruit', ['ORANGE', 'BANANA'],
+                                  Fruit,
+                                  'The fruit flag.', flag_values=self.fv)
+    expected_output = (
+        '<flag>\n'
+        '  <file>tool</file>\n'
+        '  <name>fruit</name>\n'
+        '  <meaning>&lt;orange|banana&gt;: The fruit flag.;\n'
+        '    repeat this option to specify a list of values</meaning>\n'
+        '  <default>orange,banana</default>\n'
+        '  <current>orange,banana</current>\n'
+        '  <type>multi enum class</type>\n'
+        '  <enum_value>ORANGE</enum_value>\n'
+        '  <enum_value>BANANA</enum_value>\n'
+        '</flag>\n')
+    self._check_flag_help_in_xml('fruit', 'tool', expected_output)
+
+# The next EXPECTED_HELP_XML_* constants are parts of a template for
+# the expected XML output from WriteHelpInXMLFormatTest below.  When
+# we assemble these parts into a single big string, we'll take into
+# account the ordering between the name of the main module and the
+# name of module_bar.  Next, we'll fill in the docstring for this
+# module (%(usage_doc)s), the name of the main module
+# (%(main_module_name)s) and the name of the module module_bar
+# (%(module_bar_name)s).  See WriteHelpInXMLFormatTest below.
+EXPECTED_HELP_XML_START = """\
+<?xml version="1.0" encoding="utf-8"?>
+<AllFlags>
+  <program>%(basename_of_argv0)s</program>
+  <usage>%(usage_doc)s</usage>
+"""
+
+EXPECTED_HELP_XML_FOR_FLAGS_FROM_MAIN_MODULE = """\
+  <flag>
+    <key>yes</key>
+    <file>%(main_module_name)s</file>
+    <name>allow_users</name>
+    <meaning>Users with access.</meaning>
+    <default>alice,bob</default>
+    <current>['alice', 'bob']</current>
+    <type>comma separated list of strings</type>
+    <list_separator>','</list_separator>
+  </flag>
+  <flag>
+    <key>yes</key>
+    <file>%(main_module_name)s</file>
+    <name>cc_version</name>
+    <meaning>&lt;stable|experimental&gt;: Compiler version to use.</meaning>
+    <default>stable</default>
+    <current>stable</current>
+    <type>string enum</type>
+    <enum_value>stable</enum_value>
+    <enum_value>experimental</enum_value>
+  </flag>
+  <flag>
+    <key>yes</key>
+    <file>%(main_module_name)s</file>
+    <name>cols</name>
+    <meaning>Columns to select;
+    repeat this option to specify a list of values</meaning>
+    <default>[5, 7, 23]</default>
+    <current>[5, 7, 23]</current>
+    <type>multi int</type>
+  </flag>
+  <flag>
+    <key>yes</key>
+    <file>%(main_module_name)s</file>
+    <name>dirs</name>
+    <meaning>Directories to create.</meaning>
+    <default>src libs bins</default>
+    <current>['src', 'libs', 'bins']</current>
+    <type>whitespace separated list of strings</type>
+%(whitespace_separators)s  </flag>
+  <flag>
+    <key>yes</key>
+    <file>%(main_module_name)s</file>
+    <name>file_path</name>
+    <meaning>A test string flag.</meaning>
+    <default>/path/to/my/dir</default>
+    <current>/path/to/my/dir</current>
+    <type>string</type>
+  </flag>
+  <flag>
+    <key>yes</key>
+    <file>%(main_module_name)s</file>
+    <name>files</name>
+    <meaning>Files to process.</meaning>
+    <default>a.cc,a.h,archive/old.zip</default>
+    <current>['a.cc', 'a.h', 'archive/old.zip']</current>
+    <type>comma separated list of strings</type>
+    <list_separator>\',\'</list_separator>
+  </flag>
+  <flag>
+    <key>yes</key>
+    <file>%(main_module_name)s</file>
+    <name>flavours</name>
+    <meaning>&lt;APPLE|BANANA|CHERRY&gt;: Compilation flavour.;
+    repeat this option to specify a list of values</meaning>
+    <default>['APPLE', 'BANANA']</default>
+    <current>['APPLE', 'BANANA']</current>
+    <type>multi string enum</type>
