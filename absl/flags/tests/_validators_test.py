@@ -793,3 +793,178 @@ class MarkFlagAsRequiredTest(absltest.TestCase):
         'string_flag', 'value', 'string flag', flag_values=self.flag_values)
     _validators.mark_flag_as_required(
         'string_flag', flag_values=self.flag_values)
+    argv = ('./program',)
+    self.flag_values(argv)
+    self.assertEqual('value', self.flag_values.string_flag)
+    expected = ('flag --string_flag=None: Flag --string_flag must have a value '
+                'other than None.')
+    with self.assertRaises(_exceptions.IllegalFlagValueError) as cm:
+      self.flag_values.string_flag = None
+    self.assertEqual(expected, str(cm.exception))
+
+  def test_flag_default_not_none_warning(self):
+    _defines.DEFINE_string(
+        'flag_not_none', '', 'empty default', flag_values=self.flag_values)
+    with warnings.catch_warnings(record=True) as caught_warnings:
+      warnings.simplefilter('always')
+      _validators.mark_flag_as_required(
+          'flag_not_none', flag_values=self.flag_values)
+
+    self.assertLen(caught_warnings, 1)
+    self.assertIn('--flag_not_none has a non-None default value',
+                  str(caught_warnings[0].message))
+
+  def test_mismatching_flagvalues(self):
+    flag_holder = _defines.DEFINE_string(
+        'string_flag',
+        'value',
+        'string flag',
+        flag_values=_flagvalues.FlagValues())
+    expected = (
+        'flag_values must not be customized when operating on a FlagHolder')
+    with self.assertRaisesWithLiteralMatch(ValueError, expected):
+      _validators.mark_flag_as_required(
+          flag_holder, flag_values=self.flag_values)
+
+
+class MarkFlagsAsRequiredTest(absltest.TestCase):
+
+  def setUp(self):
+    super(MarkFlagsAsRequiredTest, self).setUp()
+    self.flag_values = _flagvalues.FlagValues()
+
+  def test_success(self):
+    _defines.DEFINE_string(
+        'string_flag_1', None, 'string flag 1', flag_values=self.flag_values)
+    _defines.DEFINE_string(
+        'string_flag_2', None, 'string flag 2', flag_values=self.flag_values)
+    flag_names = ['string_flag_1', 'string_flag_2']
+    _validators.mark_flags_as_required(flag_names, flag_values=self.flag_values)
+    argv = ('./program', '--string_flag_1=value_1', '--string_flag_2=value_2')
+    self.flag_values(argv)
+    self.assertEqual('value_1', self.flag_values.string_flag_1)
+    self.assertEqual('value_2', self.flag_values.string_flag_2)
+
+  def test_success_holders(self):
+    flag_1_holder = _defines.DEFINE_string(
+        'string_flag_1', None, 'string flag 1', flag_values=self.flag_values)
+    flag_2_holder = _defines.DEFINE_string(
+        'string_flag_2', None, 'string flag 2', flag_values=self.flag_values)
+    _validators.mark_flags_as_required([flag_1_holder, flag_2_holder],
+                                       flag_values=self.flag_values)
+    argv = ('./program', '--string_flag_1=value_1', '--string_flag_2=value_2')
+    self.flag_values(argv)
+    self.assertEqual('value_1', self.flag_values.string_flag_1)
+    self.assertEqual('value_2', self.flag_values.string_flag_2)
+
+  def test_catch_none_as_default(self):
+    _defines.DEFINE_string(
+        'string_flag_1', None, 'string flag 1', flag_values=self.flag_values)
+    _defines.DEFINE_string(
+        'string_flag_2', None, 'string flag 2', flag_values=self.flag_values)
+    _validators.mark_flags_as_required(
+        ['string_flag_1', 'string_flag_2'], flag_values=self.flag_values)
+    argv = ('./program', '--string_flag_1=value_1')
+    expected = (
+        r'flag --string_flag_2=None: Flag --string_flag_2 must have a value '
+        r'other than None\.')
+    with self.assertRaisesRegex(_exceptions.IllegalFlagValueError, expected):
+      self.flag_values(argv)
+
+  def test_catch_setting_none_after_program_start(self):
+    _defines.DEFINE_string(
+        'string_flag_1',
+        'value_1',
+        'string flag 1',
+        flag_values=self.flag_values)
+    _defines.DEFINE_string(
+        'string_flag_2',
+        'value_2',
+        'string flag 2',
+        flag_values=self.flag_values)
+    _validators.mark_flags_as_required(
+        ['string_flag_1', 'string_flag_2'], flag_values=self.flag_values)
+    argv = ('./program', '--string_flag_1=value_1')
+    self.flag_values(argv)
+    self.assertEqual('value_1', self.flag_values.string_flag_1)
+    expected = (
+        'flag --string_flag_1=None: Flag --string_flag_1 must have a value '
+        'other than None.')
+    with self.assertRaises(_exceptions.IllegalFlagValueError) as cm:
+      self.flag_values.string_flag_1 = None
+    self.assertEqual(expected, str(cm.exception))
+
+  def test_catch_multiple_flags_as_none_at_program_start(self):
+    _defines.DEFINE_float(
+        'float_flag_1',
+        None,
+        'string flag 1',
+        flag_values=self.flag_values)
+    _defines.DEFINE_float(
+        'float_flag_2',
+        None,
+        'string flag 2',
+        flag_values=self.flag_values)
+    _validators.mark_flags_as_required(
+        ['float_flag_1', 'float_flag_2'], flag_values=self.flag_values)
+    argv = ('./program', '')
+    expected = (
+        'flag --float_flag_1=None: Flag --float_flag_1 must have a value '
+        'other than None.\n'
+        'flag --float_flag_2=None: Flag --float_flag_2 must have a value '
+        'other than None.')
+    with self.assertRaises(_exceptions.IllegalFlagValueError) as cm:
+      self.flag_values(argv)
+    self.assertEqual(expected, str(cm.exception))
+
+  def test_fail_fast_single_flag_and_skip_remaining_validators(self):
+    def raise_unexpected_error(x):
+      del x
+      raise _exceptions.ValidationError('Should not be raised.')
+    _defines.DEFINE_float(
+        'flag_1', None, 'flag 1', flag_values=self.flag_values)
+    _defines.DEFINE_float(
+        'flag_2', 4.2, 'flag 2', flag_values=self.flag_values)
+    _validators.mark_flag_as_required('flag_1', flag_values=self.flag_values)
+    _validators.register_validator(
+        'flag_1', raise_unexpected_error, flag_values=self.flag_values)
+    _validators.register_multi_flags_validator(['flag_2', 'flag_1'],
+                                               raise_unexpected_error,
+                                               flag_values=self.flag_values)
+    argv = ('./program', '')
+    expected = (
+        'flag --flag_1=None: Flag --flag_1 must have a value other than None.')
+    with self.assertRaises(_exceptions.IllegalFlagValueError) as cm:
+      self.flag_values(argv)
+    self.assertEqual(expected, str(cm.exception))
+
+  def test_fail_fast_multi_flag_and_skip_remaining_validators(self):
+    def raise_expected_error(x):
+      del x
+      raise _exceptions.ValidationError('Expected error.')
+    def raise_unexpected_error(x):
+      del x
+      raise _exceptions.ValidationError('Got unexpected error.')
+    _defines.DEFINE_float(
+        'flag_1', 5.1, 'flag 1', flag_values=self.flag_values)
+    _defines.DEFINE_float(
+        'flag_2', 10.0, 'flag 2', flag_values=self.flag_values)
+    _validators.register_multi_flags_validator(['flag_1', 'flag_2'],
+                                               raise_expected_error,
+                                               flag_values=self.flag_values)
+    _validators.register_multi_flags_validator(['flag_2', 'flag_1'],
+                                               raise_unexpected_error,
+                                               flag_values=self.flag_values)
+    _validators.register_validator(
+        'flag_1', raise_unexpected_error, flag_values=self.flag_values)
+    _validators.register_validator(
+        'flag_2', raise_unexpected_error, flag_values=self.flag_values)
+    argv = ('./program', '')
+    expected = ('flags flag_1=5.1, flag_2=10.0: Expected error.')
+    with self.assertRaises(_exceptions.IllegalFlagValueError) as cm:
+      self.flag_values(argv)
+    self.assertEqual(expected, str(cm.exception))
+
+
+if __name__ == '__main__':
+  absltest.main()
