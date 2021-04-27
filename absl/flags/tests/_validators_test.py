@@ -591,3 +591,205 @@ class MarkFlagsAsMutualExclusiveTest(absltest.TestCase):
   def test_no_multistring_flags_present_required(self):
     self._mark_flags_as_mutually_exclusive(
         ['multi_flag_one', 'multi_flag_two'], True)
+    argv = ('./program',)
+    expected = (
+        'flags multi_flag_one=None, multi_flag_two=None: '
+        'Exactly one of (multi_flag_one, multi_flag_two) must have a value '
+        'other than None.')
+
+    self.assertRaisesWithLiteralMatch(_exceptions.IllegalFlagValueError,
+                                      expected, self.flag_values, argv)
+
+  def test_one_multiflag_present(self):
+    self._mark_flags_as_mutually_exclusive(
+        ['multi_flag_one', 'multi_flag_two'], True)
+    self.flag_values(('./program', '--multi_flag_one=1'))
+    self.assertEqual(['1'], self.flag_values.multi_flag_one)
+
+  def test_one_multiflag_present_repeated(self):
+    self._mark_flags_as_mutually_exclusive(
+        ['multi_flag_one', 'multi_flag_two'], True)
+    self.flag_values(('./program', '--multi_flag_one=1', '--multi_flag_one=1b'))
+    self.assertEqual(['1', '1b'], self.flag_values.multi_flag_one)
+
+  def test_multiple_multiflags_present(self):
+    self._mark_flags_as_mutually_exclusive(
+        ['multi_flag_one', 'multi_flag_two'], False)
+    argv = ('./program', '--multi_flag_one=1', '--multi_flag_two=2')
+    expected = (
+        "flags multi_flag_one=['1'], multi_flag_two=['2']: "
+        'At most one of (multi_flag_one, multi_flag_two) must have a value '
+        'other than None.')
+
+    self.assertRaisesWithLiteralMatch(_exceptions.IllegalFlagValueError,
+                                      expected, self.flag_values, argv)
+
+  def test_multiple_multiflags_present_required(self):
+    self._mark_flags_as_mutually_exclusive(
+        ['multi_flag_one', 'multi_flag_two'], True)
+    argv = ('./program', '--multi_flag_one=1', '--multi_flag_two=2')
+    expected = (
+        "flags multi_flag_one=['1'], multi_flag_two=['2']: "
+        'Exactly one of (multi_flag_one, multi_flag_two) must have a value '
+        'other than None.')
+
+    self.assertRaisesWithLiteralMatch(_exceptions.IllegalFlagValueError,
+                                      expected, self.flag_values, argv)
+
+  def test_flag_default_not_none_warning(self):
+    with warnings.catch_warnings(record=True) as caught_warnings:
+      warnings.simplefilter('always')
+      self._mark_flags_as_mutually_exclusive(['flag_one', 'flag_not_none'],
+                                             False)
+    self.assertLen(caught_warnings, 1)
+    self.assertIn('--flag_not_none has a non-None default value',
+                  str(caught_warnings[0].message))
+
+  def test_multiple_flagvalues(self):
+    other_holder = _defines.DEFINE_boolean(
+        'other_flagvalues',
+        False,
+        'other ',
+        flag_values=_flagvalues.FlagValues())
+    expected = (
+        'multiple FlagValues instances used in invocation. '
+        'FlagHolders must be registered to the same FlagValues instance as '
+        'do flag names, if provided.')
+    with self.assertRaisesWithLiteralMatch(ValueError, expected):
+      self._mark_flags_as_mutually_exclusive(
+          [self.flag_one_holder, other_holder], False)
+
+
+class MarkBoolFlagsAsMutualExclusiveTest(absltest.TestCase):
+
+  def setUp(self):
+    super(MarkBoolFlagsAsMutualExclusiveTest, self).setUp()
+    self.flag_values = _flagvalues.FlagValues()
+
+    self.false_1_holder = _defines.DEFINE_boolean(
+        'false_1', False, 'default false 1', flag_values=self.flag_values)
+    self.false_2_holder = _defines.DEFINE_boolean(
+        'false_2', False, 'default false 2', flag_values=self.flag_values)
+    self.true_1_holder = _defines.DEFINE_boolean(
+        'true_1', True, 'default true 1', flag_values=self.flag_values)
+    self.non_bool_holder = _defines.DEFINE_integer(
+        'non_bool', None, 'non bool', flag_values=self.flag_values)
+
+  def _mark_bool_flags_as_mutually_exclusive(self, flag_names, required):
+    _validators.mark_bool_flags_as_mutual_exclusive(
+        flag_names, required=required, flag_values=self.flag_values)
+
+  def test_no_flags_present(self):
+    self._mark_bool_flags_as_mutually_exclusive(['false_1', 'false_2'], False)
+    self.flag_values(('./program',))
+    self.assertEqual(False, self.flag_values.false_1)
+    self.assertEqual(False, self.flag_values.false_2)
+
+  def test_no_flags_present_holder(self):
+    self._mark_bool_flags_as_mutually_exclusive(
+        [self.false_1_holder, self.false_2_holder], False)
+    self.flag_values(('./program',))
+    self.assertEqual(False, self.flag_values.false_1)
+    self.assertEqual(False, self.flag_values.false_2)
+
+  def test_no_flags_present_mixed(self):
+    self._mark_bool_flags_as_mutually_exclusive(
+        [self.false_1_holder, 'false_2'], False)
+    self.flag_values(('./program',))
+    self.assertEqual(False, self.flag_values.false_1)
+    self.assertEqual(False, self.flag_values.false_2)
+
+  def test_no_flags_present_required(self):
+    self._mark_bool_flags_as_mutually_exclusive(['false_1', 'false_2'], True)
+    argv = ('./program',)
+    expected = (
+        'flags false_1=False, false_2=False: '
+        'Exactly one of (false_1, false_2) must be True.')
+
+    self.assertRaisesWithLiteralMatch(_exceptions.IllegalFlagValueError,
+                                      expected, self.flag_values, argv)
+
+  def test_no_flags_present_with_default_true_required(self):
+    self._mark_bool_flags_as_mutually_exclusive(['false_1', 'true_1'], True)
+    self.flag_values(('./program',))
+    self.assertEqual(False, self.flag_values.false_1)
+    self.assertEqual(True, self.flag_values.true_1)
+
+  def test_two_flags_true(self):
+    self._mark_bool_flags_as_mutually_exclusive(['false_1', 'false_2'], False)
+    argv = ('./program', '--false_1', '--false_2')
+    expected = (
+        'flags false_1=True, false_2=True: At most one of (false_1, '
+        'false_2) must be True.')
+
+    self.assertRaisesWithLiteralMatch(_exceptions.IllegalFlagValueError,
+                                      expected, self.flag_values, argv)
+
+  def test_non_bool_flag(self):
+    expected = ('Flag --non_bool is not Boolean, which is required for flags '
+                'used in mark_bool_flags_as_mutual_exclusive.')
+    with self.assertRaisesWithLiteralMatch(_exceptions.ValidationError,
+                                           expected):
+      self._mark_bool_flags_as_mutually_exclusive(['false_1', 'non_bool'],
+                                                  False)
+
+  def test_multiple_flagvalues(self):
+    other_bool_holder = _defines.DEFINE_boolean(
+        'other_bool', False, 'other bool', flag_values=_flagvalues.FlagValues())
+    expected = (
+        'multiple FlagValues instances used in invocation. '
+        'FlagHolders must be registered to the same FlagValues instance as '
+        'do flag names, if provided.')
+    with self.assertRaisesWithLiteralMatch(ValueError, expected):
+      self._mark_bool_flags_as_mutually_exclusive(
+          [self.false_1_holder, other_bool_holder], False)
+
+
+class MarkFlagAsRequiredTest(absltest.TestCase):
+
+  def setUp(self):
+    super(MarkFlagAsRequiredTest, self).setUp()
+    self.flag_values = _flagvalues.FlagValues()
+
+  def test_success(self):
+    _defines.DEFINE_string(
+        'string_flag', None, 'string flag', flag_values=self.flag_values)
+    _validators.mark_flag_as_required(
+        'string_flag', flag_values=self.flag_values)
+    argv = ('./program', '--string_flag=value')
+    self.flag_values(argv)
+    self.assertEqual('value', self.flag_values.string_flag)
+
+  def test_success_holder(self):
+    holder = _defines.DEFINE_string(
+        'string_flag', None, 'string flag', flag_values=self.flag_values)
+    _validators.mark_flag_as_required(holder, flag_values=self.flag_values)
+    argv = ('./program', '--string_flag=value')
+    self.flag_values(argv)
+    self.assertEqual('value', self.flag_values.string_flag)
+
+  def test_success_holder_infer_flagvalues(self):
+    holder = _defines.DEFINE_string(
+        'string_flag', None, 'string flag', flag_values=self.flag_values)
+    _validators.mark_flag_as_required(holder)
+    argv = ('./program', '--string_flag=value')
+    self.flag_values(argv)
+    self.assertEqual('value', self.flag_values.string_flag)
+
+  def test_catch_none_as_default(self):
+    _defines.DEFINE_string(
+        'string_flag', None, 'string flag', flag_values=self.flag_values)
+    _validators.mark_flag_as_required(
+        'string_flag', flag_values=self.flag_values)
+    argv = ('./program',)
+    expected = (
+        r'flag --string_flag=None: Flag --string_flag must have a value other '
+        r'than None\.')
+    with self.assertRaisesRegex(_exceptions.IllegalFlagValueError, expected):
+      self.flag_values(argv)
+
+  def test_catch_setting_none_after_program_start(self):
+    _defines.DEFINE_string(
+        'string_flag', 'value', 'string flag', flag_values=self.flag_values)
+    _validators.mark_flag_as_required(
+        'string_flag', flag_values=self.flag_values)
