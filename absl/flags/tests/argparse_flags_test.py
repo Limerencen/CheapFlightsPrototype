@@ -216,3 +216,213 @@ class ArgparseFlagsTest(parameterized.TestCase):
   def test_help_main_module_flags(self):
     parser = argparse_flags.ArgumentParser(
         inherited_absl_flags=self._absl_flags)
+    help_message = parser.format_help()
+
+    # Only the short name is shown in the usage string.
+    self.assertIn('[-s ABSL_STRING]', help_message)
+    # Both names are included in the options section.
+    self.assertIn('-s ABSL_STRING, --absl_string ABSL_STRING', help_message)
+    # Verify help messages.
+    self.assertIn('help for --absl_string=%.', help_message)
+    self.assertIn('<apple|orange>: help for --absl_enum.', help_message)
+
+  def test_help_non_main_module_flags(self):
+    flags.DEFINE_string(
+        'non_main_module_flag', 'default', 'help',
+        module_name='other.module', flag_values=self._absl_flags)
+    parser = argparse_flags.ArgumentParser(
+        inherited_absl_flags=self._absl_flags)
+    help_message = parser.format_help()
+
+    # Non main module key flags are not printed in the help message.
+    self.assertNotIn('non_main_module_flag', help_message)
+
+  def test_help_non_main_module_key_flags(self):
+    flags.DEFINE_string(
+        'non_main_module_flag', 'default', 'help',
+        module_name='other.module', flag_values=self._absl_flags)
+    flags.declare_key_flag('non_main_module_flag', flag_values=self._absl_flags)
+    parser = argparse_flags.ArgumentParser(
+        inherited_absl_flags=self._absl_flags)
+    help_message = parser.format_help()
+
+    # Main module key fags are printed in the help message, even if the flag
+    # is defined in another module.
+    self.assertIn('non_main_module_flag', help_message)
+
+  @parameterized.named_parameters(
+      ('h', ['-h']),
+      ('help', ['--help']),
+      ('helpshort', ['--helpshort']),
+      ('helpfull', ['--helpfull']),
+  )
+  def test_help_flags(self, args):
+    parser = argparse_flags.ArgumentParser(
+        inherited_absl_flags=self._absl_flags)
+    with self.assertRaises(SystemExit):
+      parser.parse_args(args)
+
+  @parameterized.named_parameters(
+      ('h', ['-h']),
+      ('help', ['--help']),
+      ('helpshort', ['--helpshort']),
+      ('helpfull', ['--helpfull']),
+  )
+  def test_no_help_flags(self, args):
+    parser = argparse_flags.ArgumentParser(
+        inherited_absl_flags=self._absl_flags, add_help=False)
+    with mock.patch.object(parser, 'print_help'):
+      with self.assertRaises(SystemExit):
+        parser.parse_args(args)
+      parser.print_help.assert_not_called()
+
+  def test_helpfull_message(self):
+    flags.DEFINE_string(
+        'non_main_module_flag', 'default', 'help',
+        module_name='other.module', flag_values=self._absl_flags)
+    parser = argparse_flags.ArgumentParser(
+        inherited_absl_flags=self._absl_flags)
+    with self.assertRaises(SystemExit),\
+        mock.patch.object(sys, 'stdout', new=io.StringIO()) as mock_stdout:
+      parser.parse_args(['--helpfull'])
+    stdout_message = mock_stdout.getvalue()
+    logging.info('captured stdout message:\n%s', stdout_message)
+    self.assertIn('--non_main_module_flag', stdout_message)
+    self.assertIn('other.module', stdout_message)
+    # Make sure the main module is not included.
+    self.assertNotIn(sys.argv[0], stdout_message)
+    # Special flags defined in absl.flags.
+    self.assertIn('absl.flags:', stdout_message)
+    self.assertIn('--flagfile', stdout_message)
+    self.assertIn('--undefok', stdout_message)
+
+  @parameterized.named_parameters(
+      ('at_end',
+       ('1', '--absl_string=value_from_cmd', '--flagfile='),
+       'value_from_file'),
+      ('at_beginning',
+       ('--flagfile=', '1', '--absl_string=value_from_cmd'),
+       'value_from_cmd'),
+  )
+  def test_flagfile(self, cmd_args, expected_absl_string_value):
+    # Set gnu_getopt to False, to verify it's ignored by argparse_flags.
+    self._absl_flags.set_gnu_getopt(False)
+
+    parser = argparse_flags.ArgumentParser(
+        inherited_absl_flags=self._absl_flags)
+    parser.add_argument('--header', help='Header message to print.')
+    parser.add_argument('integers', metavar='N', type=int, nargs='+',
+                        help='an integer for the accumulator')
+    flagfile = tempfile.NamedTemporaryFile(
+        dir=absltest.TEST_TMPDIR.value, delete=False)
+    self.addCleanup(os.unlink, flagfile.name)
+    with flagfile:
+      flagfile.write(b'''
+# The flag file.
+--absl_string=value_from_file
+--absl_integer=1
+--header=header_from_file
+''')
+
+    expand_flagfile = lambda x: x + flagfile.name if x == '--flagfile=' else x
+    cmd_args = [expand_flagfile(x) for x in cmd_args]
+    args = parser.parse_args(cmd_args)
+
+    self.assertEqual([1], args.integers)
+    self.assertEqual('header_from_file', args.header)
+    self.assertEqual(expected_absl_string_value, self._absl_flags.absl_string)
+
+  @parameterized.parameters(
+      ('positional', {'positional'}, False),
+      ('--not_existed', {'existed'}, False),
+      ('--empty', set(), False),
+      ('-single_dash', {'single_dash'}, True),
+      ('--double_dash', {'double_dash'}, True),
+      ('--with_value=value', {'with_value'}, True),
+  )
+  def test_is_undefok(self, arg, undefok_names, is_undefok):
+    self.assertEqual(is_undefok, argparse_flags._is_undefok(arg, undefok_names))
+
+  @parameterized.named_parameters(
+      ('single', 'single', ['--single'], []),
+      ('multiple', 'first,second', ['--first', '--second'], []),
+      ('single_dash', 'dash', ['-dash'], []),
+      ('mixed_dash', 'mixed', ['-mixed', '--mixed'], []),
+      ('value', 'name', ['--name=value'], []),
+      ('boolean_positive', 'bool', ['--bool'], []),
+      ('boolean_negative', 'bool', ['--nobool'], []),
+      ('left_over', 'strip', ['--first', '--strip', '--last'],
+       ['--first', '--last']),
+  )
+  def test_strip_undefok_args(self, undefok, args, expected_args):
+    actual_args = argparse_flags._strip_undefok_args(undefok, args)
+    self.assertListEqual(expected_args, actual_args)
+
+  @parameterized.named_parameters(
+      ('at_end', ['--unknown', '--undefok=unknown']),
+      ('at_beginning', ['--undefok=unknown', '--unknown']),
+      ('multiple', ['--unknown', '--undefok=unknown,another_unknown']),
+      ('with_value', ['--unknown=value', '--undefok=unknown']),
+      ('maybe_boolean', ['--nounknown', '--undefok=unknown']),
+      ('with_space', ['--unknown', '--undefok', 'unknown']),
+  )
+  def test_undefok_flag_correct_use(self, cmd_args):
+    parser = argparse_flags.ArgumentParser(
+        inherited_absl_flags=self._absl_flags)
+    args = parser.parse_args(cmd_args)  # Make sure it doesn't raise.
+    # Make sure `undefok` is not exposed in namespace.
+    sentinel = object()
+    self.assertIs(sentinel, getattr(args, 'undefok', sentinel))
+
+  def test_undefok_flag_existing(self):
+    parser = argparse_flags.ArgumentParser(
+        inherited_absl_flags=self._absl_flags)
+    parser.parse_args(
+        ['--absl_string=new_value', '--undefok=absl_string'])
+    self.assertEqual('new_value', self._absl_flags.absl_string)
+
+  @parameterized.named_parameters(
+      ('no_equal', ['--unknown', 'value', '--undefok=unknown']),
+      ('single_dash', ['--unknown', '-undefok=unknown']),
+  )
+  def test_undefok_flag_incorrect_use(self, cmd_args):
+    parser = argparse_flags.ArgumentParser(
+        inherited_absl_flags=self._absl_flags)
+    with self.assertRaises(SystemExit):
+      parser.parse_args(cmd_args)
+
+  def test_argument_default(self):
+    # Regression test for https://github.com/abseil/abseil-py/issues/171.
+    parser = argparse_flags.ArgumentParser(
+        inherited_absl_flags=self._absl_flags, argument_default=23)
+    parser.add_argument(
+        '--magic_number', type=int, help='The magic number to use.')
+    args = parser.parse_args([])
+    self.assertEqual(args.magic_number, 23)
+
+
+class ArgparseWithAppRunTest(parameterized.TestCase):
+
+  @parameterized.named_parameters(
+      ('simple',
+       'main_simple', 'parse_flags_simple',
+       ['--argparse_echo=I am argparse.', '--absl_echo=I am absl.'],
+       ['I am argparse.', 'I am absl.']),
+      ('subcommand_roll_dice',
+       'main_subcommands', 'parse_flags_subcommands',
+       ['--argparse_echo=I am argparse.', '--absl_echo=I am absl.',
+        'roll_dice', '--num_faces=12'],
+       ['I am argparse.', 'I am absl.', 'Rolled a dice: ']),
+      ('subcommand_shuffle',
+       'main_subcommands', 'parse_flags_subcommands',
+       ['--argparse_echo=I am argparse.', '--absl_echo=I am absl.',
+        'shuffle', 'a', 'b', 'c'],
+       ['I am argparse.', 'I am absl.', 'Shuffled: ']),
+  )
+  def test_argparse_with_app_run(
+      self, main_func_name, flags_parser_func_name, args, output_strings):
+    env = os.environ.copy()
+    env['MAIN_FUNC'] = main_func_name
+    env['FLAGS_PARSER_FUNC'] = flags_parser_func_name
+    helper = _bazelize_command.get_executable_path(
+        'absl/flags/tests/argparse_flags_test_helper')
