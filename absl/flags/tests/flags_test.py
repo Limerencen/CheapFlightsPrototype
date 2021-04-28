@@ -307,3 +307,205 @@ class FlagsUnitTest(absltest.TestCase):
     flags.DEFINE_enum('kwery', None, ['who', 'what', 'Why', 'where', 'when'],
                       '?')
     flags.DEFINE_enum(
+        'sense', None, ['Case', 'case', 'CASE'], '?', case_sensitive=True)
+    flags.DEFINE_enum(
+        'cases',
+        None, ['UPPER', 'lower', 'Initial', 'Ot_HeR'],
+        '?',
+        case_sensitive=False)
+    flags.DEFINE_enum(
+        'funny',
+        None, ['Joke', 'ha', 'ha', 'ha', 'ha'],
+        '?',
+        case_sensitive=True)
+    flags.DEFINE_enum(
+        'blah',
+        None, ['bla', 'Blah', 'BLAH', 'blah'],
+        '?',
+        case_sensitive=False)
+    flags.DEFINE_string(
+        'only_once', None, 'test only sets this once', allow_overwrite=False)
+    flags.DEFINE_string(
+        'universe',
+        None,
+        'test tries to set this three times',
+        allow_overwrite=False)
+
+    # Specify number of flags defined above.  The short_name defined
+    # for 'repeat' counts as an extra flag.
+    number_defined_flags = 22 + 1
+    self.assertLen(FLAGS, number_defined_flags + number_test_framework_flags)
+
+    self.assertEqual(FLAGS.repeat, 4)
+    self.assertEqual(FLAGS.name, 'Bob')
+    self.assertEqual(FLAGS.debug, 0)
+    self.assertEqual(FLAGS.q, 1)
+    self.assertEqual(FLAGS.octal, 0o666)
+    self.assertEqual(FLAGS.decimal, 666)
+    self.assertEqual(FLAGS.hexadecimal, 0x666)
+    self.assertEqual(FLAGS.x, 3)
+    self.assertEqual(FLAGS.l, 0x7fffffff00000000)
+    self.assertEqual(FLAGS.args, ['v=1', 'vmodule=a=0,b=2'])
+    self.assertEqual(FLAGS.letters, ['a', 'b', 'c'])
+    self.assertEqual(FLAGS.numbers, [1, 2, 3])
+    self.assertIsNone(FLAGS.kwery)
+    self.assertIsNone(FLAGS.sense)
+    self.assertIsNone(FLAGS.cases)
+    self.assertIsNone(FLAGS.funny)
+    self.assertIsNone(FLAGS.blah)
+
+    flag_values = FLAGS.flag_values_dict()
+    self.assertEqual(flag_values['repeat'], 4)
+    self.assertEqual(flag_values['name'], 'Bob')
+    self.assertEqual(flag_values['debug'], 0)
+    self.assertEqual(flag_values['r'], 4)  # Short for repeat.
+    self.assertEqual(flag_values['q'], 1)
+    self.assertEqual(flag_values['quack'], 0)
+    self.assertEqual(flag_values['x'], 3)
+    self.assertEqual(flag_values['l'], 0x7fffffff00000000)
+    self.assertEqual(flag_values['args'], ['v=1', 'vmodule=a=0,b=2'])
+    self.assertEqual(flag_values['letters'], ['a', 'b', 'c'])
+    self.assertEqual(flag_values['numbers'], [1, 2, 3])
+    self.assertIsNone(flag_values['kwery'])
+    self.assertIsNone(flag_values['sense'])
+    self.assertIsNone(flag_values['cases'])
+    self.assertIsNone(flag_values['funny'])
+    self.assertIsNone(flag_values['blah'])
+
+    # Verify string form of defaults
+    self.assertEqual(FLAGS['repeat'].default_as_str, "'4'")
+    self.assertEqual(FLAGS['name'].default_as_str, "'Bob'")
+    self.assertEqual(FLAGS['debug'].default_as_str, "'false'")
+    self.assertEqual(FLAGS['q'].default_as_str, "'true'")
+    self.assertEqual(FLAGS['quack'].default_as_str, "'false'")
+    self.assertEqual(FLAGS['noexec'].default_as_str, "'true'")
+    self.assertEqual(FLAGS['x'].default_as_str, "'3'")
+    self.assertEqual(FLAGS['l'].default_as_str, "'9223372032559808512'")
+    self.assertEqual(FLAGS['args'].default_as_str, '\'v=1,"vmodule=a=0,b=2"\'')
+    self.assertEqual(FLAGS['letters'].default_as_str, "'a,b,c'")
+    self.assertEqual(FLAGS['numbers'].default_as_str, "'1,2,3'")
+
+    # Verify that the iterator for flags yields all the keys
+    keys = list(FLAGS)
+    keys.sort()
+    reg_flags = list(FLAGS._flags())
+    reg_flags.sort()
+    self.assertEqual(keys, reg_flags)
+
+    # Parse flags
+    # .. empty command line
+    argv = ('./program',)
+    argv = FLAGS(argv)
+    self.assertLen(argv, 1, 'wrong number of arguments pulled')
+    self.assertEqual(argv[0], './program', 'program name not preserved')
+
+    # .. non-empty command line
+    argv = ('./program', '--debug', '--name=Bob', '-q', '--x=8')
+    argv = FLAGS(argv)
+    self.assertLen(argv, 1, 'wrong number of arguments pulled')
+    self.assertEqual(argv[0], './program', 'program name not preserved')
+    self.assertEqual(FLAGS['debug'].present, 1)
+    FLAGS['debug'].present = 0  # Reset
+    self.assertEqual(FLAGS['name'].present, 1)
+    FLAGS['name'].present = 0  # Reset
+    self.assertEqual(FLAGS['q'].present, 1)
+    FLAGS['q'].present = 0  # Reset
+    self.assertEqual(FLAGS['x'].present, 1)
+    FLAGS['x'].present = 0  # Reset
+
+    # Flags list.
+    self.assertLen(FLAGS, number_defined_flags + number_test_framework_flags)
+    self.assertIn('name', FLAGS)
+    self.assertIn('debug', FLAGS)
+    self.assertIn('repeat', FLAGS)
+    self.assertIn('r', FLAGS)
+    self.assertIn('q', FLAGS)
+    self.assertIn('quack', FLAGS)
+    self.assertIn('x', FLAGS)
+    self.assertIn('l', FLAGS)
+    self.assertIn('args', FLAGS)
+    self.assertIn('letters', FLAGS)
+    self.assertIn('numbers', FLAGS)
+
+    # __contains__
+    self.assertIn('name', FLAGS)
+    self.assertNotIn('name2', FLAGS)
+
+    # try deleting a flag
+    del FLAGS.r
+    self.assertLen(FLAGS,
+                   number_defined_flags - 1 + number_test_framework_flags)
+    self.assertNotIn('r', FLAGS)
+
+    # .. command line with extra stuff
+    argv = ('./program', '--debug', '--name=Bob', 'extra')
+    argv = FLAGS(argv)
+    self.assertLen(argv, 2, 'wrong number of arguments pulled')
+    self.assertEqual(argv[0], './program', 'program name not preserved')
+    self.assertEqual(argv[1], 'extra', 'extra argument not preserved')
+    self.assertEqual(FLAGS['debug'].present, 1)
+    FLAGS['debug'].present = 0  # Reset
+    self.assertEqual(FLAGS['name'].present, 1)
+    FLAGS['name'].present = 0  # Reset
+
+    # Test reset
+    argv = ('./program', '--debug')
+    argv = FLAGS(argv)
+    self.assertLen(argv, 1, 'wrong number of arguments pulled')
+    self.assertEqual(argv[0], './program', 'program name not preserved')
+    self.assertEqual(FLAGS['debug'].present, 1)
+    self.assertTrue(FLAGS['debug'].value)
+    FLAGS.unparse_flags()
+    self.assertEqual(FLAGS['debug'].present, 0)
+    self.assertFalse(FLAGS['debug'].value)
+
+    # Test that reset restores default value when default value is None.
+    argv = ('./program', '--kwery=who')
+    argv = FLAGS(argv)
+    self.assertLen(argv, 1, 'wrong number of arguments pulled')
+    self.assertEqual(argv[0], './program', 'program name not preserved')
+    self.assertEqual(FLAGS['kwery'].present, 1)
+    self.assertEqual(FLAGS['kwery'].value, 'who')
+    FLAGS.unparse_flags()
+    argv = ('./program', '--kwery=Why')
+    argv = FLAGS(argv)
+    self.assertLen(argv, 1, 'wrong number of arguments pulled')
+    self.assertEqual(argv[0], './program', 'program name not preserved')
+    self.assertEqual(FLAGS['kwery'].present, 1)
+    self.assertEqual(FLAGS['kwery'].value, 'Why')
+    FLAGS.unparse_flags()
+    self.assertEqual(FLAGS['kwery'].present, 0)
+    self.assertIsNone(FLAGS['kwery'].value)
+
+    # Test case sensitive enum.
+    argv = ('./program', '--sense=CASE')
+    argv = FLAGS(argv)
+    self.assertLen(argv, 1, 'wrong number of arguments pulled')
+    self.assertEqual(argv[0], './program', 'program name not preserved')
+    self.assertEqual(FLAGS['sense'].present, 1)
+    self.assertEqual(FLAGS['sense'].value, 'CASE')
+    FLAGS.unparse_flags()
+    argv = ('./program', '--sense=Case')
+    argv = FLAGS(argv)
+    self.assertLen(argv, 1, 'wrong number of arguments pulled')
+    self.assertEqual(argv[0], './program', 'program name not preserved')
+    self.assertEqual(FLAGS['sense'].present, 1)
+    self.assertEqual(FLAGS['sense'].value, 'Case')
+    FLAGS.unparse_flags()
+
+    # Test case insensitive enum.
+    argv = ('./program', '--cases=upper')
+    argv = FLAGS(argv)
+    self.assertLen(argv, 1, 'wrong number of arguments pulled')
+    self.assertEqual(argv[0], './program', 'program name not preserved')
+    self.assertEqual(FLAGS['cases'].present, 1)
+    self.assertEqual(FLAGS['cases'].value, 'UPPER')
+    FLAGS.unparse_flags()
+
+    # Test case sensitive enum with duplicates.
+    argv = ('./program', '--funny=ha')
+    argv = FLAGS(argv)
+    self.assertLen(argv, 1, 'wrong number of arguments pulled')
+    self.assertEqual(argv[0], './program', 'program name not preserved')
+    self.assertEqual(FLAGS['funny'].present, 1)
+    self.assertEqual(FLAGS['funny'].value, 'ha')
