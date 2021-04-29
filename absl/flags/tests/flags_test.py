@@ -1543,3 +1543,217 @@ class MultiEnumFlagsTest(absltest.TestCase):
     # Test case insensitive enum.
     flags.DEFINE_multi_enum(
         'm_enum2', ['whoosh'], ['FOO', 'BAR', 'BAZ', 'WHOOSH'],
+        'Enum option that can occur multiple times',
+        short_name='me2',
+        case_sensitive=False,
+        flag_values=fv)
+    argv = ('./program', '--m_enum2=bar', '--me2=fOo')
+    fv(argv)
+    self.assertListEqual(fv.get_flag_value('m_enum2', None), ['BAR', 'FOO'])
+
+    # Test case sensitive enum.
+    flags.DEFINE_multi_enum(
+        'm_enum3', ['BAR'], ['FOO', 'BAR', 'BAZ', 'WHOOSH'],
+        'Enum option that can occur multiple times',
+        short_name='me3',
+        case_sensitive=True,
+        flag_values=fv)
+    argv = ('./program', '--m_enum3=bar', '--me3=fOo')
+    self.assertRaisesRegex(
+        flags.IllegalFlagValueError,
+        r'flag --m_enum3=invalid: value should be one of <FOO|BAR|BAZ|WHOOSH>',
+        fv, argv)
+
+  def test_bad_multi_enum_flags(self):
+    """Test multi_enum with invalid values."""
+
+    # Test defaults that are not in the permitted list of enums.
+    self.assertRaisesRegex(
+        flags.IllegalFlagValueError,
+        r'flag --m_enum=INVALID: value should be one of <FOO|BAR|BAZ>',
+        flags.DEFINE_multi_enum, 'm_enum', ['INVALID'], ['FOO', 'BAR', 'BAZ'],
+        'desc')
+
+    self.assertRaisesRegex(
+        flags.IllegalFlagValueError,
+        r'flag --m_enum=1234: value should be one of <FOO|BAR|BAZ>',
+        flags.DEFINE_multi_enum, 'm_enum2', [1234], ['FOO', 'BAR', 'BAZ'],
+        'desc')
+
+    # Test command-line values that are not in the permitted list of enums.
+    flags.DEFINE_multi_enum('m_enum4', 'FOO', ['FOO', 'BAR', 'BAZ'],
+                            'enum option that can occur multiple times')
+    argv = ('./program', '--m_enum4=INVALID')
+    self.assertRaisesRegex(
+        flags.IllegalFlagValueError,
+        r'flag --m_enum4=invalid: value should be one of <FOO|BAR|BAZ>', FLAGS,
+        argv)
+
+
+class MultiEnumClassFlagsTest(absltest.TestCase):
+
+  def test_short_name(self):
+    fv = flags.FlagValues()
+    flags.DEFINE_multi_enum_class(
+        'fruit',
+        None,
+        Fruit,
+        'Enum option that can occur multiple times',
+        flag_values=fv,
+        short_name='me')
+    self.assertEqual(fv['fruit'].short_name, 'me')
+
+  def test_define_results_in_registered_flag_with_none(self):
+    fv = flags.FlagValues()
+    enum_defaults = None
+    flags.DEFINE_multi_enum_class(
+        'fruit',
+        enum_defaults,
+        Fruit,
+        'Enum option that can occur multiple times',
+        flag_values=fv)
+    fv.mark_as_parsed()
+
+    self.assertIsNone(fv.fruit)
+
+  def test_help_text(self):
+    fv = flags.FlagValues()
+    enum_defaults = None
+    flags.DEFINE_multi_enum_class(
+        'fruit',
+        enum_defaults,
+        Fruit,
+        'Enum option that can occur multiple times',
+        flag_values=fv)
+
+    self.assertRegex(
+        fv['fruit'].help,
+        r'<apple\|orange>: Enum option that can occur multiple times;\s+'
+        'repeat this option to specify a list of values')
+
+  def test_define_results_in_registered_flag_with_string(self):
+    fv = flags.FlagValues()
+    enum_defaults = 'apple'
+    flags.DEFINE_multi_enum_class(
+        'fruit',
+        enum_defaults,
+        Fruit,
+        'Enum option that can occur multiple times',
+        flag_values=fv)
+    fv.mark_as_parsed()
+
+    self.assertListEqual(fv.fruit, [Fruit.APPLE])
+
+  def test_define_results_in_registered_flag_with_enum(self):
+    fv = flags.FlagValues()
+    enum_defaults = Fruit.APPLE
+    flags.DEFINE_multi_enum_class(
+        'fruit',
+        enum_defaults,
+        Fruit,
+        'Enum option that can occur multiple times',
+        flag_values=fv)
+    fv.mark_as_parsed()
+
+    self.assertListEqual(fv.fruit, [Fruit.APPLE])
+
+  def test_define_results_in_registered_flag_with_string_list(self):
+    fv = flags.FlagValues()
+    enum_defaults = ['apple', 'APPLE']
+    flags.DEFINE_multi_enum_class(
+        'fruit',
+        enum_defaults,
+        CaseSensitiveFruit,
+        'Enum option that can occur multiple times',
+        flag_values=fv,
+        case_sensitive=True)
+    fv.mark_as_parsed()
+
+    self.assertListEqual(fv.fruit,
+                         [CaseSensitiveFruit.apple, CaseSensitiveFruit.APPLE])
+
+  def test_define_results_in_registered_flag_with_enum_list(self):
+    fv = flags.FlagValues()
+    enum_defaults = [Fruit.APPLE, Fruit.ORANGE]
+    flags.DEFINE_multi_enum_class(
+        'fruit',
+        enum_defaults,
+        Fruit,
+        'Enum option that can occur multiple times',
+        flag_values=fv)
+    fv.mark_as_parsed()
+
+    self.assertListEqual(fv.fruit, [Fruit.APPLE, Fruit.ORANGE])
+
+  def test_from_command_line_returns_multiple(self):
+    fv = flags.FlagValues()
+    enum_defaults = [Fruit.APPLE]
+    flags.DEFINE_multi_enum_class(
+        'fruit',
+        enum_defaults,
+        Fruit,
+        'Enum option that can occur multiple times',
+        flag_values=fv)
+    argv = ('./program', '--fruit=Apple', '--fruit=orange')
+    fv(argv)
+    self.assertListEqual(fv.fruit, [Fruit.APPLE, Fruit.ORANGE])
+
+  def test_bad_multi_enum_class_flags_from_definition(self):
+    with self.assertRaisesRegex(
+        flags.IllegalFlagValueError,
+        'flag --fruit=INVALID: value should be one of <apple|orange|APPLE>'):
+      flags.DEFINE_multi_enum_class('fruit', ['INVALID'], Fruit, 'desc')
+
+  def test_bad_multi_enum_class_flags_from_commandline(self):
+    fv = flags.FlagValues()
+    enum_defaults = [Fruit.APPLE]
+    flags.DEFINE_multi_enum_class(
+        'fruit', enum_defaults, Fruit, 'desc', flag_values=fv)
+    argv = ('./program', '--fruit=INVALID')
+    with self.assertRaisesRegex(
+        flags.IllegalFlagValueError,
+        'flag --fruit=INVALID: value should be one of <apple|orange|APPLE>'):
+      fv(argv)
+
+
+class UnicodeFlagsTest(absltest.TestCase):
+  """Testing proper unicode support for flags."""
+
+  def test_unicode_default_and_helpstring(self):
+    fv = flags.FlagValues()
+    flags.DEFINE_string(
+        'unicode_str',
+        b'\xC3\x80\xC3\xBD'.decode('utf-8'),
+        b'help:\xC3\xAA'.decode('utf-8'),
+        flag_values=fv)
+    argv = ('./program',)
+    fv(argv)  # should not raise any exceptions
+
+    argv = ('./program', '--unicode_str=foo')
+    fv(argv)  # should not raise any exceptions
+
+  def test_unicode_in_list(self):
+    fv = flags.FlagValues()
+    flags.DEFINE_list(
+        'unicode_list',
+        ['abc', b'\xC3\x80'.decode('utf-8'), b'\xC3\xBD'.decode('utf-8')],
+        b'help:\xC3\xAB'.decode('utf-8'),
+        flag_values=fv)
+    argv = ('./program',)
+    fv(argv)  # should not raise any exceptions
+
+    argv = ('./program', '--unicode_list=hello,there')
+    fv(argv)  # should not raise any exceptions
+
+  def test_xmloutput(self):
+    fv = flags.FlagValues()
+    flags.DEFINE_string(
+        'unicode1',
+        b'\xC3\x80\xC3\xBD'.decode('utf-8'),
+        b'help:\xC3\xAC'.decode('utf-8'),
+        flag_values=fv)
+    flags.DEFINE_list(
+        'unicode2',
+        ['abc', b'\xC3\x80'.decode('utf-8'), b'\xC3\xBD'.decode('utf-8')],
+        b'help:\xC3\xAD'.decode('utf-8'),
+        flag_values=fv)
