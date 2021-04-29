@@ -722,3 +722,198 @@ class FlagsUnitTest(absltest.TestCase):
     self.assertEqual(FLAGS['s_str'].serialize(), '--s_str=sing1')
 
     self.assertEqual(FLAGS['testnone'].serialize(), '')
+
+    testcomma_list1 = ['aa', 'bb']
+    testspace_list1 = ['aa', 'bb', 'cc']
+    testspace_or_comma_list1 = ['aa', 'bb', 'cc', 'dd']
+    FLAGS.testcomma_list = list(testcomma_list1)
+    FLAGS.testspace_list = list(testspace_list1)
+    FLAGS.testspace_or_comma_list = list(testspace_or_comma_list1)
+    argv = ('./program', FLAGS['testcomma_list'].serialize(),
+            FLAGS['testspace_list'].serialize(),
+            FLAGS['testspace_or_comma_list'].serialize())
+    argv = FLAGS(argv)
+    self.assertEqual(FLAGS.testcomma_list, testcomma_list1)
+    self.assertEqual(FLAGS.testspace_list, testspace_list1)
+    self.assertEqual(FLAGS.testspace_or_comma_list, testspace_or_comma_list1)
+
+    testcomma_list1 = ['aa some spaces', 'bb']
+    testspace_list1 = ['aa', 'bb,some,commas,', 'cc']
+    testspace_or_comma_list1 = ['aa', 'bb,some,commas,', 'cc']
+    FLAGS.testcomma_list = list(testcomma_list1)
+    FLAGS.testspace_list = list(testspace_list1)
+    FLAGS.testspace_or_comma_list = list(testspace_or_comma_list1)
+    argv = ('./program', FLAGS['testcomma_list'].serialize(),
+            FLAGS['testspace_list'].serialize(),
+            FLAGS['testspace_or_comma_list'].serialize())
+    argv = FLAGS(argv)
+    self.assertEqual(FLAGS.testcomma_list, testcomma_list1)
+    self.assertEqual(FLAGS.testspace_list, testspace_list1)
+    # We don't expect idempotency when commas are placed in an item value and
+    # comma_compat is enabled.
+    self.assertEqual(FLAGS.testspace_or_comma_list,
+                     ['aa', 'bb', 'some', 'commas', 'cc'])
+
+    FLAGS.testcomma_list = old_testcomma_list
+    FLAGS.testspace_list = old_testspace_list
+    FLAGS.testspace_or_comma_list = old_testspace_or_comma_list
+
+    ####################################
+    # Test flag-update:
+
+    def args_list():
+      # Exclude flags that have different default values based on the
+      # environment.
+      flags_to_exclude = {'log_dir', 'test_srcdir', 'test_tmpdir'}
+      flagnames = set(FLAGS) - flags_to_exclude
+
+      nonbool_flags = []
+      truebool_flags = []
+      falsebool_flags = []
+      for name in flagnames:
+        flag_value = FLAGS.get_flag_value(name, None)
+        if not isinstance(FLAGS[name], flags.BooleanFlag):
+          nonbool_flags.append('--%s %s' % (name, flag_value))
+        elif flag_value:
+          truebool_flags.append('--%s' % name)
+        else:
+          falsebool_flags.append('--no%s' % name)
+      all_flags = nonbool_flags + truebool_flags + falsebool_flags
+      all_flags.sort()
+      return all_flags
+
+    argv = ('./program', '--repeat=3', '--name=giants', '--nodebug')
+
+    FLAGS(argv)
+    self.assertEqual(FLAGS.get_flag_value('repeat', None), 3)
+    self.assertEqual(FLAGS.get_flag_value('name', None), 'giants')
+    self.assertEqual(FLAGS.get_flag_value('debug', None), 0)
+    self.assertListEqual([
+        '--alsologtostderr',
+        "--args ['v=1', 'vmodule=a=0,b=2']",
+        '--blah None',
+        '--cases None',
+        '--decimal 666',
+        '--float 3.14',
+        '--funny None',
+        '--hexadecimal 1638',
+        '--kwery None',
+        '--l 9223372032559808512',
+        "--letters ['a', 'b', 'c']",
+        '--logger_levels {}',
+        "--m ['str1', 'str2']",
+        "--m_str ['str1', 'str2']",
+        '--name giants',
+        '--no?',
+        '--nodebug',
+        '--noexec',
+        '--nohelp',
+        '--nohelpfull',
+        '--nohelpshort',
+        '--nohelpxml',
+        '--nologtostderr',
+        '--noonly_check_args',
+        '--nopdb_post_mortem',
+        '--noq',
+        '--norun_with_pdb',
+        '--norun_with_profiling',
+        '--notest0',
+        '--notestget2',
+        '--notestget3',
+        '--notestnone',
+        '--numbers [1, 2, 3]',
+        '--octal 438',
+        '--only_once singlevalue',
+        '--pdb False',
+        '--profile_file None',
+        '--quack',
+        '--repeat 3',
+        "--s ['sing1']",
+        "--s_str ['sing1']",
+        '--sense None',
+        '--showprefixforinfo',
+        '--stderrthreshold fatal',
+        '--test1',
+        '--test_random_seed 301',
+        '--test_randomize_ordering_seed ',
+        '--testcomma_list []',
+        '--testget1',
+        '--testget4 None',
+        '--testspace_list []',
+        '--testspace_or_comma_list []',
+        '--tmod_baz_x',
+        '--universe ptolemaic',
+        '--use_cprofile_for_profiling',
+        '--v -1',
+        '--verbosity -1',
+        '--x 10',
+        '--xml_output_file ',
+    ], args_list())
+
+    argv = ('./program', '--debug', '--m_str=upd1', '-s', 'upd2')
+    FLAGS(argv)
+    self.assertEqual(FLAGS.get_flag_value('repeat', None), 3)
+    self.assertEqual(FLAGS.get_flag_value('name', None), 'giants')
+    self.assertEqual(FLAGS.get_flag_value('debug', None), 1)
+
+    # items appended to existing non-default value lists for --m/--m_str
+    # new value overwrites default value (not appended to it) for --s/--s_str
+    self.assertListEqual([
+        '--alsologtostderr',
+        "--args ['v=1', 'vmodule=a=0,b=2']",
+        '--blah None',
+        '--cases None',
+        '--debug',
+        '--decimal 666',
+        '--float 3.14',
+        '--funny None',
+        '--hexadecimal 1638',
+        '--kwery None',
+        '--l 9223372032559808512',
+        "--letters ['a', 'b', 'c']",
+        '--logger_levels {}',
+        "--m ['str1', 'str2', 'upd1']",
+        "--m_str ['str1', 'str2', 'upd1']",
+        '--name giants',
+        '--no?',
+        '--noexec',
+        '--nohelp',
+        '--nohelpfull',
+        '--nohelpshort',
+        '--nohelpxml',
+        '--nologtostderr',
+        '--noonly_check_args',
+        '--nopdb_post_mortem',
+        '--noq',
+        '--norun_with_pdb',
+        '--norun_with_profiling',
+        '--notest0',
+        '--notestget2',
+        '--notestget3',
+        '--notestnone',
+        '--numbers [1, 2, 3]',
+        '--octal 438',
+        '--only_once singlevalue',
+        '--pdb False',
+        '--profile_file None',
+        '--quack',
+        '--repeat 3',
+        "--s ['sing1', 'upd2']",
+        "--s_str ['sing1', 'upd2']",
+        '--sense None',
+        '--showprefixforinfo',
+        '--stderrthreshold fatal',
+        '--test1',
+        '--test_random_seed 301',
+        '--test_randomize_ordering_seed ',
+        '--testcomma_list []',
+        '--testget1',
+        '--testget4 None',
+        '--testspace_list []',
+        '--testspace_or_comma_list []',
+        '--tmod_baz_x',
+        '--universe ptolemaic',
+        '--use_cprofile_for_profiling',
+        '--v -1',
+        '--verbosity -1',
+        '--x 10',
