@@ -1363,3 +1363,183 @@ class FlagsUnitTest(absltest.TestCase):
   def test_enum_class_flag_requires_non_empty_enum_class(self):
     fv = flags.FlagValues()
     with self.assertRaises(ValueError):
+      flags.DEFINE_enum_class('empty', None, EmptyEnum, 'help', flag_values=fv)
+
+  def test_required_flag(self):
+    fv = flags.FlagValues()
+    fl = flags.DEFINE_integer(
+        name='int_flag',
+        default=None,
+        help='help',
+        required=True,
+        flag_values=fv)
+    # Since the flag is required, the FlagHolder should ensure value returned
+    # is not None.
+    self.assertTrue(fl._ensure_non_none_value)
+
+  def test_illegal_required_flag(self):
+    fv = flags.FlagValues()
+    with self.assertRaises(ValueError):
+      flags.DEFINE_integer(
+          name='int_flag',
+          default=3,
+          help='help',
+          required=True,
+          flag_values=fv)
+
+
+class MultiNumericalFlagsTest(absltest.TestCase):
+
+  def test_multi_numerical_flags(self):
+    """Test multi_int and multi_float flags."""
+    fv = flags.FlagValues()
+    int_defaults = [77, 88]
+    flags.DEFINE_multi_integer(
+        'm_int',
+        int_defaults,
+        'integer option that can occur multiple times',
+        short_name='mi',
+        flag_values=fv)
+    self.assertListEqual(fv['m_int'].default, int_defaults)
+    argv = ('./program', '--m_int=-99', '--mi=101')
+    fv(argv)
+    self.assertListEqual(fv.get_flag_value('m_int', None), [-99, 101])
+
+    float_defaults = [2.2, 3]
+    flags.DEFINE_multi_float(
+        'm_float',
+        float_defaults,
+        'float option that can occur multiple times',
+        short_name='mf',
+        flag_values=fv)
+    for (expected, actual) in zip(float_defaults,
+                                  fv.get_flag_value('m_float', None)):
+      self.assertAlmostEqual(expected, actual)
+    argv = ('./program', '--m_float=-17', '--mf=2.78e9')
+    fv(argv)
+    expected_floats = [-17.0, 2.78e9]
+    for (expected, actual) in zip(expected_floats,
+                                  fv.get_flag_value('m_float', None)):
+      self.assertAlmostEqual(expected, actual)
+
+  def test_multi_numerical_with_tuples(self):
+    """Verify multi_int/float accept tuples as default values."""
+    flags.DEFINE_multi_integer(
+        'm_int_tuple', (77, 88),
+        'integer option that can occur multiple times',
+        short_name='mi_tuple')
+    self.assertListEqual(FLAGS.get_flag_value('m_int_tuple', None), [77, 88])
+
+    dict_with_float_keys = {2.2: 'hello', 3: 'happy'}
+    float_defaults = dict_with_float_keys.keys()
+    flags.DEFINE_multi_float(
+        'm_float_tuple',
+        float_defaults,
+        'float option that can occur multiple times',
+        short_name='mf_tuple')
+    for (expected, actual) in zip(float_defaults,
+                                  FLAGS.get_flag_value('m_float_tuple', None)):
+      self.assertAlmostEqual(expected, actual)
+
+  def test_single_value_default(self):
+    """Test multi_int and multi_float flags with a single default value."""
+    int_default = 77
+    flags.DEFINE_multi_integer('m_int1', int_default,
+                               'integer option that can occur multiple times')
+    self.assertListEqual(FLAGS.get_flag_value('m_int1', None), [int_default])
+
+    float_default = 2.2
+    flags.DEFINE_multi_float('m_float1', float_default,
+                             'float option that can occur multiple times')
+    actual = FLAGS.get_flag_value('m_float1', None)
+    self.assertEqual(1, len(actual))
+    self.assertAlmostEqual(actual[0], float_default)
+
+  def test_bad_multi_numerical_flags(self):
+    """Test multi_int and multi_float flags with non-parseable values."""
+
+    # Test non-parseable defaults.
+    self.assertRaisesRegex(
+        flags.IllegalFlagValueError,
+        r"flag --m_int2=abc: invalid literal for int\(\) with base 10: 'abc'",
+        flags.DEFINE_multi_integer, 'm_int2', ['abc'], 'desc')
+
+    self.assertRaisesRegex(
+        flags.IllegalFlagValueError, r'flag --m_float2=abc: '
+        r'(invalid literal for float\(\)|could not convert string to float): '
+        r"'?abc'?", flags.DEFINE_multi_float, 'm_float2', ['abc'], 'desc')
+
+    # Test non-parseable command line values.
+    fv = flags.FlagValues()
+    flags.DEFINE_multi_integer(
+        'm_int2',
+        '77',
+        'integer option that can occur multiple times',
+        flag_values=fv)
+    argv = ('./program', '--m_int2=def')
+    self.assertRaisesRegex(
+        flags.IllegalFlagValueError,
+        r"flag --m_int2=def: invalid literal for int\(\) with base 10: 'def'",
+        fv, argv)
+
+    flags.DEFINE_multi_float(
+        'm_float2',
+        2.2,
+        'float option that can occur multiple times',
+        flag_values=fv)
+    argv = ('./program', '--m_float2=def')
+    self.assertRaisesRegex(
+        flags.IllegalFlagValueError, r'flag --m_float2=def: '
+        r'(invalid literal for float\(\)|could not convert string to float): '
+        r"'?def'?", fv, argv)
+
+
+class MultiEnumFlagsTest(absltest.TestCase):
+
+  def test_multi_enum_flags(self):
+    """Test multi_enum flags."""
+    fv = flags.FlagValues()
+
+    enum_defaults = ['FOO', 'BAZ']
+    flags.DEFINE_multi_enum(
+        'm_enum',
+        enum_defaults, ['FOO', 'BAR', 'BAZ', 'WHOOSH'],
+        'Enum option that can occur multiple times',
+        short_name='me',
+        flag_values=fv)
+    self.assertListEqual(fv['m_enum'].default, enum_defaults)
+    argv = ('./program', '--m_enum=WHOOSH', '--me=FOO')
+    fv(argv)
+    self.assertListEqual(fv.get_flag_value('m_enum', None), ['WHOOSH', 'FOO'])
+
+  def test_help_text(self):
+    """Test multi_enum flag's help text."""
+    fv = flags.FlagValues()
+
+    flags.DEFINE_multi_enum(
+        'm_enum',
+        None, ['FOO', 'BAR'],
+        'Enum option that can occur multiple times',
+        flag_values=fv)
+    self.assertRegex(
+        fv['m_enum'].help,
+        r'<FOO\|BAR>: Enum option that can occur multiple times;\s+'
+        'repeat this option to specify a list of values')
+
+  def test_single_value_default(self):
+    """Test multi_enum flags with a single default value."""
+    fv = flags.FlagValues()
+    enum_default = 'FOO'
+    flags.DEFINE_multi_enum(
+        'm_enum1',
+        enum_default, ['FOO', 'BAR', 'BAZ', 'WHOOSH'],
+        'enum option that can occur multiple times',
+        flag_values=fv)
+    self.assertListEqual(fv['m_enum1'].default, [enum_default])
+
+  def test_case_sensitivity(self):
+    """Test case sensitivity of multi_enum flag."""
+    fv = flags.FlagValues()
+    # Test case insensitive enum.
+    flags.DEFINE_multi_enum(
+        'm_enum2', ['whoosh'], ['FOO', 'BAR', 'BAZ', 'WHOOSH'],
