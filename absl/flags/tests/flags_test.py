@@ -509,3 +509,216 @@ class FlagsUnitTest(absltest.TestCase):
     self.assertEqual(argv[0], './program', 'program name not preserved')
     self.assertEqual(FLAGS['funny'].present, 1)
     self.assertEqual(FLAGS['funny'].value, 'ha')
+    FLAGS.unparse_flags()
+
+    # Test case insensitive enum with duplicates.
+    argv = ('./program', '--blah=bLah')
+    argv = FLAGS(argv)
+    self.assertLen(argv, 1, 'wrong number of arguments pulled')
+    self.assertEqual(argv[0], './program', 'program name not preserved')
+    self.assertEqual(FLAGS['blah'].present, 1)
+    self.assertEqual(FLAGS['blah'].value, 'Blah')
+    FLAGS.unparse_flags()
+    argv = ('./program', '--blah=BLAH')
+    argv = FLAGS(argv)
+    self.assertLen(argv, 1, 'wrong number of arguments pulled')
+    self.assertEqual(argv[0], './program', 'program name not preserved')
+    self.assertEqual(FLAGS['blah'].present, 1)
+    self.assertEqual(FLAGS['blah'].value, 'Blah')
+    FLAGS.unparse_flags()
+
+    # Test integer argument passing
+    argv = ('./program', '--x', '0x12345')
+    argv = FLAGS(argv)
+    self.assertEqual(FLAGS.x, 0x12345)
+    self.assertEqual(type(FLAGS.x), int)
+
+    argv = ('./program', '--x', '0x1234567890ABCDEF1234567890ABCDEF')
+    argv = FLAGS(argv)
+    self.assertEqual(FLAGS.x, 0x1234567890ABCDEF1234567890ABCDEF)
+    self.assertIsInstance(FLAGS.x, int)
+
+    argv = ('./program', '--x', '0o12345')
+    argv = FLAGS(argv)
+    self.assertEqual(FLAGS.x, 0o12345)
+    self.assertEqual(type(FLAGS.x), int)
+
+    # Treat 0-prefixed parameters as base-10, not base-8
+    argv = ('./program', '--x', '012345')
+    argv = FLAGS(argv)
+    self.assertEqual(FLAGS.x, 12345)
+    self.assertEqual(type(FLAGS.x), int)
+
+    argv = ('./program', '--x', '0123459')
+    argv = FLAGS(argv)
+    self.assertEqual(FLAGS.x, 123459)
+    self.assertEqual(type(FLAGS.x), int)
+
+    argv = ('./program', '--x', '0x123efg')
+    with self.assertRaises(flags.IllegalFlagValueError):
+      argv = FLAGS(argv)
+
+    # Test boolean argument parsing
+    flags.DEFINE_boolean('test0', None, 'test boolean parsing')
+    argv = ('./program', '--notest0')
+    argv = FLAGS(argv)
+    self.assertEqual(FLAGS.test0, 0)
+
+    flags.DEFINE_boolean('test1', None, 'test boolean parsing')
+    argv = ('./program', '--test1')
+    argv = FLAGS(argv)
+    self.assertEqual(FLAGS.test1, 1)
+
+    FLAGS.test0 = None
+    argv = ('./program', '--test0=false')
+    argv = FLAGS(argv)
+    self.assertEqual(FLAGS.test0, 0)
+
+    FLAGS.test1 = None
+    argv = ('./program', '--test1=true')
+    argv = FLAGS(argv)
+    self.assertEqual(FLAGS.test1, 1)
+
+    FLAGS.test0 = None
+    argv = ('./program', '--test0=0')
+    argv = FLAGS(argv)
+    self.assertEqual(FLAGS.test0, 0)
+
+    FLAGS.test1 = None
+    argv = ('./program', '--test1=1')
+    argv = FLAGS(argv)
+    self.assertEqual(FLAGS.test1, 1)
+
+    # Test booleans that already have 'no' as a prefix
+    FLAGS.noexec = None
+    argv = ('./program', '--nonoexec', '--name', 'Bob')
+    argv = FLAGS(argv)
+    self.assertEqual(FLAGS.noexec, 0)
+
+    FLAGS.noexec = None
+    argv = ('./program', '--name', 'Bob', '--noexec')
+    argv = FLAGS(argv)
+    self.assertEqual(FLAGS.noexec, 1)
+
+    # Test unassigned booleans
+    flags.DEFINE_boolean('testnone', None, 'test boolean parsing')
+    argv = ('./program',)
+    argv = FLAGS(argv)
+    self.assertIsNone(FLAGS.testnone)
+
+    # Test get with default
+    flags.DEFINE_boolean('testget1', None, 'test parsing with defaults')
+    flags.DEFINE_boolean('testget2', None, 'test parsing with defaults')
+    flags.DEFINE_boolean('testget3', None, 'test parsing with defaults')
+    flags.DEFINE_integer('testget4', None, 'test parsing with defaults')
+    argv = ('./program', '--testget1', '--notestget2')
+    argv = FLAGS(argv)
+    self.assertEqual(FLAGS.get_flag_value('testget1', 'foo'), 1)
+    self.assertEqual(FLAGS.get_flag_value('testget2', 'foo'), 0)
+    self.assertEqual(FLAGS.get_flag_value('testget3', 'foo'), 'foo')
+    self.assertEqual(FLAGS.get_flag_value('testget4', 'foo'), 'foo')
+
+    # test list code
+    lists = [['hello', 'moo', 'boo', '1'], []]
+
+    flags.DEFINE_list('testcomma_list', '', 'test comma list parsing')
+    flags.DEFINE_spaceseplist('testspace_list', '', 'tests space list parsing')
+    flags.DEFINE_spaceseplist(
+        'testspace_or_comma_list',
+        '',
+        'tests space list parsing with comma compatibility',
+        comma_compat=True)
+
+    for name, sep in (('testcomma_list', ','), ('testspace_list',
+                                                ' '), ('testspace_list', '\n'),
+                      ('testspace_or_comma_list',
+                       ' '), ('testspace_or_comma_list',
+                              '\n'), ('testspace_or_comma_list', ',')):
+      for lst in lists:
+        argv = ('./program', '--%s=%s' % (name, sep.join(lst)))
+        argv = FLAGS(argv)
+        self.assertEqual(getattr(FLAGS, name), lst)
+
+    # Test help text
+    flags_help = str(FLAGS)
+    self.assertNotEqual(
+        flags_help.find('repeat'), -1, 'cannot find flag in help')
+    self.assertNotEqual(
+        flags_help.find(repeat_help), -1, 'cannot find help string in help')
+
+    # Test flag specified twice
+    argv = ('./program', '--repeat=4', '--repeat=2', '--debug', '--nodebug')
+    argv = FLAGS(argv)
+    self.assertEqual(FLAGS.get_flag_value('repeat', None), 2)
+    self.assertEqual(FLAGS.get_flag_value('debug', None), 0)
+
+    # Test MultiFlag with single default value
+    flags.DEFINE_multi_string(
+        's_str',
+        'sing1',
+        'string option that can occur multiple times',
+        short_name='s')
+    self.assertEqual(FLAGS.get_flag_value('s_str', None), ['sing1'])
+
+    # Test MultiFlag with list of default values
+    multi_string_defs = ['def1', 'def2']
+    flags.DEFINE_multi_string(
+        'm_str',
+        multi_string_defs,
+        'string option that can occur multiple times',
+        short_name='m')
+    self.assertEqual(FLAGS.get_flag_value('m_str', None), multi_string_defs)
+
+    # Test flag specified multiple times with a MultiFlag
+    argv = ('./program', '--m_str=str1', '-m', 'str2')
+    argv = FLAGS(argv)
+    self.assertEqual(FLAGS.get_flag_value('m_str', None), ['str1', 'str2'])
+
+    # A flag with allow_overwrite set to False should behave normally when it
+    # is only specified once
+    argv = ('./program', '--only_once=singlevalue')
+    argv = FLAGS(argv)
+    self.assertEqual(FLAGS.get_flag_value('only_once', None), 'singlevalue')
+
+    # A flag with allow_overwrite set to False should complain when it is
+    # specified more than once
+    argv = ('./program', '--universe=ptolemaic', '--universe=copernicean',
+            '--universe=euclidean')
+    self.assertRaisesWithLiteralMatch(
+        flags.IllegalFlagValueError,
+        'flag --universe=copernicean: already defined as ptolemaic', FLAGS,
+        argv)
+
+    # Test single-letter flags; should support both single and double dash
+    argv = ('./program', '-q')
+    argv = FLAGS(argv)
+    self.assertEqual(FLAGS.get_flag_value('q', None), 1)
+
+    argv = ('./program', '--q', '--x', '9', '--noquack')
+    argv = FLAGS(argv)
+    self.assertEqual(FLAGS.get_flag_value('q', None), 1)
+    self.assertEqual(FLAGS.get_flag_value('x', None), 9)
+    self.assertEqual(FLAGS.get_flag_value('quack', None), 0)
+
+    argv = ('./program', '--noq', '--x=10', '--quack')
+    argv = FLAGS(argv)
+    self.assertEqual(FLAGS.get_flag_value('q', None), 0)
+    self.assertEqual(FLAGS.get_flag_value('x', None), 10)
+    self.assertEqual(FLAGS.get_flag_value('quack', None), 1)
+
+    ####################################
+    # Test flag serialization code:
+
+    old_testcomma_list = FLAGS.testcomma_list
+    old_testspace_list = FLAGS.testspace_list
+    old_testspace_or_comma_list = FLAGS.testspace_or_comma_list
+
+    argv = ('./program', FLAGS['test0'].serialize(), FLAGS['test1'].serialize(),
+            FLAGS['s_str'].serialize())
+
+    argv = FLAGS(argv)
+    self.assertEqual(FLAGS['test0'].serialize(), '--notest0')
+    self.assertEqual(FLAGS['test1'].serialize(), '--test1')
+    self.assertEqual(FLAGS['s_str'].serialize(), '--s_str=sing1')
+
+    self.assertEqual(FLAGS['testnone'].serialize(), '')
