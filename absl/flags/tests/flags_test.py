@@ -917,3 +917,211 @@ class FlagsUnitTest(absltest.TestCase):
         '--v -1',
         '--verbosity -1',
         '--x 10',
+        '--xml_output_file ',
+    ], args_list())
+
+    ####################################
+    # Test all kind of error conditions.
+
+    # Argument not in enum exception
+    argv = ('./program', '--kwery=WHEN')
+    self.assertRaises(flags.IllegalFlagValueError, FLAGS, argv)
+    argv = ('./program', '--kwery=why')
+    self.assertRaises(flags.IllegalFlagValueError, FLAGS, argv)
+
+    # Duplicate flag detection
+    with self.assertRaises(flags.DuplicateFlagError):
+      flags.DEFINE_boolean('run', 0, 'runhelp', short_name='q')
+
+    # Duplicate short flag detection
+    with self.assertRaisesRegex(
+        flags.DuplicateFlagError,
+        r"The flag 'z' is defined twice\. .*First from.*, Second from"):
+      flags.DEFINE_boolean('zoom1', 0, 'runhelp z1', short_name='z')
+      flags.DEFINE_boolean('zoom2', 0, 'runhelp z2', short_name='z')
+      raise AssertionError('duplicate short flag detection failed')
+
+    # Duplicate mixed flag detection
+    with self.assertRaisesRegex(
+        flags.DuplicateFlagError,
+        r"The flag 's' is defined twice\. .*First from.*, Second from"):
+      flags.DEFINE_boolean('short1', 0, 'runhelp s1', short_name='s')
+      flags.DEFINE_boolean('s', 0, 'runhelp s2')
+
+    # Check that duplicate flag detection detects definition sites
+    # correctly.
+    flagnames = ['repeated']
+    original_flags = flags.FlagValues()
+    flags.DEFINE_boolean(
+        flagnames[0],
+        False,
+        'Flag about to be repeated.',
+        flag_values=original_flags)
+    duplicate_flags = module_foo.duplicate_flags(flagnames)
+    with self.assertRaisesRegex(flags.DuplicateFlagError,
+                                'flags_test.*module_foo'):
+      original_flags.append_flag_values(duplicate_flags)
+
+    # Make sure allow_override works
+    try:
+      flags.DEFINE_boolean(
+          'dup1', 0, 'runhelp d11', short_name='u', allow_override=0)
+      flag = FLAGS._flags()['dup1']
+      self.assertEqual(flag.default, 0)
+
+      flags.DEFINE_boolean(
+          'dup1', 1, 'runhelp d12', short_name='u', allow_override=1)
+      flag = FLAGS._flags()['dup1']
+      self.assertEqual(flag.default, 1)
+    except flags.DuplicateFlagError:
+      raise AssertionError('allow_override did not permit a flag duplication')
+
+    # Make sure allow_override works
+    try:
+      flags.DEFINE_boolean(
+          'dup2', 0, 'runhelp d21', short_name='u', allow_override=1)
+      flag = FLAGS._flags()['dup2']
+      self.assertEqual(flag.default, 0)
+
+      flags.DEFINE_boolean(
+          'dup2', 1, 'runhelp d22', short_name='u', allow_override=0)
+      flag = FLAGS._flags()['dup2']
+      self.assertEqual(flag.default, 1)
+    except flags.DuplicateFlagError:
+      raise AssertionError('allow_override did not permit a flag duplication')
+
+    # Make sure that re-importing a module does not cause a DuplicateFlagError
+    # to be raised.
+    try:
+      sys.modules.pop('absl.flags.tests.module_baz')
+      import absl.flags.tests.module_baz
+      del absl
+    except flags.DuplicateFlagError:
+      raise AssertionError('Module reimport caused flag duplication error')
+
+    # Make sure that when we override, the help string gets updated correctly
+    flags.DEFINE_boolean(
+        'dup3', 0, 'runhelp d31', short_name='u', allow_override=1)
+    flags.DEFINE_boolean(
+        'dup3', 1, 'runhelp d32', short_name='u', allow_override=1)
+    self.assertEqual(str(FLAGS).find('runhelp d31'), -1)
+    self.assertNotEqual(str(FLAGS).find('runhelp d32'), -1)
+
+    # Make sure append_flag_values works
+    new_flags = flags.FlagValues()
+    flags.DEFINE_boolean('new1', 0, 'runhelp n1', flag_values=new_flags)
+    flags.DEFINE_boolean('new2', 0, 'runhelp n2', flag_values=new_flags)
+    self.assertEqual(len(new_flags._flags()), 2)
+    old_len = len(FLAGS._flags())
+    FLAGS.append_flag_values(new_flags)
+    self.assertEqual(len(FLAGS._flags()) - old_len, 2)
+    self.assertEqual('new1' in FLAGS._flags(), True)
+    self.assertEqual('new2' in FLAGS._flags(), True)
+
+    # Then test that removing those flags works
+    FLAGS.remove_flag_values(new_flags)
+    self.assertEqual(len(FLAGS._flags()), old_len)
+    self.assertFalse('new1' in FLAGS._flags())
+    self.assertFalse('new2' in FLAGS._flags())
+
+    # Make sure append_flag_values works with flags with shortnames.
+    new_flags = flags.FlagValues()
+    flags.DEFINE_boolean('new3', 0, 'runhelp n3', flag_values=new_flags)
+    flags.DEFINE_boolean(
+        'new4', 0, 'runhelp n4', flag_values=new_flags, short_name='n4')
+    self.assertEqual(len(new_flags._flags()), 3)
+    old_len = len(FLAGS._flags())
+    FLAGS.append_flag_values(new_flags)
+    self.assertEqual(len(FLAGS._flags()) - old_len, 3)
+    self.assertIn('new3', FLAGS._flags())
+    self.assertIn('new4', FLAGS._flags())
+    self.assertIn('n4', FLAGS._flags())
+    self.assertEqual(FLAGS._flags()['n4'], FLAGS._flags()['new4'])
+
+    # Then test removing them
+    FLAGS.remove_flag_values(new_flags)
+    self.assertEqual(len(FLAGS._flags()), old_len)
+    self.assertFalse('new3' in FLAGS._flags())
+    self.assertFalse('new4' in FLAGS._flags())
+    self.assertFalse('n4' in FLAGS._flags())
+
+    # Make sure append_flag_values fails on duplicates
+    flags.DEFINE_boolean('dup4', 0, 'runhelp d41')
+    new_flags = flags.FlagValues()
+    flags.DEFINE_boolean('dup4', 0, 'runhelp d42', flag_values=new_flags)
+    with self.assertRaises(flags.DuplicateFlagError):
+      FLAGS.append_flag_values(new_flags)
+
+    # Integer out of bounds
+    with self.assertRaises(flags.IllegalFlagValueError):
+      argv = ('./program', '--repeat=-4')
+      FLAGS(argv)
+
+    # Non-integer
+    with self.assertRaises(flags.IllegalFlagValueError):
+      argv = ('./program', '--repeat=2.5')
+      FLAGS(argv)
+
+    # Missing required argument
+    with self.assertRaises(flags.Error):
+      argv = ('./program', '--name')
+      FLAGS(argv)
+
+    # Non-boolean arguments for boolean
+    with self.assertRaises(flags.IllegalFlagValueError):
+      argv = ('./program', '--debug=goofup')
+      FLAGS(argv)
+
+    with self.assertRaises(flags.IllegalFlagValueError):
+      argv = ('./program', '--debug=42')
+      FLAGS(argv)
+
+    # Non-numeric argument for integer flag --repeat
+    with self.assertRaises(flags.IllegalFlagValueError):
+      argv = ('./program', '--repeat', 'Bob', 'extra')
+      FLAGS(argv)
+
+    # Aliases of existing flags
+    with self.assertRaises(flags.UnrecognizedFlagError):
+      flags.DEFINE_alias('alias_not_a_flag', 'not_a_flag')
+
+    # Programmtically modify alias and aliased flag
+    flags.DEFINE_alias('alias_octal', 'octal')
+    FLAGS.octal = 0o2222
+    self.assertEqual(0o2222, FLAGS.octal)
+    self.assertEqual(0o2222, FLAGS.alias_octal)
+    FLAGS.alias_octal = 0o4444
+    self.assertEqual(0o4444, FLAGS.octal)
+    self.assertEqual(0o4444, FLAGS.alias_octal)
+
+    # Setting alias preserves the default of the original
+    flags.DEFINE_alias('alias_name', 'name')
+    flags.DEFINE_alias('alias_debug', 'debug')
+    flags.DEFINE_alias('alias_decimal', 'decimal')
+    flags.DEFINE_alias('alias_float', 'float')
+    flags.DEFINE_alias('alias_letters', 'letters')
+    self.assertEqual(FLAGS['name'].default, FLAGS.alias_name)
+    self.assertEqual(FLAGS['debug'].default, FLAGS.alias_debug)
+    self.assertEqual(int(FLAGS['decimal'].default), FLAGS.alias_decimal)
+    self.assertEqual(float(FLAGS['float'].default), FLAGS.alias_float)
+    self.assertSameElements(FLAGS['letters'].default, FLAGS.alias_letters)
+
+    # Original flags set on command line
+    argv = ('./program', '--name=Martin', '--debug=True', '--decimal=777',
+            '--letters=x,y,z')
+    FLAGS(argv)
+    self.assertEqual('Martin', FLAGS.name)
+    self.assertEqual('Martin', FLAGS.alias_name)
+    self.assertTrue(FLAGS.debug)
+    self.assertTrue(FLAGS.alias_debug)
+    self.assertEqual(777, FLAGS.decimal)
+    self.assertEqual(777, FLAGS.alias_decimal)
+    self.assertSameElements(['x', 'y', 'z'], FLAGS.letters)
+    self.assertSameElements(['x', 'y', 'z'], FLAGS.alias_letters)
+
+    # Alias flags set on command line
+    argv = ('./program', '--alias_name=Auston', '--alias_debug=False',
+            '--alias_decimal=888', '--alias_letters=l,m,n')
+    FLAGS(argv)
+    self.assertEqual('Auston', FLAGS.name)
+    self.assertEqual('Auston', FLAGS.alias_name)
