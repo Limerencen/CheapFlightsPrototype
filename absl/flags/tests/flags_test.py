@@ -1125,3 +1125,241 @@ class FlagsUnitTest(absltest.TestCase):
     FLAGS(argv)
     self.assertEqual('Auston', FLAGS.name)
     self.assertEqual('Auston', FLAGS.alias_name)
+    self.assertFalse(FLAGS.debug)
+    self.assertFalse(FLAGS.alias_debug)
+    self.assertEqual(888, FLAGS.decimal)
+    self.assertEqual(888, FLAGS.alias_decimal)
+    self.assertSameElements(['l', 'm', 'n'], FLAGS.letters)
+    self.assertSameElements(['l', 'm', 'n'], FLAGS.alias_letters)
+
+    # Make sure importing a module does not change flag value parsed
+    # from commandline.
+    flags.DEFINE_integer(
+        'dup5', 1, 'runhelp d51', short_name='u5', allow_override=0)
+    self.assertEqual(FLAGS.dup5, 1)
+    self.assertEqual(FLAGS.dup5, 1)
+    argv = ('./program', '--dup5=3')
+    FLAGS(argv)
+    self.assertEqual(FLAGS.dup5, 3)
+    flags.DEFINE_integer(
+        'dup5', 2, 'runhelp d52', short_name='u5', allow_override=1)
+    self.assertEqual(FLAGS.dup5, 3)
+
+    # Make sure importing a module does not change user defined flag value.
+    flags.DEFINE_integer(
+        'dup6', 1, 'runhelp d61', short_name='u6', allow_override=0)
+    self.assertEqual(FLAGS.dup6, 1)
+    FLAGS.dup6 = 3
+    self.assertEqual(FLAGS.dup6, 3)
+    flags.DEFINE_integer(
+        'dup6', 2, 'runhelp d62', short_name='u6', allow_override=1)
+    self.assertEqual(FLAGS.dup6, 3)
+
+    # Make sure importing a module does not change user defined flag value
+    # even if it is the 'default' value.
+    flags.DEFINE_integer(
+        'dup7', 1, 'runhelp d71', short_name='u7', allow_override=0)
+    self.assertEqual(FLAGS.dup7, 1)
+    FLAGS.dup7 = 1
+    self.assertEqual(FLAGS.dup7, 1)
+    flags.DEFINE_integer(
+        'dup7', 2, 'runhelp d72', short_name='u7', allow_override=1)
+    self.assertEqual(FLAGS.dup7, 1)
+
+    # Test module_help().
+    helpstr = FLAGS.module_help(module_baz)
+
+    expected_help = '\n' + module_baz.__name__ + ':' + """
+  --[no]tmod_baz_x: Boolean flag.
+    (default: 'true')"""
+
+    self.assertMultiLineEqual(expected_help, helpstr)
+
+    # Test main_module_help().  This must be part of test_flags because
+    # it depends on dup1/2/3/etc being introduced first.
+    helpstr = FLAGS.main_module_help()
+
+    expected_help = '\n' + sys.argv[0] + ':' + """
+  --[no]alias_debug: Alias for --debug.
+    (default: 'false')
+  --alias_decimal: Alias for --decimal.
+    (default: '666')
+    (an integer)
+  --alias_float: Alias for --float.
+    (default: '3.14')
+    (a number)
+  --alias_letters: Alias for --letters.
+    (default: 'a,b,c')
+    (a comma separated list)
+  --alias_name: Alias for --name.
+    (default: 'Bob')
+  --alias_octal: Alias for --octal.
+    (default: '438')
+    (an integer)
+  --args: a list of arguments
+    (default: 'v=1,"vmodule=a=0,b=2"')
+    (a comma separated list)
+  --blah: <bla|Blah|BLAH|blah>: ?
+  --cases: <UPPER|lower|Initial|Ot_HeR>: ?
+  --[no]debug: debughelp
+    (default: 'false')
+  --decimal: using decimals
+    (default: '666')
+    (an integer)
+  -u,--[no]dup1: runhelp d12
+    (default: 'true')
+  -u,--[no]dup2: runhelp d22
+    (default: 'true')
+  -u,--[no]dup3: runhelp d32
+    (default: 'true')
+  --[no]dup4: runhelp d41
+    (default: 'false')
+  -u5,--dup5: runhelp d51
+    (default: '1')
+    (an integer)
+  -u6,--dup6: runhelp d61
+    (default: '1')
+    (an integer)
+  -u7,--dup7: runhelp d71
+    (default: '1')
+    (an integer)
+  --float: using floats
+    (default: '3.14')
+    (a number)
+  --funny: <Joke|ha|ha|ha|ha>: ?
+  --hexadecimal: using hexadecimals
+    (default: '1638')
+    (an integer)
+  --kwery: <who|what|Why|where|when>: ?
+  --l: how long to be
+    (default: '9223372032559808512')
+    (an integer)
+  --letters: a list of letters
+    (default: 'a,b,c')
+    (a comma separated list)
+  -m,--m_str: string option that can occur multiple times;
+    repeat this option to specify a list of values
+    (default: "['def1', 'def2']")
+  --name: namehelp
+    (default: 'Bob')
+  --[no]noexec: boolean flag with no as prefix
+    (default: 'true')
+  --numbers: a list of numbers
+    (default: '1,2,3')
+    (a comma separated list)
+  --octal: using octals
+    (default: '438')
+    (an integer)
+  --only_once: test only sets this once
+  --[no]q: quiet mode
+    (default: 'true')
+  --[no]quack: superstring of 'q'
+    (default: 'false')
+  -r,--repeat: how many times to repeat (0-5)
+    (default: '4')
+    (a non-negative integer)
+  -s,--s_str: string option that can occur multiple times;
+    repeat this option to specify a list of values
+    (default: "['sing1']")
+  --sense: <Case|case|CASE>: ?
+  --[no]test0: test boolean parsing
+  --[no]test1: test boolean parsing
+  --testcomma_list: test comma list parsing
+    (default: '')
+    (a comma separated list)
+  --[no]testget1: test parsing with defaults
+  --[no]testget2: test parsing with defaults
+  --[no]testget3: test parsing with defaults
+  --testget4: test parsing with defaults
+    (an integer)
+  --[no]testnone: test boolean parsing
+  --testspace_list: tests space list parsing
+    (default: '')
+    (a whitespace separated list)
+  --testspace_or_comma_list: tests space list parsing with comma compatibility
+    (default: '')
+    (a whitespace or comma separated list)
+  --universe: test tries to set this three times
+  --x: how eXtreme to be
+    (default: '3')
+    (an integer)
+  -z,--[no]zoom1: runhelp z1
+    (default: 'false')"""
+
+    self.assertMultiLineEqual(expected_help, helpstr)
+
+  def test_string_flag_with_wrong_type(self):
+    fv = flags.FlagValues()
+    with self.assertRaises(flags.IllegalFlagValueError):
+      flags.DEFINE_string('name', False, 'help', flag_values=fv)
+    with self.assertRaises(flags.IllegalFlagValueError):
+      flags.DEFINE_string('name2', 0, 'help', flag_values=fv)
+
+  def test_integer_flag_with_wrong_type(self):
+    fv = flags.FlagValues()
+    with self.assertRaises(flags.IllegalFlagValueError):
+      flags.DEFINE_integer('name', 1e2, 'help', flag_values=fv)
+    with self.assertRaises(flags.IllegalFlagValueError):
+      flags.DEFINE_integer('name', [], 'help', flag_values=fv)
+    with self.assertRaises(flags.IllegalFlagValueError):
+      flags.DEFINE_integer('name', False, 'help', flag_values=fv)
+
+  def test_float_flag_with_wrong_type(self):
+    fv = flags.FlagValues()
+    with self.assertRaises(flags.IllegalFlagValueError):
+      flags.DEFINE_float('name', False, 'help', flag_values=fv)
+
+  def test_enum_flag_with_empty_values(self):
+    fv = flags.FlagValues()
+    with self.assertRaises(ValueError):
+      flags.DEFINE_enum('fruit', None, [], 'help', flag_values=fv)
+
+  def test_define_enum_class_flag(self):
+    fv = flags.FlagValues()
+    flags.DEFINE_enum_class('fruit', None, Fruit, '?', flag_values=fv)
+    fv.mark_as_parsed()
+
+    self.assertIsNone(fv.fruit)
+
+  def test_parse_enum_class_flag(self):
+    fv = flags.FlagValues()
+    flags.DEFINE_enum_class('fruit', None, Fruit, '?', flag_values=fv)
+
+    argv = ('./program', '--fruit=orange')
+    argv = fv(argv)
+    self.assertEqual(len(argv), 1, 'wrong number of arguments pulled')
+    self.assertEqual(argv[0], './program', 'program name not preserved')
+    self.assertEqual(fv['fruit'].present, 1)
+    self.assertEqual(fv['fruit'].value, Fruit.ORANGE)
+    fv.unparse_flags()
+    argv = ('./program', '--fruit=APPLE')
+    argv = fv(argv)
+    self.assertEqual(len(argv), 1, 'wrong number of arguments pulled')
+    self.assertEqual(argv[0], './program', 'program name not preserved')
+    self.assertEqual(fv['fruit'].present, 1)
+    self.assertEqual(fv['fruit'].value, Fruit.APPLE)
+    fv.unparse_flags()
+
+  def test_enum_class_flag_help_message(self):
+    fv = flags.FlagValues()
+    flags.DEFINE_enum_class('fruit', None, Fruit, '?', flag_values=fv)
+
+    helpstr = fv.main_module_help()
+    expected_help = '\n%s:\n  --fruit: <apple|orange>: ?' % sys.argv[0]
+
+    self.assertEqual(helpstr, expected_help)
+
+  def test_enum_class_flag_with_wrong_default_value_type(self):
+    fv = flags.FlagValues()
+    with self.assertRaises(_exceptions.IllegalFlagValueError):
+      flags.DEFINE_enum_class('fruit', 1, Fruit, 'help', flag_values=fv)
+
+  def test_enum_class_flag_requires_enum_class(self):
+    fv = flags.FlagValues()
+    with self.assertRaises(TypeError):
+      flags.DEFINE_enum_class(
+          'fruit', None, ['apple', 'orange'], 'help', flag_values=fv)
+
+  def test_enum_class_flag_requires_non_empty_enum_class(self):
+    fv = flags.FlagValues()
+    with self.assertRaises(ValueError):
