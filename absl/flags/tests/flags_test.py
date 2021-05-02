@@ -1757,3 +1757,213 @@ class UnicodeFlagsTest(absltest.TestCase):
         ['abc', b'\xC3\x80'.decode('utf-8'), b'\xC3\xBD'.decode('utf-8')],
         b'help:\xC3\xAD'.decode('utf-8'),
         flag_values=fv)
+    flags.DEFINE_list(
+        'non_unicode', ['abc', 'def', 'ghi'],
+        b'help:\xC3\xAD'.decode('utf-8'),
+        flag_values=fv)
+
+    outfile = io.StringIO()
+    fv.write_help_in_xml_format(outfile)
+    actual_output = outfile.getvalue()
+
+    # The xml output is large, so we just check parts of it.
+    self.assertIn(
+        b'<name>unicode1</name>\n'
+        b'    <meaning>help:\xc3\xac</meaning>\n'
+        b'    <default>\xc3\x80\xc3\xbd</default>\n'
+        b'    <current>\xc3\x80\xc3\xbd</current>'.decode('utf-8'),
+        actual_output)
+    self.assertIn(
+        b'<name>unicode2</name>\n'
+        b'    <meaning>help:\xc3\xad</meaning>\n'
+        b'    <default>abc,\xc3\x80,\xc3\xbd</default>\n'
+        b"    <current>['abc', '\xc3\x80', '\xc3\xbd']"
+        b'</current>'.decode('utf-8'), actual_output)
+    self.assertIn(
+        b'<name>non_unicode</name>\n'
+        b'    <meaning>help:\xc3\xad</meaning>\n'
+        b'    <default>abc,def,ghi</default>\n'
+        b"    <current>['abc', 'def', 'ghi']"
+        b'</current>'.decode('utf-8'), actual_output)
+
+
+class LoadFromFlagFileTest(absltest.TestCase):
+  """Testing loading flags from a file and parsing them."""
+
+  def setUp(self):
+    self.flag_values = flags.FlagValues()
+    flags.DEFINE_string(
+        'unittest_message1',
+        'Foo!',
+        'You Add Here.',
+        flag_values=self.flag_values)
+    flags.DEFINE_string(
+        'unittest_message2',
+        'Bar!',
+        'Hello, Sailor!',
+        flag_values=self.flag_values)
+    flags.DEFINE_boolean(
+        'unittest_boolflag',
+        0,
+        'Some Boolean thing',
+        flag_values=self.flag_values)
+    flags.DEFINE_integer(
+        'unittest_number',
+        12345,
+        'Some integer',
+        lower_bound=0,
+        flag_values=self.flag_values)
+    flags.DEFINE_list(
+        'UnitTestList', '1,2,3', 'Some list', flag_values=self.flag_values)
+    self.tmp_path = None
+    self.flag_values.mark_as_parsed()
+
+  def tearDown(self):
+    self._remove_test_files()
+
+  def _setup_test_files(self):
+    """Creates and sets up some dummy flagfile files with bogus flags."""
+
+    # Figure out where to create temporary files
+    self.assertFalse(self.tmp_path)
+    self.tmp_path = tempfile.mkdtemp()
+
+    tmp_flag_file_1 = open(self.tmp_path + '/UnitTestFile1.tst', 'w')
+    tmp_flag_file_2 = open(self.tmp_path + '/UnitTestFile2.tst', 'w')
+    tmp_flag_file_3 = open(self.tmp_path + '/UnitTestFile3.tst', 'w')
+    tmp_flag_file_4 = open(self.tmp_path + '/UnitTestFile4.tst', 'w')
+
+    # put some dummy flags in our test files
+    tmp_flag_file_1.write('#A Fake Comment\n')
+    tmp_flag_file_1.write('--unittest_message1=tempFile1!\n')
+    tmp_flag_file_1.write('\n')
+    tmp_flag_file_1.write('--unittest_number=54321\n')
+    tmp_flag_file_1.write('--nounittest_boolflag\n')
+    file_list = [tmp_flag_file_1.name]
+    # this one includes test file 1
+    tmp_flag_file_2.write('//A Different Fake Comment\n')
+    tmp_flag_file_2.write('--flagfile=%s\n' % tmp_flag_file_1.name)
+    tmp_flag_file_2.write('--unittest_message2=setFromTempFile2\n')
+    tmp_flag_file_2.write('\t\t\n')
+    tmp_flag_file_2.write('--unittest_number=6789a\n')
+    file_list.append(tmp_flag_file_2.name)
+    # this file points to itself
+    tmp_flag_file_3.write('--flagfile=%s\n' % tmp_flag_file_3.name)
+    tmp_flag_file_3.write('--unittest_message1=setFromTempFile3\n')
+    tmp_flag_file_3.write('#YAFC\n')
+    tmp_flag_file_3.write('--unittest_boolflag\n')
+    file_list.append(tmp_flag_file_3.name)
+    # this file is unreadable
+    tmp_flag_file_4.write('--flagfile=%s\n' % tmp_flag_file_3.name)
+    tmp_flag_file_4.write('--unittest_message1=setFromTempFile4\n')
+    tmp_flag_file_4.write('--unittest_message1=setFromTempFile4\n')
+    os.chmod(self.tmp_path + '/UnitTestFile4.tst', 0)
+    file_list.append(tmp_flag_file_4.name)
+
+    tmp_flag_file_1.close()
+    tmp_flag_file_2.close()
+    tmp_flag_file_3.close()
+    tmp_flag_file_4.close()
+
+    return file_list  # these are just the file names
+
+  def _remove_test_files(self):
+    """Removes the files we just created."""
+    if self.tmp_path:
+      shutil.rmtree(self.tmp_path, ignore_errors=True)
+      self.tmp_path = None
+
+  def _read_flags_from_files(self, argv, force_gnu):
+    return argv[:1] + self.flag_values.read_flags_from_files(
+        argv[1:], force_gnu=force_gnu)
+
+  #### Flagfile Unit Tests ####
+  def test_method_flagfiles_1(self):
+    """Test trivial case with no flagfile based options."""
+    fake_cmd_line = 'fooScript --unittest_boolflag'
+    fake_argv = fake_cmd_line.split(' ')
+    self.flag_values(fake_argv)
+    self.assertEqual(self.flag_values.unittest_boolflag, 1)
+    self.assertListEqual(fake_argv,
+                         self._read_flags_from_files(fake_argv, False))
+
+  def test_method_flagfiles_2(self):
+    """Tests parsing one file + arguments off simulated argv."""
+    tmp_files = self._setup_test_files()
+    # specify our temp file on the fake cmd line
+    fake_cmd_line = 'fooScript --q --flagfile=%s' % tmp_files[0]
+    fake_argv = fake_cmd_line.split(' ')
+
+    # We should see the original cmd line with the file's contents spliced in.
+    # Flags from the file will appear in the order order they are specified
+    # in the file, in the same position as the flagfile argument.
+    expected_results = [
+        'fooScript', '--q', '--unittest_message1=tempFile1!',
+        '--unittest_number=54321', '--nounittest_boolflag'
+    ]
+    test_results = self._read_flags_from_files(fake_argv, False)
+    self.assertListEqual(expected_results, test_results)
+
+  # end testTwo def
+
+  def test_method_flagfiles_3(self):
+    """Tests parsing nested files + arguments of simulated argv."""
+    tmp_files = self._setup_test_files()
+    # specify our temp file on the fake cmd line
+    fake_cmd_line = ('fooScript --unittest_number=77 --flagfile=%s' %
+                     tmp_files[1])
+    fake_argv = fake_cmd_line.split(' ')
+
+    expected_results = [
+        'fooScript', '--unittest_number=77', '--unittest_message1=tempFile1!',
+        '--unittest_number=54321', '--nounittest_boolflag',
+        '--unittest_message2=setFromTempFile2', '--unittest_number=6789a'
+    ]
+    test_results = self._read_flags_from_files(fake_argv, False)
+    self.assertListEqual(expected_results, test_results)
+
+  # end testThree def
+
+  def test_method_flagfiles_3_spaces(self):
+    """Tests parsing nested files + arguments of simulated argv.
+
+    The arguments include a pair that is actually an arg with a value, so it
+    doesn't stop processing.
+    """
+    tmp_files = self._setup_test_files()
+    # specify our temp file on the fake cmd line
+    fake_cmd_line = ('fooScript --unittest_number 77 --flagfile=%s' %
+                     tmp_files[1])
+    fake_argv = fake_cmd_line.split(' ')
+
+    expected_results = [
+        'fooScript', '--unittest_number', '77',
+        '--unittest_message1=tempFile1!', '--unittest_number=54321',
+        '--nounittest_boolflag', '--unittest_message2=setFromTempFile2',
+        '--unittest_number=6789a'
+    ]
+    test_results = self._read_flags_from_files(fake_argv, False)
+    self.assertListEqual(expected_results, test_results)
+
+  def test_method_flagfiles_3_spaces_boolean(self):
+    """Tests parsing nested files + arguments of simulated argv.
+
+    The arguments include a pair that looks like a --x y arg with value, but
+    since the flag is a boolean it's actually not.
+    """
+    tmp_files = self._setup_test_files()
+    # specify our temp file on the fake cmd line
+    fake_cmd_line = ('fooScript --unittest_boolflag 77 --flagfile=%s' %
+                     tmp_files[1])
+    fake_argv = fake_cmd_line.split(' ')
+
+    expected_results = [
+        'fooScript', '--unittest_boolflag', '77',
+        '--flagfile=%s' % tmp_files[1]
+    ]
+    with _use_gnu_getopt(self.flag_values, False):
+      test_results = self._read_flags_from_files(fake_argv, False)
+      self.assertListEqual(expected_results, test_results)
+
+  def test_method_flagfiles_4(self):
+    """Tests parsing self-referential files + arguments of simulated argv.
