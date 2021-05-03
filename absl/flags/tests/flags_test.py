@@ -2363,3 +2363,180 @@ class FlagsParsingTest(absltest.TestCase):
     argv = self.flag_values(argv)
     self.assertEqual(len(argv), 2, 'wrong number of arguments pulled')
     self.assertEqual(argv[0], './program', 'program name not preserved')
+    self.assertEqual(argv[1], 'extra', 'extra argument not preserved')
+
+    # Test incorrect --undefok with no value.
+    argv = ('./program', '--name=Bob', '--undefok')
+    with self.assertRaises(flags.Error):
+      self.flag_values(argv)
+
+
+class NonGlobalFlagsTest(absltest.TestCase):
+
+  def test_nonglobal_flags(self):
+    """Test use of non-global FlagValues."""
+    nonglobal_flags = flags.FlagValues()
+    flags.DEFINE_string('nonglobal_flag', 'Bob', 'flaghelp', nonglobal_flags)
+    argv = ('./program', '--nonglobal_flag=Mary', 'extra')
+    argv = nonglobal_flags(argv)
+    self.assertEqual(len(argv), 2, 'wrong number of arguments pulled')
+    self.assertEqual(argv[0], './program', 'program name not preserved')
+    self.assertEqual(argv[1], 'extra', 'extra argument not preserved')
+    self.assertEqual(nonglobal_flags['nonglobal_flag'].value, 'Mary')
+
+  def test_unrecognized_nonglobal_flags(self):
+    """Test unrecognized non-global flags."""
+    nonglobal_flags = flags.FlagValues()
+    argv = ('./program', '--nosuchflag')
+    try:
+      argv = nonglobal_flags(argv)
+      raise AssertionError('Unknown flag exception not raised')
+    except flags.UnrecognizedFlagError as e:
+      self.assertEqual(e.flagname, 'nosuchflag')
+
+    argv = ('./program', '--nosuchflag', '--undefok=nosuchflag')
+
+    argv = nonglobal_flags(argv)
+    self.assertEqual(len(argv), 1, 'wrong number of arguments pulled')
+    self.assertEqual(argv[0], './program', 'program name not preserved')
+
+  def test_create_flag_errors(self):
+    # Since the exception classes are exposed, nothing stops users
+    # from creating their own instances. This test makes sure that
+    # people modifying the flags module understand that the external
+    # mechanisms for creating the exceptions should continue to work.
+    _ = flags.Error()
+    _ = flags.Error('message')
+    _ = flags.DuplicateFlagError()
+    _ = flags.DuplicateFlagError('message')
+    _ = flags.IllegalFlagValueError()
+    _ = flags.IllegalFlagValueError('message')
+
+  def test_flag_values_del_attr(self):
+    """Checks that del self.flag_values.flag_id works."""
+    default_value = 'default value for test_flag_values_del_attr'
+    # 1. Declare and delete a flag with no short name.
+    flag_values = flags.FlagValues()
+    flags.DEFINE_string(
+        'delattr_foo', default_value, 'A simple flag.', flag_values=flag_values)
+
+    flag_values.mark_as_parsed()
+    self.assertEqual(flag_values.delattr_foo, default_value)
+    flag_obj = flag_values['delattr_foo']
+    # We also check that _FlagIsRegistered works as expected :)
+    self.assertTrue(flag_values._flag_is_registered(flag_obj))
+    del flag_values.delattr_foo
+    self.assertFalse('delattr_foo' in flag_values._flags())
+    self.assertFalse(flag_values._flag_is_registered(flag_obj))
+    # If the previous del FLAGS.delattr_foo did not work properly, the
+    # next definition will trigger a redefinition error.
+    flags.DEFINE_integer(
+        'delattr_foo', 3, 'A simple flag.', flag_values=flag_values)
+    del flag_values.delattr_foo
+
+    self.assertFalse('delattr_foo' in flag_values)
+
+    # 2. Declare and delete a flag with a short name.
+    flags.DEFINE_string(
+        'delattr_bar',
+        default_value,
+        'flag with short name',
+        short_name='x5',
+        flag_values=flag_values)
+    flag_obj = flag_values['delattr_bar']
+    self.assertTrue(flag_values._flag_is_registered(flag_obj))
+    del flag_values.x5
+    self.assertTrue(flag_values._flag_is_registered(flag_obj))
+    del flag_values.delattr_bar
+    self.assertFalse(flag_values._flag_is_registered(flag_obj))
+
+    # 3. Just like 2, but del flag_values.name last
+    flags.DEFINE_string(
+        'delattr_bar',
+        default_value,
+        'flag with short name',
+        short_name='x5',
+        flag_values=flag_values)
+    flag_obj = flag_values['delattr_bar']
+    self.assertTrue(flag_values._flag_is_registered(flag_obj))
+    del flag_values.delattr_bar
+    self.assertTrue(flag_values._flag_is_registered(flag_obj))
+    del flag_values.x5
+    self.assertFalse(flag_values._flag_is_registered(flag_obj))
+
+    self.assertFalse('delattr_bar' in flag_values)
+    self.assertFalse('x5' in flag_values)
+
+  def test_list_flag_format(self):
+    """Tests for correctly-formatted list flags."""
+    fv = flags.FlagValues()
+    flags.DEFINE_list('listflag', '', 'A list of arguments', flag_values=fv)
+
+    def _check_parsing(listval):
+      """Parse a particular value for our test flag, --listflag."""
+      argv = fv(['./program', '--listflag=' + listval, 'plain-arg'])
+      self.assertEqual(['./program', 'plain-arg'], argv)
+      return fv.listflag
+
+    # Basic success case
+    self.assertEqual(_check_parsing('foo,bar'), ['foo', 'bar'])
+    # Success case: newline in argument is quoted.
+    self.assertEqual(_check_parsing('"foo","bar\nbar"'), ['foo', 'bar\nbar'])
+    # Failure case: newline in argument is unquoted.
+    self.assertRaises(flags.IllegalFlagValueError, _check_parsing,
+                      '"foo",bar\nbar')
+    # Failure case: unmatched ".
+    self.assertRaises(flags.IllegalFlagValueError, _check_parsing,
+                      '"foo,barbar')
+
+  def test_flag_definition_via_setitem(self):
+    with self.assertRaises(flags.IllegalFlagValueError):
+      flag_values = flags.FlagValues()
+      flag_values['flag_name'] = 'flag_value'
+
+
+class SetDefaultTest(absltest.TestCase):
+
+  def setUp(self):
+    super().setUp()
+    self.flag_values = flags.FlagValues()
+
+  def test_success(self):
+    int_holder = flags.DEFINE_integer(
+        'an_int', 1, 'an int', flag_values=self.flag_values)
+
+    flags.set_default(int_holder, 2)
+    self.flag_values.mark_as_parsed()
+
+    self.assertEqual(int_holder.value, 2)
+
+  def test_update_after_parse(self):
+    int_holder = flags.DEFINE_integer(
+        'an_int', 1, 'an int', flag_values=self.flag_values)
+
+    self.flag_values.mark_as_parsed()
+    flags.set_default(int_holder, 2)
+
+    self.assertEqual(int_holder.value, 2)
+
+  def test_overridden_by_explicit_assignment(self):
+    int_holder = flags.DEFINE_integer(
+        'an_int', 1, 'an int', flag_values=self.flag_values)
+
+    self.flag_values.mark_as_parsed()
+    self.flag_values.an_int = 3
+    flags.set_default(int_holder, 2)
+
+    self.assertEqual(int_holder.value, 3)
+
+  def test_restores_back_to_none(self):
+    int_holder = flags.DEFINE_integer(
+        'an_int', None, 'an int', flag_values=self.flag_values)
+
+    self.flag_values.mark_as_parsed()
+    flags.set_default(int_holder, 3)
+    flags.set_default(int_holder, None)
+
+    self.assertIsNone(int_holder.value)
+
+  def test_failure_on_invalid_type(self):
