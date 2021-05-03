@@ -2169,3 +2169,197 @@ class LoadFromFlagFileTest(absltest.TestCase):
     self.assertEqual(self.flag_values['unittest_boolflag'].default_as_str,
                      "'false'")
     self.flag_values(['dummyscript', '--unittest_boolflag=true'])
+    self.assertEqual(self.flag_values.unittest_boolflag, True)
+
+    # Test that setting a list default works correctly.
+    self.flag_values.set_default('UnitTestList', '4,5,6')
+    self.assertListEqual(self.flag_values.UnitTestList, ['4', '5', '6'])
+    self.assertEqual(self.flag_values['UnitTestList'].default_as_str, "'4,5,6'")
+    self.flag_values(['dummyscript', '--UnitTestList=7,8,9'])
+    self.assertListEqual(self.flag_values.UnitTestList, ['7', '8', '9'])
+
+    # Test that setting invalid defaults raises exceptions
+    with self.assertRaises(flags.IllegalFlagValueError):
+      self.flag_values.set_default('unittest_number', 'oops')
+    with self.assertRaises(flags.IllegalFlagValueError):
+      self.flag_values.set_default('unittest_number', -1)
+
+
+class FlagsParsingTest(absltest.TestCase):
+  """Testing different aspects of parsing: '-f' vs '--flag', etc."""
+
+  def setUp(self):
+    self.flag_values = flags.FlagValues()
+
+  def test_two_dash_arg_first(self):
+    flags.DEFINE_string(
+        'twodash_name', 'Bob', 'namehelp', flag_values=self.flag_values)
+    flags.DEFINE_string(
+        'twodash_blame', 'Rob', 'blamehelp', flag_values=self.flag_values)
+    argv = ('./program', '--', '--twodash_name=Harry')
+    argv = self.flag_values(argv)
+    self.assertEqual('Bob', self.flag_values.twodash_name)
+    self.assertEqual(argv[1], '--twodash_name=Harry')
+
+  def test_two_dash_arg_middle(self):
+    flags.DEFINE_string(
+        'twodash2_name', 'Bob', 'namehelp', flag_values=self.flag_values)
+    flags.DEFINE_string(
+        'twodash2_blame', 'Rob', 'blamehelp', flag_values=self.flag_values)
+    argv = ('./program', '--twodash2_blame=Larry', '--',
+            '--twodash2_name=Harry')
+    argv = self.flag_values(argv)
+    self.assertEqual('Bob', self.flag_values.twodash2_name)
+    self.assertEqual('Larry', self.flag_values.twodash2_blame)
+    self.assertEqual(argv[1], '--twodash2_name=Harry')
+
+  def test_one_dash_arg_first(self):
+    flags.DEFINE_string(
+        'onedash_name', 'Bob', 'namehelp', flag_values=self.flag_values)
+    flags.DEFINE_string(
+        'onedash_blame', 'Rob', 'blamehelp', flag_values=self.flag_values)
+    argv = ('./program', '-', '--onedash_name=Harry')
+    with _use_gnu_getopt(self.flag_values, False):
+      argv = self.flag_values(argv)
+      self.assertEqual(len(argv), 3)
+      self.assertEqual(argv[1], '-')
+      self.assertEqual(argv[2], '--onedash_name=Harry')
+
+  def test_required_flag_not_specified(self):
+    flags.DEFINE_string(
+        'str_flag',
+        default=None,
+        help='help',
+        required=True,
+        flag_values=self.flag_values)
+    argv = ('./program',)
+    with _use_gnu_getopt(self.flag_values, False):
+      with self.assertRaises(flags.IllegalFlagValueError):
+        self.flag_values(argv)
+
+  def test_required_arg_works_with_other_validators(self):
+    flags.DEFINE_integer(
+        'int_flag',
+        default=None,
+        help='help',
+        required=True,
+        lower_bound=4,
+        flag_values=self.flag_values)
+    argv = ('./program', '--int_flag=2')
+    with _use_gnu_getopt(self.flag_values, False):
+      with self.assertRaises(flags.IllegalFlagValueError):
+        self.flag_values(argv)
+
+  def test_unrecognized_flags(self):
+    flags.DEFINE_string('name', 'Bob', 'namehelp', flag_values=self.flag_values)
+    # Unknown flag --nosuchflag
+    try:
+      argv = ('./program', '--nosuchflag', '--name=Bob', 'extra')
+      self.flag_values(argv)
+      raise AssertionError('Unknown flag exception not raised')
+    except flags.UnrecognizedFlagError as e:
+      self.assertEqual(e.flagname, 'nosuchflag')
+      self.assertEqual(e.flagvalue, '--nosuchflag')
+
+    # Unknown flag -w (short option)
+    try:
+      argv = ('./program', '-w', '--name=Bob', 'extra')
+      self.flag_values(argv)
+      raise AssertionError('Unknown flag exception not raised')
+    except flags.UnrecognizedFlagError as e:
+      self.assertEqual(e.flagname, 'w')
+      self.assertEqual(e.flagvalue, '-w')
+
+    # Unknown flag --nosuchflagwithparam=foo
+    try:
+      argv = ('./program', '--nosuchflagwithparam=foo', '--name=Bob', 'extra')
+      self.flag_values(argv)
+      raise AssertionError('Unknown flag exception not raised')
+    except flags.UnrecognizedFlagError as e:
+      self.assertEqual(e.flagname, 'nosuchflagwithparam')
+      self.assertEqual(e.flagvalue, '--nosuchflagwithparam=foo')
+
+    # Allow unknown flag --nosuchflag if specified with undefok
+    argv = ('./program', '--nosuchflag', '--name=Bob', '--undefok=nosuchflag',
+            'extra')
+    argv = self.flag_values(argv)
+    self.assertEqual(len(argv), 2, 'wrong number of arguments pulled')
+    self.assertEqual(argv[0], './program', 'program name not preserved')
+    self.assertEqual(argv[1], 'extra', 'extra argument not preserved')
+
+    # Allow unknown flag --noboolflag if undefok=boolflag is specified
+    argv = ('./program', '--noboolflag', '--name=Bob', '--undefok=boolflag',
+            'extra')
+    argv = self.flag_values(argv)
+    self.assertEqual(len(argv), 2, 'wrong number of arguments pulled')
+    self.assertEqual(argv[0], './program', 'program name not preserved')
+    self.assertEqual(argv[1], 'extra', 'extra argument not preserved')
+
+    # But not if the flagname is misspelled:
+    try:
+      argv = ('./program', '--nosuchflag', '--name=Bob', '--undefok=nosuchfla',
+              'extra')
+      self.flag_values(argv)
+      raise AssertionError('Unknown flag exception not raised')
+    except flags.UnrecognizedFlagError as e:
+      self.assertEqual(e.flagname, 'nosuchflag')
+
+    try:
+      argv = ('./program', '--nosuchflag', '--name=Bob',
+              '--undefok=nosuchflagg', 'extra')
+      self.flag_values(argv)
+      raise AssertionError('Unknown flag exception not raised')
+    except flags.UnrecognizedFlagError as e:
+      self.assertEqual(e.flagname, 'nosuchflag')
+
+    # Allow unknown short flag -w if specified with undefok
+    argv = ('./program', '-w', '--name=Bob', '--undefok=w', 'extra')
+    argv = self.flag_values(argv)
+    self.assertEqual(len(argv), 2, 'wrong number of arguments pulled')
+    self.assertEqual(argv[0], './program', 'program name not preserved')
+    self.assertEqual(argv[1], 'extra', 'extra argument not preserved')
+
+    # Allow unknown flag --nosuchflagwithparam=foo if specified
+    # with undefok
+    argv = ('./program', '--nosuchflagwithparam=foo', '--name=Bob',
+            '--undefok=nosuchflagwithparam', 'extra')
+    argv = self.flag_values(argv)
+    self.assertEqual(len(argv), 2, 'wrong number of arguments pulled')
+    self.assertEqual(argv[0], './program', 'program name not preserved')
+    self.assertEqual(argv[1], 'extra', 'extra argument not preserved')
+
+    # Even if undefok specifies multiple flags
+    argv = ('./program', '--nosuchflag', '-w', '--nosuchflagwithparam=foo',
+            '--name=Bob', '--undefok=nosuchflag,w,nosuchflagwithparam', 'extra')
+    argv = self.flag_values(argv)
+    self.assertEqual(len(argv), 2, 'wrong number of arguments pulled')
+    self.assertEqual(argv[0], './program', 'program name not preserved')
+    self.assertEqual(argv[1], 'extra', 'extra argument not preserved')
+
+    # However, not if undefok doesn't specify the flag
+    try:
+      argv = ('./program', '--nosuchflag', '--name=Bob',
+              '--undefok=another_such', 'extra')
+      self.flag_values(argv)
+      raise AssertionError('Unknown flag exception not raised')
+    except flags.UnrecognizedFlagError as e:
+      self.assertEqual(e.flagname, 'nosuchflag')
+
+    # Make sure --undefok doesn't mask other option errors.
+    try:
+      # Provide an option requiring a parameter but not giving it one.
+      argv = ('./program', '--undefok=name', '--name')
+      self.flag_values(argv)
+      raise AssertionError('Missing option parameter exception not raised')
+    except flags.UnrecognizedFlagError:
+      raise AssertionError('Wrong kind of error exception raised')
+    except flags.Error:
+      pass
+
+    # Test --undefok <list>
+    argv = ('./program', '--nosuchflag', '-w', '--nosuchflagwithparam=foo',
+            '--name=Bob', '--undefok', 'nosuchflag,w,nosuchflagwithparam',
+            'extra')
+    argv = self.flag_values(argv)
+    self.assertEqual(len(argv), 2, 'wrong number of arguments pulled')
+    self.assertEqual(argv[0], './program', 'program name not preserved')
