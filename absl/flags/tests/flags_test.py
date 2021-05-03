@@ -2540,3 +2540,199 @@ class SetDefaultTest(absltest.TestCase):
     self.assertIsNone(int_holder.value)
 
   def test_failure_on_invalid_type(self):
+    int_holder = flags.DEFINE_integer(
+        'an_int', 1, 'an int', flag_values=self.flag_values)
+
+    self.flag_values.mark_as_parsed()
+
+    with self.assertRaises(flags.IllegalFlagValueError):
+      flags.set_default(int_holder, 'a')
+
+  def test_failure_on_type_protected_none_default(self):
+    int_holder = flags.DEFINE_integer(
+        'an_int', 1, 'an int', flag_values=self.flag_values)
+
+    self.flag_values.mark_as_parsed()
+
+    flags.set_default(int_holder, None)  # NOTE: should be a type failure
+
+    with self.assertRaises(flags.IllegalFlagValueError):
+      _ = int_holder.value  # Will also fail on later access.
+
+
+class KeyFlagsTest(absltest.TestCase):
+
+  def setUp(self):
+    self.flag_values = flags.FlagValues()
+
+  def _get_names_of_defined_flags(self, module, flag_values):
+    """Returns the list of names of flags defined by a module.
+
+    Auxiliary for the test_key_flags* methods.
+
+    Args:
+      module: A module object or a string module name.
+      flag_values: A FlagValues object.
+
+    Returns:
+      A list of strings.
+    """
+    return [f.name for f in flag_values.get_flags_for_module(module)]
+
+  def _get_names_of_key_flags(self, module, flag_values):
+    """Returns the list of names of key flags for a module.
+
+    Auxiliary for the test_key_flags* methods.
+
+    Args:
+      module: A module object or a string module name.
+      flag_values: A FlagValues object.
+
+    Returns:
+      A list of strings.
+    """
+    return [f.name for f in flag_values.get_key_flags_for_module(module)]
+
+  def _assert_lists_have_same_elements(self, list_1, list_2):
+    # Checks that two lists have the same elements with the same
+    # multiplicity, in possibly different order.
+    list_1 = list(list_1)
+    list_1.sort()
+    list_2 = list(list_2)
+    list_2.sort()
+    self.assertListEqual(list_1, list_2)
+
+  def test_key_flags(self):
+    flag_values = flags.FlagValues()
+    # Before starting any testing, make sure no flags are already
+    # defined for module_foo and module_bar.
+    self.assertListEqual(
+        self._get_names_of_key_flags(module_foo, flag_values), [])
+    self.assertListEqual(
+        self._get_names_of_key_flags(module_bar, flag_values), [])
+    self.assertListEqual(
+        self._get_names_of_defined_flags(module_foo, flag_values), [])
+    self.assertListEqual(
+        self._get_names_of_defined_flags(module_bar, flag_values), [])
+
+    # Defines a few flags in module_foo and module_bar.
+    module_foo.define_flags(flag_values=flag_values)
+
+    try:
+      # Part 1. Check that all flags defined by module_foo are key for
+      # that module, and similarly for module_bar.
+      for module in [module_foo, module_bar]:
+        self._assert_lists_have_same_elements(
+            flag_values.get_flags_for_module(module),
+            flag_values.get_key_flags_for_module(module))
+        # Also check that each module defined the expected flags.
+        self._assert_lists_have_same_elements(
+            self._get_names_of_defined_flags(module, flag_values),
+            module.names_of_defined_flags())
+
+      # Part 2. Check that flags.declare_key_flag works fine.
+      # Declare that some flags from module_bar are key for
+      # module_foo.
+      module_foo.declare_key_flags(flag_values=flag_values)
+
+      # Check that module_foo has the expected list of defined flags.
+      self._assert_lists_have_same_elements(
+          self._get_names_of_defined_flags(module_foo, flag_values),
+          module_foo.names_of_defined_flags())
+
+      # Check that module_foo has the expected list of key flags.
+      self._assert_lists_have_same_elements(
+          self._get_names_of_key_flags(module_foo, flag_values),
+          module_foo.names_of_declared_key_flags())
+
+      # Part 3. Check that flags.adopt_module_key_flags works fine.
+      # Trigger a call to flags.adopt_module_key_flags(module_bar)
+      # inside module_foo.  This should declare a few more key
+      # flags in module_foo.
+      module_foo.declare_extra_key_flags(flag_values=flag_values)
+
+      # Check that module_foo has the expected list of key flags.
+      self._assert_lists_have_same_elements(
+          self._get_names_of_key_flags(module_foo, flag_values),
+          module_foo.names_of_declared_key_flags() +
+          module_foo.names_of_declared_extra_key_flags())
+    finally:
+      module_foo.remove_flags(flag_values=flag_values)
+
+  def test_key_flags_with_non_default_flag_values_object(self):
+    # Check that key flags work even when we use a FlagValues object
+    # that is not the default flags.self.flag_values object.  Otherwise, this
+    # test is similar to test_key_flags, but it uses only module_bar.
+    # The other test module (module_foo) uses only the default values
+    # for the flag_values keyword arguments.  This way, test_key_flags
+    # and this method test both the default FlagValues, the explicitly
+    # specified one, and a mixed usage of the two.
+
+    # A brand-new FlagValues object, to use instead of flags.self.flag_values.
+    fv = flags.FlagValues()
+
+    # Before starting any testing, make sure no flags are already
+    # defined for module_foo and module_bar.
+    self.assertListEqual(self._get_names_of_key_flags(module_bar, fv), [])
+    self.assertListEqual(self._get_names_of_defined_flags(module_bar, fv), [])
+
+    module_bar.define_flags(flag_values=fv)
+
+    # Check that all flags defined by module_bar are key for that
+    # module, and that module_bar defined the expected flags.
+    self._assert_lists_have_same_elements(
+        fv.get_flags_for_module(module_bar),
+        fv.get_key_flags_for_module(module_bar))
+    self._assert_lists_have_same_elements(
+        self._get_names_of_defined_flags(module_bar, fv),
+        module_bar.names_of_defined_flags())
+
+    # Pick two flags from module_bar, declare them as key for the
+    # current (i.e., main) module (via flags.declare_key_flag), and
+    # check that we get the expected effect.  The important thing is
+    # that we always use flags_values=fv (instead of the default
+    # self.flag_values).
+    main_module = sys.argv[0]
+    names_of_flags_defined_by_bar = module_bar.names_of_defined_flags()
+    flag_name_0 = names_of_flags_defined_by_bar[0]
+    flag_name_2 = names_of_flags_defined_by_bar[2]
+
+    flags.declare_key_flag(flag_name_0, flag_values=fv)
+    self._assert_lists_have_same_elements(
+        self._get_names_of_key_flags(main_module, fv), [flag_name_0])
+
+    flags.declare_key_flag(flag_name_2, flag_values=fv)
+    self._assert_lists_have_same_elements(
+        self._get_names_of_key_flags(main_module, fv),
+        [flag_name_0, flag_name_2])
+
+    # Try with a special (not user-defined) flag too:
+    flags.declare_key_flag('undefok', flag_values=fv)
+    self._assert_lists_have_same_elements(
+        self._get_names_of_key_flags(main_module, fv),
+        [flag_name_0, flag_name_2, 'undefok'])
+
+    flags.adopt_module_key_flags(module_bar, fv)
+    self._assert_lists_have_same_elements(
+        self._get_names_of_key_flags(main_module, fv),
+        names_of_flags_defined_by_bar + ['undefok'])
+
+    # Adopt key flags from the flags module itself.
+    flags.adopt_module_key_flags(flags, flag_values=fv)
+    self._assert_lists_have_same_elements(
+        self._get_names_of_key_flags(main_module, fv),
+        names_of_flags_defined_by_bar + ['flagfile', 'undefok'])
+
+  def test_key_flags_with_flagholders(self):
+    main_module = sys.argv[0]
+
+    self.assertListEqual(
+        self._get_names_of_key_flags(main_module, self.flag_values), [])
+    self.assertListEqual(
+        self._get_names_of_defined_flags(main_module, self.flag_values), [])
+
+    int_holder = flags.DEFINE_integer(
+        'main_module_int_fg',
+        1,
+        'Integer flag in the main module.',
+        flag_values=self.flag_values)
