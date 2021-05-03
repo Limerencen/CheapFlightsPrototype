@@ -1967,3 +1967,205 @@ class LoadFromFlagFileTest(absltest.TestCase):
 
   def test_method_flagfiles_4(self):
     """Tests parsing self-referential files + arguments of simulated argv.
+
+    This test should print a warning to stderr of some sort.
+    """
+    tmp_files = self._setup_test_files()
+    # specify our temp file on the fake cmd line
+    fake_cmd_line = ('fooScript --flagfile=%s --nounittest_boolflag' %
+                     tmp_files[2])
+    fake_argv = fake_cmd_line.split(' ')
+    expected_results = [
+        'fooScript', '--unittest_message1=setFromTempFile3',
+        '--unittest_boolflag', '--nounittest_boolflag'
+    ]
+
+    test_results = self._read_flags_from_files(fake_argv, False)
+    self.assertListEqual(expected_results, test_results)
+
+  def test_method_flagfiles_5(self):
+    """Test that --flagfile parsing respects the '--' end-of-options marker."""
+    tmp_files = self._setup_test_files()
+    # specify our temp file on the fake cmd line
+    fake_cmd_line = 'fooScript --some_flag -- --flagfile=%s' % tmp_files[0]
+    fake_argv = fake_cmd_line.split(' ')
+    expected_results = [
+        'fooScript', '--some_flag', '--',
+        '--flagfile=%s' % tmp_files[0]
+    ]
+
+    test_results = self._read_flags_from_files(fake_argv, False)
+    self.assertListEqual(expected_results, test_results)
+
+  def test_method_flagfiles_6(self):
+    """Test that --flagfile parsing stops at non-options (non-GNU behavior)."""
+    tmp_files = self._setup_test_files()
+    # specify our temp file on the fake cmd line
+    fake_cmd_line = ('fooScript --some_flag some_arg --flagfile=%s' %
+                     tmp_files[0])
+    fake_argv = fake_cmd_line.split(' ')
+    expected_results = [
+        'fooScript', '--some_flag', 'some_arg',
+        '--flagfile=%s' % tmp_files[0]
+    ]
+
+    with _use_gnu_getopt(self.flag_values, False):
+      test_results = self._read_flags_from_files(fake_argv, False)
+      self.assertListEqual(expected_results, test_results)
+
+  def test_method_flagfiles_7(self):
+    """Test that --flagfile parsing skips over a non-option (GNU behavior)."""
+    self.flag_values.set_gnu_getopt()
+    tmp_files = self._setup_test_files()
+    # specify our temp file on the fake cmd line
+    fake_cmd_line = ('fooScript --some_flag some_arg --flagfile=%s' %
+                     tmp_files[0])
+    fake_argv = fake_cmd_line.split(' ')
+    expected_results = [
+        'fooScript', '--some_flag', 'some_arg',
+        '--unittest_message1=tempFile1!', '--unittest_number=54321',
+        '--nounittest_boolflag'
+    ]
+
+    test_results = self._read_flags_from_files(fake_argv, False)
+    self.assertListEqual(expected_results, test_results)
+
+  def test_method_flagfiles_8(self):
+    """Test that --flagfile parsing respects force_gnu=True."""
+    tmp_files = self._setup_test_files()
+    # specify our temp file on the fake cmd line
+    fake_cmd_line = ('fooScript --some_flag some_arg --flagfile=%s' %
+                     tmp_files[0])
+    fake_argv = fake_cmd_line.split(' ')
+    expected_results = [
+        'fooScript', '--some_flag', 'some_arg',
+        '--unittest_message1=tempFile1!', '--unittest_number=54321',
+        '--nounittest_boolflag'
+    ]
+
+    test_results = self._read_flags_from_files(fake_argv, True)
+    self.assertListEqual(expected_results, test_results)
+
+  def test_method_flagfiles_repeated_non_circular(self):
+    """Tests that parsing repeated non-circular flagfiles works."""
+    tmp_files = self._setup_test_files()
+    # specify our temp files on the fake cmd line
+    fake_cmd_line = ('fooScript --flagfile=%s --flagfile=%s' %
+                     (tmp_files[1], tmp_files[0]))
+    fake_argv = fake_cmd_line.split(' ')
+    expected_results = [
+        'fooScript', '--unittest_message1=tempFile1!',
+        '--unittest_number=54321', '--nounittest_boolflag',
+        '--unittest_message2=setFromTempFile2', '--unittest_number=6789a',
+        '--unittest_message1=tempFile1!', '--unittest_number=54321',
+        '--nounittest_boolflag'
+    ]
+
+    test_results = self._read_flags_from_files(fake_argv, False)
+    self.assertListEqual(expected_results, test_results)
+
+  @unittest.skipIf(
+      os.name == 'nt',
+      'There is no good way to create an unreadable file on Windows.')
+  def test_method_flagfiles_no_permissions(self):
+    """Test that --flagfile raises except on file that is unreadable."""
+    tmp_files = self._setup_test_files()
+    # specify our temp file on the fake cmd line
+    fake_cmd_line = ('fooScript --some_flag some_arg --flagfile=%s' %
+                     tmp_files[3])
+    fake_argv = fake_cmd_line.split(' ')
+    self.assertRaises(flags.CantOpenFlagFileError, self._read_flags_from_files,
+                      fake_argv, True)
+
+  def test_method_flagfiles_not_found(self):
+    """Test that --flagfile raises except on file that does not exist."""
+    tmp_files = self._setup_test_files()
+    # specify our temp file on the fake cmd line
+    fake_cmd_line = ('fooScript --some_flag some_arg --flagfile=%sNOTEXIST' %
+                     tmp_files[3])
+    fake_argv = fake_cmd_line.split(' ')
+    self.assertRaises(flags.CantOpenFlagFileError, self._read_flags_from_files,
+                      fake_argv, True)
+
+  def test_flagfiles_user_path_expansion(self):
+    """Test that user directory referenced paths are correctly expanded.
+
+    Test paths like ~/foo. This test depends on whatever account's running
+    the unit test to have read/write access to their own home directory,
+    otherwise it'll FAIL.
+    """
+    fake_flagfile_item_style_1 = '--flagfile=~/foo.file'
+    fake_flagfile_item_style_2 = '-flagfile=~/foo.file'
+
+    expected_results = os.path.expanduser('~/foo.file')
+
+    test_results = self.flag_values._extract_filename(
+        fake_flagfile_item_style_1)
+    self.assertEqual(expected_results, test_results)
+
+    test_results = self.flag_values._extract_filename(
+        fake_flagfile_item_style_2)
+    self.assertEqual(expected_results, test_results)
+
+  def test_no_touchy_non_flags(self):
+    """Test that the flags parser does not mutilate arguments.
+
+    The arguments are not supposed to be flags
+    """
+    fake_argv = [
+        'fooScript', '--unittest_boolflag', 'command', '--command_arg1',
+        '--UnitTestBoom', '--UnitTestB'
+    ]
+    with _use_gnu_getopt(self.flag_values, False):
+      argv = self.flag_values(fake_argv)
+      self.assertListEqual(argv, fake_argv[:1] + fake_argv[2:])
+
+  def test_parse_flags_after_args_if_using_gnugetopt(self):
+    """Test that flags given after arguments are parsed if using gnu_getopt."""
+    self.flag_values.set_gnu_getopt()
+    fake_argv = [
+        'fooScript', '--unittest_boolflag', 'command', '--unittest_number=54321'
+    ]
+    argv = self.flag_values(fake_argv)
+    self.assertListEqual(argv, ['fooScript', 'command'])
+
+  def test_set_default(self):
+    """Test changing flag defaults."""
+    # Test that set_default changes both the default and the value,
+    # and that the value is changed when one is given as an option.
+    self.flag_values.set_default('unittest_message1', 'New value')
+    self.assertEqual(self.flag_values.unittest_message1, 'New value')
+    self.assertEqual(self.flag_values['unittest_message1'].default_as_str,
+                     "'New value'")
+    self.flag_values(['dummyscript', '--unittest_message1=Newer value'])
+    self.assertEqual(self.flag_values.unittest_message1, 'Newer value')
+
+    # Test that setting the default to None works correctly.
+    self.flag_values.set_default('unittest_number', None)
+    self.assertEqual(self.flag_values.unittest_number, None)
+    self.assertEqual(self.flag_values['unittest_number'].default_as_str, None)
+    self.flag_values(['dummyscript', '--unittest_number=56'])
+    self.assertEqual(self.flag_values.unittest_number, 56)
+
+    # Test that setting the default to zero works correctly.
+    self.flag_values.set_default('unittest_number', 0)
+    self.assertEqual(self.flag_values['unittest_number'].default, 0)
+    self.assertEqual(self.flag_values.unittest_number, 56)
+    self.assertEqual(self.flag_values['unittest_number'].default_as_str, "'0'")
+    self.flag_values(['dummyscript', '--unittest_number=56'])
+    self.assertEqual(self.flag_values.unittest_number, 56)
+
+    # Test that setting the default to '' works correctly.
+    self.flag_values.set_default('unittest_message1', '')
+    self.assertEqual(self.flag_values['unittest_message1'].default, '')
+    self.assertEqual(self.flag_values.unittest_message1, 'Newer value')
+    self.assertEqual(self.flag_values['unittest_message1'].default_as_str, "''")
+    self.flag_values(['dummyscript', '--unittest_message1=fifty-six'])
+    self.assertEqual(self.flag_values.unittest_message1, 'fifty-six')
+
+    # Test that setting the default to false works correctly.
+    self.flag_values.set_default('unittest_boolflag', False)
+    self.assertEqual(self.flag_values.unittest_boolflag, False)
+    self.assertEqual(self.flag_values['unittest_boolflag'].default_as_str,
+                     "'false'")
+    self.flag_values(['dummyscript', '--unittest_boolflag=true'])
