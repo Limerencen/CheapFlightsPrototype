@@ -2926,3 +2926,108 @@ class FlagsErrorMessagesTest(absltest.TestCase):
         -19,
         'smaller-than flag',
         upper_bound=4,
+        flag_values=self.flag_values)
+    flags.DEFINE_integer(
+        'usual',
+        4,
+        'usual flag',
+        lower_bound=0,
+        upper_bound=10000,
+        flag_values=self.flag_values)
+    flags.DEFINE_integer(
+        'another_usual',
+        0,
+        'usual flag',
+        lower_bound=-1,
+        upper_bound=1,
+        flag_values=self.flag_values)
+
+    self._check_error_message('positive', -4, 'a positive integer')
+    self._check_error_message('non_negative', -4, 'a non-negative integer')
+    self._check_error_message('negative', 0, 'a negative integer')
+    self._check_error_message('non_positive', 4, 'a non-positive integer')
+    self._check_error_message('usual', -4, 'an integer in the range [0, 10000]')
+    self._check_error_message('another_usual', 4,
+                              'an integer in the range [-1, 1]')
+    self._check_error_message('greater', -5, 'integer >= 4')
+    self._check_error_message('smaller', 5, 'integer <= 4')
+
+  def test_float_error_text(self):
+    flags.DEFINE_float(
+        'positive',
+        4,
+        'non-negative flag',
+        lower_bound=1,
+        flag_values=self.flag_values)
+    flags.DEFINE_float(
+        'non_negative',
+        4,
+        'positive flag',
+        lower_bound=0,
+        flag_values=self.flag_values)
+    flags.DEFINE_float(
+        'negative',
+        -4,
+        'negative flag',
+        upper_bound=-1,
+        flag_values=self.flag_values)
+    flags.DEFINE_float(
+        'non_positive',
+        -4,
+        'non-positive flag',
+        upper_bound=0,
+        flag_values=self.flag_values)
+    flags.DEFINE_float(
+        'greater',
+        19,
+        'greater-than flag',
+        lower_bound=4,
+        flag_values=self.flag_values)
+    flags.DEFINE_float(
+        'smaller',
+        -19,
+        'smaller-than flag',
+        upper_bound=4,
+        flag_values=self.flag_values)
+    flags.DEFINE_float(
+        'usual',
+        4,
+        'usual flag',
+        lower_bound=0,
+        upper_bound=10000,
+        flag_values=self.flag_values)
+    flags.DEFINE_float(
+        'another_usual',
+        0,
+        'usual flag',
+        lower_bound=-1,
+        upper_bound=1,
+        flag_values=self.flag_values)
+
+    self._check_error_message('positive', 0.5, 'number >= 1')
+    self._check_error_message('non_negative', -4.0, 'a non-negative number')
+    self._check_error_message('negative', 0.5, 'number <= -1')
+    self._check_error_message('non_positive', 4.0, 'a non-positive number')
+    self._check_error_message('usual', -4.0, 'a number in the range [0, 10000]')
+    self._check_error_message('another_usual', 4.0,
+                              'a number in the range [-1, 1]')
+    self._check_error_message('smaller', 5.0, 'number <= 4')
+
+  def _check_error_message(self, flag_name, flag_value,
+                           expected_message_suffix):
+    """Set a flag to a given value and make sure we get expected message."""
+
+    try:
+      self.flag_values.__setattr__(flag_name, flag_value)
+      raise AssertionError('Bounds exception not raised!')
+    except flags.IllegalFlagValueError as e:
+      expected = ('flag --%(name)s=%(value)s: %(value)s is not %(suffix)s' % {
+          'name': flag_name,
+          'value': flag_value,
+          'suffix': expected_message_suffix
+      })
+      self.assertEqual(str(e), expected)
+
+
+if __name__ == '__main__':
+  absltest.main()
