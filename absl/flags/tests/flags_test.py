@@ -2736,3 +2736,193 @@ class KeyFlagsTest(absltest.TestCase):
         1,
         'Integer flag in the main module.',
         flag_values=self.flag_values)
+
+    flags.declare_key_flag(int_holder, self.flag_values)
+
+    self.assertCountEqual(
+        self.flag_values.get_flags_for_module(main_module),
+        self.flag_values.get_key_flags_for_module(main_module))
+
+    bool_holder = flags.DEFINE_boolean(
+        'main_module_bool_fg',
+        False,
+        'Boolean flag in the main module.',
+        flag_values=self.flag_values)
+
+    flags.declare_key_flag(bool_holder)  # omitted flag_values
+
+    self.assertCountEqual(
+        self.flag_values.get_flags_for_module(main_module),
+        self.flag_values.get_key_flags_for_module(main_module))
+
+    self.assertLen(self.flag_values.get_flags_for_module(main_module), 2)
+
+  def test_main_module_help_with_key_flags(self):
+    # Similar to test_main_module_help, but this time we make sure to
+    # declare some key flags.
+
+    # Safety check that the main module does not declare any flags
+    # at the beginning of this test.
+    expected_help = ''
+    self.assertMultiLineEqual(expected_help,
+                              self.flag_values.main_module_help())
+
+    # Define one flag in this main module and some flags in modules
+    # a and b.  Also declare one flag from module a and one flag
+    # from module b as key flags for the main module.
+    flags.DEFINE_integer(
+        'main_module_int_fg',
+        1,
+        'Integer flag in the main module.',
+        flag_values=self.flag_values)
+
+    try:
+      main_module_int_fg_help = (
+          '  --main_module_int_fg: Integer flag in the main module.\n'
+          "    (default: '1')\n"
+          '    (an integer)')
+
+      expected_help += '\n%s:\n%s' % (sys.argv[0], main_module_int_fg_help)
+      self.assertMultiLineEqual(expected_help,
+                                self.flag_values.main_module_help())
+
+      # The following call should be a no-op: any flag declared by a
+      # module is automatically key for that module.
+      flags.declare_key_flag('main_module_int_fg', flag_values=self.flag_values)
+      self.assertMultiLineEqual(expected_help,
+                                self.flag_values.main_module_help())
+
+      # The definition of a few flags in an imported module should not
+      # change the main module help.
+      module_foo.define_flags(flag_values=self.flag_values)
+      self.assertMultiLineEqual(expected_help,
+                                self.flag_values.main_module_help())
+
+      flags.declare_key_flag('tmod_foo_bool', flag_values=self.flag_values)
+      tmod_foo_bool_help = (
+          '  --[no]tmod_foo_bool: Boolean flag from module foo.\n'
+          "    (default: 'true')")
+      expected_help += '\n' + tmod_foo_bool_help
+      self.assertMultiLineEqual(expected_help,
+                                self.flag_values.main_module_help())
+
+      flags.declare_key_flag('tmod_bar_z', flag_values=self.flag_values)
+      tmod_bar_z_help = (
+          '  --[no]tmod_bar_z: Another boolean flag from module bar.\n'
+          "    (default: 'false')")
+      # Unfortunately, there is some flag sorting inside
+      # main_module_help, so we can't keep incrementally extending
+      # the expected_help string ...
+      expected_help = ('\n%s:\n%s\n%s\n%s' %
+                       (sys.argv[0], main_module_int_fg_help, tmod_bar_z_help,
+                        tmod_foo_bool_help))
+      self.assertMultiLineEqual(self.flag_values.main_module_help(),
+                                expected_help)
+
+    finally:
+      # At the end, delete all the flag information we created.
+      self.flag_values.__delattr__('main_module_int_fg')
+      module_foo.remove_flags(flag_values=self.flag_values)
+
+  def test_adoptmodule_key_flags(self):
+    # Check that adopt_module_key_flags raises an exception when
+    # called with a module name (as opposed to a module object).
+    self.assertRaises(flags.Error, flags.adopt_module_key_flags, 'pyglib.app')
+
+  def test_disclaimkey_flags(self):
+    original_disclaim_module_ids = _helpers.disclaim_module_ids
+    _helpers.disclaim_module_ids = set(_helpers.disclaim_module_ids)
+    try:
+      module_bar.disclaim_key_flags()
+      module_foo.define_bar_flags(flag_values=self.flag_values)
+      module_name = self.flag_values.find_module_defining_flag('tmod_bar_x')
+      self.assertEqual(module_foo.__name__, module_name)
+    finally:
+      _helpers.disclaim_module_ids = original_disclaim_module_ids
+
+
+class FindModuleTest(absltest.TestCase):
+  """Testing methods that find a module that defines a given flag."""
+
+  def test_find_module_defining_flag(self):
+    self.assertEqual(
+        'default',
+        FLAGS.find_module_defining_flag('__NON_EXISTENT_FLAG__', 'default'))
+    self.assertEqual(module_baz.__name__,
+                     FLAGS.find_module_defining_flag('tmod_baz_x'))
+
+  def test_find_module_id_defining_flag(self):
+    self.assertEqual(
+        'default',
+        FLAGS.find_module_id_defining_flag('__NON_EXISTENT_FLAG__', 'default'))
+    self.assertEqual(
+        id(module_baz), FLAGS.find_module_id_defining_flag('tmod_baz_x'))
+
+  def test_find_module_defining_flag_passing_module_name(self):
+    my_flags = flags.FlagValues()
+    module_name = sys.__name__  # Must use an existing module.
+    flags.DEFINE_boolean(
+        'flag_name',
+        True,
+        'Flag with a different module name.',
+        flag_values=my_flags,
+        module_name=module_name)
+    self.assertEqual(module_name,
+                     my_flags.find_module_defining_flag('flag_name'))
+
+  def test_find_module_id_defining_flag_passing_module_name(self):
+    my_flags = flags.FlagValues()
+    module_name = sys.__name__  # Must use an existing module.
+    flags.DEFINE_boolean(
+        'flag_name',
+        True,
+        'Flag with a different module name.',
+        flag_values=my_flags,
+        module_name=module_name)
+    self.assertEqual(
+        id(sys), my_flags.find_module_id_defining_flag('flag_name'))
+
+
+class FlagsErrorMessagesTest(absltest.TestCase):
+  """Testing special cases for integer and float flags error messages."""
+
+  def setUp(self):
+    self.flag_values = flags.FlagValues()
+
+  def test_integer_error_text(self):
+    # Make sure we get proper error text
+    flags.DEFINE_integer(
+        'positive',
+        4,
+        'non-negative flag',
+        lower_bound=1,
+        flag_values=self.flag_values)
+    flags.DEFINE_integer(
+        'non_negative',
+        4,
+        'positive flag',
+        lower_bound=0,
+        flag_values=self.flag_values)
+    flags.DEFINE_integer(
+        'negative',
+        -4,
+        'negative flag',
+        upper_bound=-1,
+        flag_values=self.flag_values)
+    flags.DEFINE_integer(
+        'non_positive',
+        -4,
+        'non-positive flag',
+        upper_bound=0,
+        flag_values=self.flag_values)
+    flags.DEFINE_integer(
+        'greater',
+        19,
+        'greater-than flag',
+        lower_bound=4,
+        flag_values=self.flag_values)
+    flags.DEFINE_integer(
+        'smaller',
+        -19,
+        'smaller-than flag',
+        upper_bound=4,
