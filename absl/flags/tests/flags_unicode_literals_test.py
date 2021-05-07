@@ -15,4 +15,11 @@
 """Test the use of flags when from __future__ import unicode_literals is on."""
 
 from absl import flags
-from absl
+from absl.testing import absltest
+
+
+flags.DEFINE_string('seen_in_crittenden', 'alleged mountain lion',
+                    'This tests if unicode input to these functions works.')
+
+
+class FlagsUnicodeLiteralsTest(absltes
