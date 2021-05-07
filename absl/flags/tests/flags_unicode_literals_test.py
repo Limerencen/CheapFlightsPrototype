@@ -22,4 +22,10 @@ flags.DEFINE_string('seen_in_crittenden', 'alleged mountain lion',
                     'This tests if unicode input to these functions works.')
 
 
-class FlagsUnicodeLiteralsTest(absltes
+class FlagsUnicodeLiteralsTest(absltest.TestCase):
+
+  def testUnicodeFlagNameAndValueAreGood(self):
+    alleged_mountain_lion = flags.FLAGS.seen_in_crittenden
+    self.assertTrue(
+        isinstance(alleged_mountain_lion, type(u'')),
+        msg='expected fl
