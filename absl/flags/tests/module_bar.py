@@ -20,3 +20,15 @@ sure the unit tests for flags.py involve more than one module.
 
 from absl import flags
 from absl.flags import _helpers
+
+FLAGS = flags.FLAGS
+
+
+def define_flags(flag_values=FLAGS):
+  """Defines some flags.
+
+  Args:
+    flag_values: The FlagValues object we want to register the flags
+      with.
+  """
+  # The 'tmod_bar_' p
