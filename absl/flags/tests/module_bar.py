@@ -12,4 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Au
+"""Auxiliary module for testing flags.py.
+
+The purpose of this module is to define a few flags.  We want to make
+sure the unit tests for flags.py involve more than one module.
+"""
+
+from absl import flags
+from absl.flags import _helpers
