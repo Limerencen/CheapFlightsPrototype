@@ -31,4 +31,8 @@ def define_flags(flag_values=FLAGS):
     flag_values: The FlagValues object we want to register the flags
       with.
   """
-  # The 'tmod_bar_' p
+  # The 'tmod_bar_' prefix (short for 'test_module_bar') ensures there
+  # is no name clash with the existing flags.
+  flags.DEFINE_boolean('tmod_bar_x', True, 'Boolean flag.',
+                       flag_values=flag_values)
+  f
