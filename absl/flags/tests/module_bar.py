@@ -35,4 +35,7 @@ def define_flags(flag_values=FLAGS):
   # is no name clash with the existing flags.
   flags.DEFINE_boolean('tmod_bar_x', True, 'Boolean flag.',
                        flag_values=flag_values)
-  f
+  flags.DEFINE_string('tmod_bar_y', 'default', 'String flag.',
+                      flag_values=flag_values)
+  flags.DEFINE_boolean('tmod_bar_z', False,
+                       'Another boolean flag from module ba
