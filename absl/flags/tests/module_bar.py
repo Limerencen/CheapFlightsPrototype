@@ -59,4 +59,11 @@ def remove_one_flag(flag_name, flag_values=FLAGS):
   we do not want the cleanup code to crash.
 
   Args:
-    flag_name: A string, the na
+    flag_name: A string, the name of the flag to delete.
+    flag_values: The FlagValues object we remove the flag from.
+  """
+  if flag_name in flag_values:
+    flag_values.__delattr__(flag_name)
+
+
+def names_of_d
