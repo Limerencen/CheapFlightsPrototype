@@ -42,4 +42,10 @@ def define_flags(flag_values=FLAGS):
                        flag_values=flag_values)
   flags.DEFINE_integer('tmod_bar_t', 4, 'Sample int flag.',
                        flag_values=flag_values)
-  flags.DEFINE_integer('tmod_bar_u', 5, '
+  flags.DEFINE_integer('tmod_bar_u', 5, 'Sample int flag.',
+                       flag_values=flag_values)
+  flags.DEFINE_integer('tmod_bar_v', 6, 'Sample int flag.',
+                       flag_values=flag_values)
+
+
+def remove_one_flag(flag_name, flag_v
