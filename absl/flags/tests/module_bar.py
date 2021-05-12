@@ -48,4 +48,8 @@ def define_flags(flag_values=FLAGS):
                        flag_values=flag_values)
 
 
-def remove_one_flag(flag_name, flag_v
+def remove_one_flag(flag_name, flag_values=FLAGS):
+  """Removes the definition of one flag from flags.FLAGS.
+
+  Note: if the flag is not defined in flags.FLAGS, this function does
+  not do anything (in particular, it does not raise any excep
