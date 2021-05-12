@@ -52,4 +52,11 @@ def remove_one_flag(flag_name, flag_values=FLAGS):
   """Removes the definition of one flag from flags.FLAGS.
 
   Note: if the flag is not defined in flags.FLAGS, this function does
-  not do anything (in particular, it does not raise any excep
+  not do anything (in particular, it does not raise any exception).
+
+  Motivation: We use this function for cleanup *after* a test: if
+  there was a failure during a test and not all flags were declared,
+  we do not want the cleanup code to crash.
+
+  Args:
+    flag_name: A string, the na
