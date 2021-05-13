@@ -66,4 +66,11 @@ def remove_one_flag(flag_name, flag_values=FLAGS):
     flag_values.__delattr__(flag_name)
 
 
-def names_of_d
+def names_of_defined_flags():
+  """Returns: List of names of the flags declared in this module."""
+  return ['tmod_bar_x',
+          'tmod_bar_y',
+          'tmod_bar_z',
+          'tmod_bar_t',
+          'tmod_bar_u',
+     
