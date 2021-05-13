@@ -73,4 +73,11 @@ def names_of_defined_flags():
           'tmod_bar_z',
           'tmod_bar_t',
           'tmod_bar_u',
-     
+          'tmod_bar_v']
+
+
+def remove_flags(flag_values=FLAGS):
+  """Deletes the flag definitions done by the above define_flags().
+
+  Args:
+    flag_values: The FlagValues object we remove the fl
