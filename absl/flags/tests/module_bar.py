@@ -80,4 +80,11 @@ def remove_flags(flag_values=FLAGS):
   """Deletes the flag definitions done by the above define_flags().
 
   Args:
-    flag_values: The FlagValues object we remove the fl
+    flag_values: The FlagValues object we remove the flags from.
+  """
+  for flag_name in names_of_defined_flags():
+    remove_one_flag(flag_name, flag_values=flag_values)
+
+
+def get_module_name():
+  """Uses get_calling_module() to return the name
