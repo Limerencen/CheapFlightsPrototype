@@ -87,4 +87,14 @@ def remove_flags(flag_values=FLAGS):
 
 
 def get_module_name():
-  """Uses get_calling_module() to return the name
+  """Uses get_calling_module() to return the name of this module.
+
+  For checking that get_calling_module works as expected.
+
+  Returns:
+    A string, the name of this module.
+  """
+  return _helpers.get_calling_module()
+
+
+def execute_code(code,
