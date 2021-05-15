@@ -104,4 +104,8 @@ def execute_code(code, global_dict):
 
   Args:
     code: A string, the code to be executed.
-    global_dict: A dictionary, the
+    global_dict: A dictionary, the global environment that code should
+      be executed in.
+  """
+  # Indeed, using exec generates a lint warning.  But some user code
+  # actually uses exec, and we have to test for it ...
