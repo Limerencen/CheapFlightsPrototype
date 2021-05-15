@@ -97,4 +97,11 @@ def get_module_name():
   return _helpers.get_calling_module()
 
 
-def execute_code(code,
+def execute_code(code, global_dict):
+  """Executes some code in a given global environment.
+
+  For testing of get_calling_module.
+
+  Args:
+    code: A string, the code to be executed.
+    global_dict: A dictionary, the
