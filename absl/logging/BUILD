@@ -93,3 +93,9 @@ py_test(
     shard_count = 50,
     srcs_version = "PY3",
     deps = [
+        ":logging",
+        "//absl/testing:_bazelize_command",
+        "//absl/testing:absltest",
+        "//absl/testing:parameterized",
+    ],
+)
