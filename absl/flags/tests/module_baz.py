@@ -14,4 +14,12 @@
 
 """Auxiliary module for testing flags.py.
 
-The purpose 
+The purpose of this module is to test the behavior of flags that are defined
+before main() executes.
+"""
+
+from absl import flags
+
+FLAGS = flags.FLAGS
+
+flags.DEFINE_boolean('tmod_baz_x', True, 'Boolean flag.')
