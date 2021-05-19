@@ -390,3 +390,199 @@ def fatal(msg, *args, **kwargs):
 
 def error(msg, *args, **kwargs):
   """Logs an error message."""
+  log(ERROR, msg, *args, **kwargs)
+
+
+def warning(msg, *args, **kwargs):
+  """Logs a warning message."""
+  log(WARNING, msg, *args, **kwargs)
+
+
+def warn(msg, *args, **kwargs):
+  """Deprecated, use 'warning' instead."""
+  warnings.warn("The 'warn' function is deprecated, use 'warning' instead",
+                DeprecationWarning, 2)
+  log(WARNING, msg, *args, **kwargs)
+
+
+def info(msg, *args, **kwargs):
+  """Logs an info message."""
+  log(INFO, msg, *args, **kwargs)
+
+
+def debug(msg, *args, **kwargs):
+  """Logs a debug message."""
+  log(DEBUG, msg, *args, **kwargs)
+
+
+def exception(msg, *args, **kwargs):
+  """Logs an exception, with traceback and message."""
+  error(msg, *args, **kwargs, exc_info=True)
+
+
+# Counter to keep track of number of log entries per token.
+_log_counter_per_token = {}
+
+
+def _get_next_log_count_per_token(token):
+  """Wrapper for _log_counter_per_token. Thread-safe.
+
+  Args:
+    token: The token for which to look up the count.
+
+  Returns:
+    The number of times this function has been called with
+    *token* as an argument (starting at 0).
+  """
+  # Can't use a defaultdict because defaultdict isn't atomic, whereas
+  # setdefault is.
+  return next(_log_counter_per_token.setdefault(token, itertools.count()))
+
+
+def log_every_n(level, msg, n, *args):
+  """Logs ``msg % args`` at level 'level' once per 'n' times.
+
+  Logs the 1st call, (N+1)st call, (2N+1)st call,  etc.
+  Not threadsafe.
+
+  Args:
+    level: int, the absl logging level at which to log.
+    msg: str, the message to be logged.
+    n: int, the number of times this should be called before it is logged.
+    *args: The args to be substituted into the msg.
+  """
+  count = _get_next_log_count_per_token(get_absl_logger().findCaller())
+  log_if(level, msg, not (count % n), *args)
+
+
+# Keeps track of the last log time of the given token.
+# Note: must be a dict since set/get is atomic in CPython.
+# Note: entries are never released as their number is expected to be low.
+_log_timer_per_token = {}
+
+
+def _seconds_have_elapsed(token, num_seconds):
+  """Tests if 'num_seconds' have passed since 'token' was requested.
+
+  Not strictly thread-safe - may log with the wrong frequency if called
+  concurrently from multiple threads. Accuracy depends on resolution of
+  'timeit.default_timer()'.
+
+  Always returns True on the first call for a given 'token'.
+
+  Args:
+    token: The token for which to look up the count.
+    num_seconds: The number of seconds to test for.
+
+  Returns:
+    Whether it has been >= 'num_seconds' since 'token' was last requested.
+  """
+  now = timeit.default_timer()
+  then = _log_timer_per_token.get(token, None)
+  if then is None or (now - then) >= num_seconds:
+    _log_timer_per_token[token] = now
+    return True
+  else:
+    return False
+
+
+def log_every_n_seconds(level, msg, n_seconds, *args):
+  """Logs ``msg % args`` at level ``level`` iff ``n_seconds`` elapsed since last call.
+
+  Logs the first call, logs subsequent calls if 'n' seconds have elapsed since
+  the last logging call from the same call site (file + line). Not thread-safe.
+
+  Args:
+    level: int, the absl logging level at which to log.
+    msg: str, the message to be logged.
+    n_seconds: float or int, seconds which should elapse before logging again.
+    *args: The args to be substituted into the msg.
+  """
+  should_log = _seconds_have_elapsed(get_absl_logger().findCaller(), n_seconds)
+  log_if(level, msg, should_log, *args)
+
+
+def log_first_n(level, msg, n, *args):
+  """Logs ``msg % args`` at level ``level`` only first ``n`` times.
+
+  Not threadsafe.
+
+  Args:
+    level: int, the absl logging level at which to log.
+    msg: str, the message to be logged.
+    n: int, the maximal number of times the message is logged.
+    *args: The args to be substituted into the msg.
+  """
+  count = _get_next_log_count_per_token(get_absl_logger().findCaller())
+  log_if(level, msg, count < n, *args)
+
+
+def log_if(level, msg, condition, *args):
+  """Logs ``msg % args`` at level ``level`` only if condition is fulfilled."""
+  if condition:
+    log(level, msg, *args)
+
+
+def log(level, msg, *args, **kwargs):
+  """Logs ``msg % args`` at absl logging level ``level``.
+
+  If no args are given just print msg, ignoring any interpolation specifiers.
+
+  Args:
+    level: int, the absl logging level at which to log the message
+        (logging.DEBUG|INFO|WARNING|ERROR|FATAL). While some C++ verbose logging
+        level constants are also supported, callers should prefer explicit
+        logging.vlog() calls for such purpose.
+
+    msg: str, the message to be logged.
+    *args: The args to be substituted into the msg.
+    **kwargs: May contain exc_info to add exception traceback to message.
+  """
+  if level > converter.ABSL_DEBUG:
+    # Even though this function supports level that is greater than 1, users
+    # should use logging.vlog instead for such cases.
+    # Treat this as vlog, 1 is equivalent to DEBUG.
+    standard_level = converter.STANDARD_DEBUG - (level - 1)
+  else:
+    if level < converter.ABSL_FATAL:
+      level = converter.ABSL_FATAL
+    standard_level = converter.absl_to_standard(level)
+
+  # Match standard logging's behavior. Before use_absl_handler() and
+  # logging is configured, there is no handler attached on _absl_logger nor
+  # logging.root. So logs go no where.
+  if not logging.root.handlers:
+    logging.basicConfig()
+
+  _absl_logger.log(standard_level, msg, *args, **kwargs)
+
+
+def vlog(level, msg, *args, **kwargs):
+  """Log ``msg % args`` at C++ vlog level ``level``.
+
+  Args:
+    level: int, the C++ verbose logging level at which to log the message,
+        e.g. 1, 2, 3, 4... While absl level constants are also supported,
+        callers should prefer logging.log|debug|info|... calls for such purpose.
+    msg: str, the message to be logged.
+    *args: The args to be substituted into the msg.
+    **kwargs: May contain exc_info to add exception traceback to message.
+  """
+  log(level, msg, *args, **kwargs)
+
+
+def vlog_is_on(level):
+  """Checks if vlog is enabled for the given level in caller's source file.
+
+  Args:
+    level: int, the C++ verbose logging level at which to log the message,
+        e.g. 1, 2, 3, 4... While absl level constants are also supported,
+        callers should prefer level_debug|level_info|... calls for
+        checking those.
+
+  Returns:
+    True if logging is turned on for that level.
+  """
+
+  if level > converter.ABSL_DEBUG:
+    # Even though this function supports level that is greater than 1, users
