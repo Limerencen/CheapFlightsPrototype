@@ -796,3 +796,200 @@ def skip_log_prefix(func):
     file_name = get_absl_logger().findCaller()[0]
     func_name = func
     func_lineno = None
+  else:
+    raise TypeError('Input is neither callable nor a string.')
+  ABSLLogger.register_frame_to_skip(file_name, func_name, func_lineno)
+  return func
+
+
+def _is_non_absl_fatal_record(log_record):
+  return (log_record.levelno >= logging.FATAL and
+          not log_record.__dict__.get(_ABSL_LOG_FATAL, False))
+
+
+def _is_absl_fatal_record(log_record):
+  return (log_record.levelno >= logging.FATAL and
+          log_record.__dict__.get(_ABSL_LOG_FATAL, False))
+
+
+# Indicates if we still need to warn about pre-init logs going to stderr.
+_warn_preinit_stderr = True
+
+
+class PythonHandler(logging.StreamHandler):
+  """The handler class used by Abseil Python logging implementation."""
+
+  def __init__(self, stream=None, formatter=None):
+    super(PythonHandler, self).__init__(stream)
+    self.setFormatter(formatter or PythonFormatter())
+
+  def start_logging_to_file(self, program_name=None, log_dir=None):
+    """Starts logging messages to files instead of standard error."""
+    FLAGS.logtostderr = False
+
+    actual_log_dir, file_prefix, symlink_prefix = find_log_dir_and_names(
+        program_name=program_name, log_dir=log_dir)
+
+    basename = '%s.INFO.%s.%d' % (
+        file_prefix,
+        time.strftime('%Y%m%d-%H%M%S', time.localtime(time.time())),
+        os.getpid())
+    filename = os.path.join(actual_log_dir, basename)
+
+    self.stream = open(filename, 'a', encoding='utf-8')
+
+    # os.symlink is not available on Windows Python 2.
+    if getattr(os, 'symlink', None):
+      # Create a symlink to the log file with a canonical name.
+      symlink = os.path.join(actual_log_dir, symlink_prefix + '.INFO')
+      try:
+        if os.path.islink(symlink):
+          os.unlink(symlink)
+        os.symlink(os.path.basename(filename), symlink)
+      except EnvironmentError:
+        # If it fails, we're sad but it's no error.  Commonly, this
+        # fails because the symlink was created by another user and so
+        # we can't modify it
+        pass
+
+  def use_absl_log_file(self, program_name=None, log_dir=None):
+    """Conditionally logs to files, based on --logtostderr."""
+    if FLAGS['logtostderr'].value:
+      self.stream = sys.stderr
+    else:
+      self.start_logging_to_file(program_name=program_name, log_dir=log_dir)
+
+  def flush(self):
+    """Flushes all log files."""
+    self.acquire()
+    try:
+      if self.stream and hasattr(self.stream, 'flush'):
+        self.stream.flush()
+    except (EnvironmentError, ValueError):
+      # A ValueError is thrown if we try to flush a closed file.
+      pass
+    finally:
+      self.release()
+
+  def _log_to_stderr(self, record):
+    """Emits the record to stderr.
+
+    This temporarily sets the handler stream to stderr, calls
+    StreamHandler.emit, then reverts the stream back.
+
+    Args:
+      record: logging.LogRecord, the record to log.
+    """
+    # emit() is protected by a lock in logging.Handler, so we don't need to
+    # protect here again.
+    old_stream = self.stream
+    self.stream = sys.stderr
+    try:
+      super(PythonHandler, self).emit(record)
+    finally:
+      self.stream = old_stream
+
+  def emit(self, record):
+    """Prints a record out to some streams.
+
+    1. If ``FLAGS.logtostderr`` is set, it will print to ``sys.stderr`` ONLY.
+    2. If ``FLAGS.alsologtostderr`` is set, it will print to ``sys.stderr``.
+    3. If ``FLAGS.logtostderr`` is not set, it will log to the stream
+        associated with the current thread.
+
+    Args:
+      record: :class:`logging.LogRecord`, the record to emit.
+    """
+    # People occasionally call logging functions at import time before
+    # our flags may have even been defined yet, let alone even parsed, as we
+    # rely on the C++ side to define some flags for us and app init to
+    # deal with parsing.  Match the C++ library behavior of notify and emit
+    # such messages to stderr.  It encourages people to clean-up and does
+    # not hide the message.
+    level = record.levelno
+    if not FLAGS.is_parsed():  # Also implies "before flag has been defined".
+      global _warn_preinit_stderr
+      if _warn_preinit_stderr:
+        sys.stderr.write(
+            'WARNING: Logging before flag parsing goes to stderr.\n')
+        _warn_preinit_stderr = False
+      self._log_to_stderr(record)
+    elif FLAGS['logtostderr'].value:
+      self._log_to_stderr(record)
+    else:
+      super(PythonHandler, self).emit(record)
+      stderr_threshold = converter.string_to_standard(
+          FLAGS['stderrthreshold'].value)
+      if ((FLAGS['alsologtostderr'].value or level >= stderr_threshold) and
+          self.stream != sys.stderr):
+        self._log_to_stderr(record)
+    # Die when the record is created from ABSLLogger and level is FATAL.
+    if _is_absl_fatal_record(record):
+      self.flush()  # Flush the log before dying.
+
+      # In threaded python, sys.exit() from a non-main thread only
+      # exits the thread in question.
+      os.abort()
+
+  def close(self):
+    """Closes the stream to which we are writing."""
+    self.acquire()
+    try:
+      self.flush()
+      try:
+        # Do not close the stream if it's sys.stderr|stdout. They may be
+        # redirected or overridden to files, which should be managed by users
+        # explicitly.
+        user_managed = sys.stderr, sys.stdout, sys.__stderr__, sys.__stdout__
+        if self.stream not in user_managed and (
+            not hasattr(self.stream, 'isatty') or not self.stream.isatty()):
+          self.stream.close()
+      except ValueError:
+        # A ValueError is thrown if we try to run isatty() on a closed file.
+        pass
+      super(PythonHandler, self).close()
+    finally:
+      self.release()
+
+
+class ABSLHandler(logging.Handler):
+  """Abseil Python logging module's log handler."""
+
+  def __init__(self, python_logging_formatter):
+    super(ABSLHandler, self).__init__()
+
+    self._python_handler = PythonHandler(formatter=python_logging_formatter)
+    self.activate_python_handler()
+
+  def format(self, record):
+    return self._current_handler.format(record)
+
+  def setFormatter(self, fmt):
+    self._current_handler.setFormatter(fmt)
+
+  def emit(self, record):
+    self._current_handler.emit(record)
+
+  def flush(self):
+    self._current_handler.flush()
+
+  def close(self):
+    super(ABSLHandler, self).close()
+    self._current_handler.close()
+
+  def handle(self, record):
+    rv = self.filter(record)
+    if rv:
+      return self._current_handler.handle(record)
+    return rv
+
+  @property
+  def python_handler(self):
+    return self._python_handler
+
+  def activate_python_handler(self):
+    """Uses the Python logging handler as the current logging handler."""
+    self._current_handler = self._python_handler
+
+  def use_absl_log_file(self, program_name=None, log_dir=None):
+    self._current_handler.use_absl_log_file(program_name, log_dir)
