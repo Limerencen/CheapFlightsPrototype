@@ -15,4 +15,8 @@
 """Module to convert log levels between Abseil Python, C++, and Python standard.
 
 This converter has to convert (best effort) between three different
-loggin
+logging level schemes:
+
+  * **cpp**: The C++ logging level scheme used in Abseil C++.
+  * **absl**: The absl.logging level scheme used in Abseil Python.
+  * **standard**: The python standard library logging level 
