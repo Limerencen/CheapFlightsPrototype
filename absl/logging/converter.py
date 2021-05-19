@@ -19,4 +19,10 @@ logging level schemes:
 
   * **cpp**: The C++ logging level scheme used in Abseil C++.
   * **absl**: The absl.logging level scheme used in Abseil Python.
-  * **standard**: The python standard library logging level 
+  * **standard**: The python standard library logging level scheme.
+
+Here is a handy ascii chart for easy mental mapping::
+
+    LEVEL    | cpp |  absl  | standard |
+    ---------+-----+--------+----------+
+    DEBUG    |  0  |    1   | 
