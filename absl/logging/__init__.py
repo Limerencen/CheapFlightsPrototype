@@ -586,3 +586,213 @@ def vlog_is_on(level):
 
   if level > converter.ABSL_DEBUG:
     # Even though this function supports level that is greater than 1, users
+    # should use logging.vlog instead for such cases.
+    # Treat this as vlog, 1 is equivalent to DEBUG.
+    standard_level = converter.STANDARD_DEBUG - (level - 1)
+  else:
+    if level < converter.ABSL_FATAL:
+      level = converter.ABSL_FATAL
+    standard_level = converter.absl_to_standard(level)
+  return _absl_logger.isEnabledFor(standard_level)
+
+
+def flush():
+  """Flushes all log files."""
+  get_absl_handler().flush()
+
+
+def level_debug():
+  """Returns True if debug logging is turned on."""
+  return get_verbosity() >= DEBUG
+
+
+def level_info():
+  """Returns True if info logging is turned on."""
+  return get_verbosity() >= INFO
+
+
+def level_warning():
+  """Returns True if warning logging is turned on."""
+  return get_verbosity() >= WARNING
+
+
+level_warn = level_warning  # Deprecated function.
+
+
+def level_error():
+  """Returns True if error logging is turned on."""
+  return get_verbosity() >= ERROR
+
+
+def get_log_file_name(level=INFO):
+  """Returns the name of the log file.
+
+  For Python logging, only one file is used and level is ignored. And it returns
+  empty string if it logs to stderr/stdout or the log stream has no `name`
+  attribute.
+
+  Args:
+    level: int, the absl.logging level.
+
+  Raises:
+    ValueError: Raised when `level` has an invalid value.
+  """
+  if level not in converter.ABSL_LEVELS:
+    raise ValueError('Invalid absl.logging level {}'.format(level))
+  stream = get_absl_handler().python_handler.stream
+  if (stream == sys.stderr or stream == sys.stdout or
+      not hasattr(stream, 'name')):
+    return ''
+  else:
+    return stream.name
+
+
+def find_log_dir_and_names(program_name=None, log_dir=None):
+  """Computes the directory and filename prefix for log file.
+
+  Args:
+    program_name: str|None, the filename part of the path to the program that
+        is running without its extension.  e.g: if your program is called
+        ``usr/bin/foobar.py`` this method should probably be called with
+        ``program_name='foobar`` However, this is just a convention, you can
+        pass in any string you want, and it will be used as part of the
+        log filename. If you don't pass in anything, the default behavior
+        is as described in the example.  In python standard logging mode,
+        the program_name will be prepended with ``py_`` if it is the
+        ``program_name`` argument is omitted.
+    log_dir: str|None, the desired log directory.
+
+  Returns:
+    (log_dir, file_prefix, symlink_prefix)
+
+  Raises:
+    FileNotFoundError: raised in Python 3 when it cannot find a log directory.
+    OSError: raised in Python 2 when it cannot find a log directory.
+  """
+  if not program_name:
+    # Strip the extension (foobar.par becomes foobar, and
+    # fubar.py becomes fubar). We do this so that the log
+    # file names are similar to C++ log file names.
+    program_name = os.path.splitext(os.path.basename(sys.argv[0]))[0]
+
+    # Prepend py_ to files so that python code gets a unique file, and
+    # so that C++ libraries do not try to write to the same log files as us.
+    program_name = 'py_%s' % program_name
+
+  actual_log_dir = find_log_dir(log_dir=log_dir)
+
+  try:
+    username = getpass.getuser()
+  except KeyError:
+    # This can happen, e.g. when running under docker w/o passwd file.
+    if hasattr(os, 'getuid'):
+      # Windows doesn't have os.getuid
+      username = str(os.getuid())
+    else:
+      username = 'unknown'
+  hostname = socket.gethostname()
+  file_prefix = '%s.%s.%s.log' % (program_name, hostname, username)
+
+  return actual_log_dir, file_prefix, program_name
+
+
+def find_log_dir(log_dir=None):
+  """Returns the most suitable directory to put log files into.
+
+  Args:
+    log_dir: str|None, if specified, the logfile(s) will be created in that
+        directory.  Otherwise if the --log_dir command-line flag is provided,
+        the logfile will be created in that directory.  Otherwise the logfile
+        will be created in a standard location.
+
+  Raises:
+    FileNotFoundError: raised in Python 3 when it cannot find a log directory.
+    OSError: raised in Python 2 when it cannot find a log directory.
+  """
+  # Get a list of possible log dirs (will try to use them in order).
+  # NOTE: Google's internal implementation has a special handling for Google
+  # machines, which uses a list of directories. Hence the following uses `dirs`
+  # instead of a single directory.
+  if log_dir:
+    # log_dir was explicitly specified as an arg, so use it and it alone.
+    dirs = [log_dir]
+  elif FLAGS['log_dir'].value:
+    # log_dir flag was provided, so use it and it alone (this mimics the
+    # behavior of the same flag in logging.cc).
+    dirs = [FLAGS['log_dir'].value]
+  else:
+    dirs = [tempfile.gettempdir()]
+
+  # Find the first usable log dir.
+  for d in dirs:
+    if os.path.isdir(d) and os.access(d, os.W_OK):
+      return d
+  raise FileNotFoundError(
+      "Can't find a writable directory for logs, tried %s" % dirs)
+
+
+def get_absl_log_prefix(record):
+  """Returns the absl log prefix for the log record.
+
+  Args:
+    record: logging.LogRecord, the record to get prefix for.
+  """
+  created_tuple = time.localtime(record.created)
+  created_microsecond = int(record.created % 1.0 * 1e6)
+
+  critical_prefix = ''
+  level = record.levelno
+  if _is_non_absl_fatal_record(record):
+    # When the level is FATAL, but not logged from absl, lower the level so
+    # it's treated as ERROR.
+    level = logging.ERROR
+    critical_prefix = _CRITICAL_PREFIX
+  severity = converter.get_initial_for_level(level)
+
+  return '%c%02d%02d %02d:%02d:%02d.%06d %5d %s:%d] %s' % (
+      severity,
+      created_tuple.tm_mon,
+      created_tuple.tm_mday,
+      created_tuple.tm_hour,
+      created_tuple.tm_min,
+      created_tuple.tm_sec,
+      created_microsecond,
+      _get_thread_id(),
+      record.filename,
+      record.lineno,
+      critical_prefix)
+
+
+def skip_log_prefix(func):
+  """Skips reporting the prefix of a given function or name by :class:`~absl.logging.ABSLLogger`.
+
+  This is a convenience wrapper function / decorator for
+  :meth:`~absl.logging.ABSLLogger.register_frame_to_skip`.
+
+  If a callable function is provided, only that function will be skipped.
+  If a function name is provided, all functions with the same name in the
+  file that this is called in will be skipped.
+
+  This can be used as a decorator of the intended function to be skipped.
+
+  Args:
+    func: Callable function or its name as a string.
+
+  Returns:
+    func (the input, unchanged).
+
+  Raises:
+    ValueError: The input is callable but does not have a function code object.
+    TypeError: The input is neither callable nor a string.
+  """
+  if callable(func):
+    func_code = getattr(func, '__code__', None)
+    if func_code is None:
+      raise ValueError('Input callable does not have a function code object.')
+    file_name = func_code.co_filename
+    func_name = func_code.co_name
+    func_lineno = func_code.co_firstlineno
+  elif isinstance(func, str):
+    file_name = get_absl_logger().findCaller()[0]
+    func_name = func
+    func_lineno = None
