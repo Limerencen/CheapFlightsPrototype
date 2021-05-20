@@ -50,4 +50,11 @@ STANDARD_CRITICAL = logging.CRITICAL
 STANDARD_ERROR = logging.ERROR
 STANDARD_WARNING = logging.WARNING
 STANDARD_INFO = logging.INFO
-STANDARD_DEBUG = logging.DEBU
+STANDARD_DEBUG = logging.DEBUG
+
+# These levels are also used to define the constants
+# FATAL, ERROR, WARNING, INFO, and DEBUG in the
+# absl.logging module.
+ABSL_FATAL = -3
+ABSL_ERROR = -2
+ABSL_WARN
