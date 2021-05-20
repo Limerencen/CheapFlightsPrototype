@@ -41,4 +41,13 @@ Converting from standard to absl or cpp is a lossy conversion.
 Converting back to standard will lose granularity.  For this reason,
 users should always try to convert to standard, the richest
 representation, before manipulating the levels, and then only to cpp
-or absl if those level schemes ar
+or absl if those level schemes are absolutely necessary.
+"""
+
+import logging
+
+STANDARD_CRITICAL = logging.CRITICAL
+STANDARD_ERROR = logging.ERROR
+STANDARD_WARNING = logging.WARNING
+STANDARD_INFO = logging.INFO
+STANDARD_DEBUG = logging.DEBU
