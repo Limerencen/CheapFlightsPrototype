@@ -72,4 +72,10 @@ ABSL_LEVELS = {ABSL_FATAL: 'FATAL',
 ABSL_NAMES = {'FATAL': ABSL_FATAL,
               'ERROR': ABSL_ERROR,
               'WARNING': ABSL_WARNING,
-              'WARN': ABSL_W
+              'WARN': ABSL_WARNING,  # Deprecated name.
+              'INFO': ABSL_INFO,
+              'DEBUG': ABSL_DEBUG}
+
+ABSL_TO_STANDARD = {ABSL_FATAL: STANDARD_CRITICAL,
+                    ABSL_ERROR: STANDARD_ERROR,
+          
