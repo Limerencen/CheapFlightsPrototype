@@ -30,4 +30,8 @@ Here is a handy ascii chart for easy mental mapping::
     WARNING  |  1  |   -1   |    30    |
     ERROR    |  2  |   -2   |    40    |
     CRITICAL |  3  |   -3   |    50    |
-    FATAL    |  3  |   -3   |  
+    FATAL    |  3  |   -3   |    50    |
+
+Note: standard logging ``CRITICAL`` is mapped to absl/cpp ``FATAL``.
+However, only ``CRITICAL`` logs from the absl logger (or absl.logging.fatal)
+will terminate the program. ``CRITICAL`` log
