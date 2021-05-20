@@ -65,4 +65,11 @@ ABSL_DEBUG = 1
 ABSL_LEVELS = {ABSL_FATAL: 'FATAL',
                ABSL_ERROR: 'ERROR',
                ABSL_WARNING: 'WARNING',
-             
+               ABSL_INFO: 'INFO',
+               ABSL_DEBUG: 'DEBUG'}
+
+# Inverts the ABSL_LEVELS dictionary
+ABSL_NAMES = {'FATAL': ABSL_FATAL,
+              'ERROR': ABSL_ERROR,
+              'WARNING': ABSL_WARNING,
+              'WARN': ABSL_W
