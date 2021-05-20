@@ -78,4 +78,9 @@ ABSL_NAMES = {'FATAL': ABSL_FATAL,
 
 ABSL_TO_STANDARD = {ABSL_FATAL: STANDARD_CRITICAL,
                     ABSL_ERROR: STANDARD_ERROR,
-          
+                    ABSL_WARNING: STANDARD_WARNING,
+                    ABSL_INFO: STANDARD_INFO,
+                    ABSL_DEBUG: STANDARD_DEBUG}
+
+# Inverts the ABSL_TO_STANDARD
+STANDARD_TO_ABSL = dict((v, k) for (k, v) in ABSL_TO
