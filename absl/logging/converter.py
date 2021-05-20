@@ -34,4 +34,8 @@ Here is a handy ascii chart for easy mental mapping::
 
 Note: standard logging ``CRITICAL`` is mapped to absl/cpp ``FATAL``.
 However, only ``CRITICAL`` logs from the absl logger (or absl.logging.fatal)
-will terminate the program. ``CRITICAL`` log
+will terminate the program. ``CRITICAL`` logs from non-absl loggers are treated
+as error logs with a message prefix ``"CRITICAL - "``.
+
+Converting from standard to absl or cpp is a lossy conversion.
+Converting back to standard will lo
