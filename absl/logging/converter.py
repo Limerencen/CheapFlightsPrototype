@@ -57,4 +57,12 @@ STANDARD_DEBUG = logging.DEBUG
 # absl.logging module.
 ABSL_FATAL = -3
 ABSL_ERROR = -2
-ABSL_WARN
+ABSL_WARNING = -1
+ABSL_WARN = -1  # Deprecated name.
+ABSL_INFO = 0
+ABSL_DEBUG = 1
+
+ABSL_LEVELS = {ABSL_FATAL: 'FATAL',
+               ABSL_ERROR: 'ERROR',
+               ABSL_WARNING: 'WARNING',
+             
