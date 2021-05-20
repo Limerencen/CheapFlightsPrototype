@@ -25,4 +25,9 @@ Here is a handy ascii chart for easy mental mapping::
 
     LEVEL    | cpp |  absl  | standard |
     ---------+-----+--------+----------+
-    DEBUG    |  0  |    1   | 
+    DEBUG    |  0  |    1   |    10    |
+    INFO     |  0  |    0   |    20    |
+    WARNING  |  1  |   -1   |    30    |
+    ERROR    |  2  |   -2   |    40    |
+    CRITICAL |  3  |   -3   |    50    |
+    FATAL    |  3  |   -3   |  
