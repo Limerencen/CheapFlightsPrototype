@@ -38,4 +38,7 @@ will terminate the program. ``CRITICAL`` logs from non-absl loggers are treated
 as error logs with a message prefix ``"CRITICAL - "``.
 
 Converting from standard to absl or cpp is a lossy conversion.
-Converting back to standard will lo
+Converting back to standard will lose granularity.  For this reason,
+users should always try to convert to standard, the richest
+representation, before manipulating the levels, and then only to cpp
+or absl if those level schemes ar
