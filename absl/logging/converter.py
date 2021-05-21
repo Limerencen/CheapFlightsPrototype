@@ -97,4 +97,11 @@ def get_initial_for_level(level):
   * ``'F'`` when: ``level >= STANDARD_CRITICAL``.
 
   Args:
-    level: int, a Python stand
+    level: int, a Python standard logging level.
+
+  Returns:
+    The first initial as it would be logged by the C++ logging module.
+  """
+  if level < STANDARD_WARNING:
+    return 'I'
+  elif level < STANDARD_ERROR:
