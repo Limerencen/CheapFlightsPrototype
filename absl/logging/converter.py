@@ -83,4 +83,13 @@ ABSL_TO_STANDARD = {ABSL_FATAL: STANDARD_CRITICAL,
                     ABSL_DEBUG: STANDARD_DEBUG}
 
 # Inverts the ABSL_TO_STANDARD
-STANDARD_TO_ABSL = dict((v, k) for (k, v) in ABSL_TO
+STANDARD_TO_ABSL = dict((v, k) for (k, v) in ABSL_TO_STANDARD.items())
+
+
+def get_initial_for_level(level):
+  """Gets the initial that should start the log line for the given level.
+
+  It returns:
+
+  * ``'I'`` when: ``level < STANDARD_WARNING``.
+  
