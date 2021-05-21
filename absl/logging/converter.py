@@ -92,4 +92,9 @@ def get_initial_for_level(level):
   It returns:
 
   * ``'I'`` when: ``level < STANDARD_WARNING``.
-  
+  * ``'W'`` when: ``STANDARD_WARNING <= level < STANDARD_ERROR``.
+  * ``'E'`` when: ``STANDARD_ERROR <= level < STANDARD_CRITICAL``.
+  * ``'F'`` when: ``level >= STANDARD_CRITICAL``.
+
+  Args:
+    level: int, a Python stand
