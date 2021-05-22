@@ -105,3 +105,17 @@ def get_initial_for_level(level):
   if level < STANDARD_WARNING:
     return 'I'
   elif level < STANDARD_ERROR:
+    return 'W'
+  elif level < STANDARD_CRITICAL:
+    return 'E'
+  else:
+    return 'F'
+
+
+def absl_to_cpp(level):
+  """Converts an absl log level to a cpp log level.
+
+  Args:
+    level: int, an absl.logging level.
+
+ 
