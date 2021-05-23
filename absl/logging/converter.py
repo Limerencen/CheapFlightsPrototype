@@ -149,4 +149,11 @@ def absl_to_standard(level):
     raise TypeError('Expect an int level, found {}'.format(type(level)))
   if level < ABSL_FATAL:
     level = ABSL_FATAL
-  if level <= 
+  if level <= ABSL_DEBUG:
+    return ABSL_TO_STANDARD[level]
+  # Maps to vlog levels.
+  return STANDARD_DEBUG - level + 1
+
+
+def string_to_standard(level):
+  """Converts a string level to standard logging level value.
