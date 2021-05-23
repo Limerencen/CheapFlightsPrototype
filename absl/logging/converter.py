@@ -143,4 +143,10 @@ def absl_to_standard(level):
     TypeError: Raised when level is not an integer.
 
   Returns:
-    The corresponding inte
+    The corresponding integer level for use in standard logging.
+  """
+  if not isinstance(level, int):
+    raise TypeError('Expect an int level, found {}'.format(type(level)))
+  if level < ABSL_FATAL:
+    level = ABSL_FATAL
+  if level <= 
