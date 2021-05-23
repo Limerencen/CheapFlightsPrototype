@@ -134,4 +134,13 @@ def absl_to_cpp(level):
 
 
 def absl_to_standard(level):
-  """Converts an integer level from 
+  """Converts an integer level from the absl value to the standard value.
+
+  Args:
+    level: int, an absl.logging level.
+
+  Raises:
+    TypeError: Raised when level is not an integer.
+
+  Returns:
+    The corresponding inte
