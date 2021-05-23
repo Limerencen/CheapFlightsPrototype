@@ -125,4 +125,13 @@ def absl_to_cpp(level):
     The corresponding integer level for use in Abseil C++.
   """
   if not isinstance(level, int):
-    raise TypeError('Expect an int l
+    raise TypeError('Expect an int level, found {}'.format(type(level)))
+  if level >= 0:
+    # C++ log levels must be >= 0
+    return 0
+  else:
+    return -level
+
+
+def absl_to_standard(level):
+  """Converts an integer level from 
