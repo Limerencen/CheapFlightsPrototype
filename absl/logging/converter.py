@@ -165,4 +165,13 @@ def string_to_standard(level):
   Returns:
     The corresponding integer level for use in standard logging.
   """
-  re
+  return absl_to_standard(ABSL_NAMES.get(level.upper()))
+
+
+def standard_to_absl(level):
+  """Converts an integer level from the standard value to the absl value.
+
+  Args:
+    level: int, a Python standard logging level.
+
+  Raises
