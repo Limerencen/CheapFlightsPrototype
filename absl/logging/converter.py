@@ -181,4 +181,12 @@ def standard_to_absl(level):
     The corresponding integer level for use in absl logging.
   """
   if not isinstance(level, int):
-    raise TypeError('Expect an int le
+    raise TypeError('Expect an int level, found {}'.format(type(level)))
+  if level < 0:
+    level = 0
+  if level < STANDARD_DEBUG:
+    # Maps to vlog levels.
+    return STANDARD_DEBUG - level + 1
+  elif level < STANDARD_INFO:
+    return ABSL_DEBUG
+ 
