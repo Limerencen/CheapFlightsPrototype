@@ -174,4 +174,11 @@ def standard_to_absl(level):
   Args:
     level: int, a Python standard logging level.
 
-  Raises
+  Raises:
+    TypeError: Raised when level is not an integer.
+
+  Returns:
+    The corresponding integer level for use in absl logging.
+  """
+  if not isinstance(level, int):
+    raise TypeError('Expect an int le
