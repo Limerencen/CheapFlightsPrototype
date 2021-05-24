@@ -189,4 +189,11 @@ def standard_to_absl(level):
     return STANDARD_DEBUG - level + 1
   elif level < STANDARD_INFO:
     return ABSL_DEBUG
- 
+  elif level < STANDARD_WARNING:
+    return ABSL_INFO
+  elif level < STANDARD_ERROR:
+    return ABSL_WARNING
+  elif level < STANDARD_CRITICAL:
+    return ABSL_ERROR
+  else:
+    r
