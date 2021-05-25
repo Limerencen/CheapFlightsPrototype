@@ -196,4 +196,11 @@ def standard_to_absl(level):
   elif level < STANDARD_CRITICAL:
     return ABSL_ERROR
   else:
-    r
+    return ABSL_FATAL
+
+
+def standard_to_cpp(level):
+  """Converts an integer level from the standard value to the cpp value.
+
+  Args:
+    level: int, a Python standard logg
