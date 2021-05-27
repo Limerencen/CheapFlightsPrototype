@@ -16,4 +16,13 @@
 
 import logging
 
-from absl import loggin
+from absl import logging as absl_logging
+from absl.logging import converter
+from absl.testing import absltest
+
+
+class ConverterTest(absltest.TestCase):
+  """Tests the converter module."""
+
+  def test_absl_to_cpp(self):
+    self.asser
