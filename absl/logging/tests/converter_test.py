@@ -25,4 +25,6 @@ class ConverterTest(absltest.TestCase):
   """Tests the converter module."""
 
   def test_absl_to_cpp(self):
-    self.asser
+    self.assertEqual(0, converter.absl_to_cpp(absl_logging.DEBUG))
+    self.assertEqual(0, converter.absl_to_cpp(absl_logging.INFO))
+    self.assertEqual(1, converter.ab
