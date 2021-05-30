@@ -27,4 +27,8 @@ class ConverterTest(absltest.TestCase):
   def test_absl_to_cpp(self):
     self.assertEqual(0, converter.absl_to_cpp(absl_logging.DEBUG))
     self.assertEqual(0, converter.absl_to_cpp(absl_logging.INFO))
-    self.assertEqual(1, converter.ab
+    self.assertEqual(1, converter.absl_to_cpp(absl_logging.WARN))
+    self.assertEqual(2, converter.absl_to_cpp(absl_logging.ERROR))
+    self.assertEqual(3, converter.absl_to_cpp(absl_logging.FATAL))
+
+    with self.ass
