@@ -46,4 +46,9 @@ class ConverterTest(absltest.TestCase):
     self.assertEqual(
         logging.ERROR, converter.absl_to_standard(absl_logging.ERROR))
     self.assertEqual(
-        logging.FATAL, converter.absl_to_standard(absl_logging.FAT
+        logging.FATAL, converter.absl_to_standard(absl_logging.FATAL))
+    self.assertEqual(
+        logging.CRITICAL, converter.absl_to_standard(absl_logging.FATAL))
+    # vlog levels.
+    self.assertEqual(9, converter.absl_to_standard(2))
+    self
