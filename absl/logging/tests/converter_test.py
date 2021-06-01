@@ -58,4 +58,8 @@ class ConverterTest(absltest.TestCase):
 
   def test_standard_to_absl(self):
     self.assertEqual(
-    
+        absl_logging.DEBUG, converter.standard_to_absl(logging.DEBUG))
+    self.assertEqual(
+        absl_logging.INFO, converter.standard_to_absl(logging.INFO))
+    self.assertEqual(
+        absl_loggin
