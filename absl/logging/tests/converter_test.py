@@ -66,4 +66,8 @@ class ConverterTest(absltest.TestCase):
     self.assertEqual(
         absl_logging.WARN, converter.standard_to_absl(logging.WARNING))
     self.assertEqual(
-        absl_logging.ERROR, co
+        absl_logging.ERROR, converter.standard_to_absl(logging.ERROR))
+    self.assertEqual(
+        absl_logging.FATAL, converter.standard_to_absl(logging.FATAL))
+    self.assertEqual(
+        absl_logging.FATAL, converter.stan
