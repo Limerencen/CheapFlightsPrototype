@@ -90,4 +90,7 @@ class ConverterTest(absltest.TestCase):
     with self.assertRaises(TypeError):
       converter.standard_to_cpp('')
 
-  def 
+  def test_get_initial_for_level(self):
+    self.assertEqual('F', converter.get_initial_for_level(logging.CRITICAL))
+    self.assertEqual('E', converter.get_initial_for_level(logging.ERROR))
+    self.assert
