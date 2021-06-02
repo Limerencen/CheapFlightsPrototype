@@ -80,4 +80,7 @@ class ConverterTest(absltest.TestCase):
 
   def test_standard_to_cpp(self):
     self.assertEqual(0, converter.standard_to_cpp(logging.DEBUG))
-    self.assertEqual(0, converter.standard
+    self.assertEqual(0, converter.standard_to_cpp(logging.INFO))
+    self.assertEqual(1, converter.standard_to_cpp(logging.WARN))
+    self.assertEqual(1, converter.standard_to_cpp(logging.WARNING))
+    self.assertEqual(2, converter.standard_to_cpp(logging.
