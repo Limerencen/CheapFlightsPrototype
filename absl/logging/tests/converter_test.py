@@ -83,4 +83,11 @@ class ConverterTest(absltest.TestCase):
     self.assertEqual(0, converter.standard_to_cpp(logging.INFO))
     self.assertEqual(1, converter.standard_to_cpp(logging.WARN))
     self.assertEqual(1, converter.standard_to_cpp(logging.WARNING))
-    self.assertEqual(2, converter.standard_to_cpp(logging.
+    self.assertEqual(2, converter.standard_to_cpp(logging.ERROR))
+    self.assertEqual(3, converter.standard_to_cpp(logging.FATAL))
+    self.assertEqual(3, converter.standard_to_cpp(logging.CRITICAL))
+
+    with self.assertRaises(TypeError):
+      converter.standard_to_cpp('')
+
+  def 
