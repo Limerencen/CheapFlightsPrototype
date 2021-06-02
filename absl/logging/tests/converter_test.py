@@ -75,4 +75,9 @@ class ConverterTest(absltest.TestCase):
     self.assertEqual(2, converter.standard_to_absl(logging.DEBUG - 1))
     self.assertEqual(3, converter.standard_to_absl(logging.DEBUG - 2))
 
-    with se
+    with self.assertRaises(TypeError):
+      converter.standard_to_absl('')
+
+  def test_standard_to_cpp(self):
+    self.assertEqual(0, converter.standard_to_cpp(logging.DEBUG))
+    self.assertEqual(0, converter.standard
