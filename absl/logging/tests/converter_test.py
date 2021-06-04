@@ -103,3 +103,7 @@ class ConverterTest(absltest.TestCase):
     self.assertEqual('E', converter.get_initial_for_level(41))
     self.assertEqual('W', converter.get_initial_for_level(39))
     self.assertEqual('W', converter.get_initial_for_level(31))
+    self.assertEqual('I', converter.get_initial_for_level(29))
+    self.assertEqual('I', converter.get_initial_for_level(21))
+    self.assertEqual('I', converter.get_initial_for_level(19))
+  
