@@ -93,4 +93,6 @@ class ConverterTest(absltest.TestCase):
   def test_get_initial_for_level(self):
     self.assertEqual('F', converter.get_initial_for_level(logging.CRITICAL))
     self.assertEqual('E', converter.get_initial_for_level(logging.ERROR))
-    self.assert
+    self.assertEqual('W', converter.get_initial_for_level(logging.WARNING))
+    self.assertEqual('I', converter.get_initial_for_level(logging.INFO))
+    self.assertEqual('I', converter.get_init
