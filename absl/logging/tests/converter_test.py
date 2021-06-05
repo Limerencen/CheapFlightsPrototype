@@ -109,4 +109,9 @@ class ConverterTest(absltest.TestCase):
     self.assertEqual('I', converter.get_initial_for_level(11))
     self.assertEqual('I', converter.get_initial_for_level(9))
     self.assertEqual('I', converter.get_initial_for_level(1))
-    self.assertEqual('I', conve
+    self.assertEqual('I', converter.get_initial_for_level(-1))
+
+  def test_string_to_standard(self):
+    self.assertEqual(logging.DEBUG, converter.string_to_standard('debug'))
+    self.assertEqual(logging.INFO, converter.string_to_standard('info'))
+    sel
