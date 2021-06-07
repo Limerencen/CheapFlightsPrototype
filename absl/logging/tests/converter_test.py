@@ -120,4 +120,6 @@ class ConverterTest(absltest.TestCase):
     self.assertEqual(logging.CRITICAL, converter.string_to_standard('fatal'))
 
     self.assertEqual(logging.DEBUG, converter.string_to_standard('DEBUG'))
-    self.assertEqual(logging.
+    self.assertEqual(logging.INFO, converter.string_to_standard('INFO'))
+    self.assertEqual(logging.WARNING, converter.string_to_standard('WARN'))
+    self.assertEqual(logging.WARNING, converter.s
