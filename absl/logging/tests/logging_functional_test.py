@@ -647,3 +647,87 @@ E0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] std error log
       lines = stderr.splitlines()
       for line in lines:
         self.assertIn('std error log', line)
+
+    self._exec_test(
+        _verify_ok,
+        test_name='std_logging',
+        expected_logs=[('stderr', None, assert_error_level_logged)],
+        extra_args=['-v=1', '--logger_levels=:ERROR'])
+
+    def assert_debug_level_logged(stderr):
+      lines = stderr.splitlines()
+      for line in lines:
+        self.assertRegex(line, 'std (debug|info|warning|error) log')
+
+    self._exec_test(
+        _verify_ok,
+        test_name='std_logging',
+        expected_logs=[('stderr', None, assert_debug_level_logged)],
+        extra_args=['--logger_levels=:ERROR', '-v=1'])
+
+  def test_none_exc_info_py_logging(self):
+
+    expected_stderr = ''
+    expected_info = '''\
+I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] None exc_info
+'''
+    expected_info += 'NoneType: None\n'
+
+    expected_logs = [
+        ['stderr', None, expected_stderr],
+        ['absl_log_file', 'INFO', expected_info]]
+
+    self._exec_test(
+        _verify_ok,
+        expected_logs,
+        test_name='none_exc_info',
+        use_absl_log_file=True)
+
+  def test_unicode_py_logging(self):
+
+    def get_stderr_message(stderr, name):
+      match = re.search(
+          '-- begin {} --\n(.*)-- end {} --'.format(name, name),
+          stderr, re.MULTILINE | re.DOTALL)
+      self.assertTrue(
+          match, 'Cannot find stderr message for test {}'.format(name))
+      return match.group(1)
+
+    def assert_stderr(stderr):
+      """Verifies that it writes correct information to stderr for Python 3.
+
+      There are no unicode errors in Python 3.
+
+      Args:
+        stderr: the message from stderr.
+      """
+      # Successful logs:
+      for name in (
+          'unicode', 'unicode % unicode', 'bytes % bytes', 'unicode % bytes',
+          'bytes % unicode', 'unicode % iso8859-15', 'str % exception',
+          'str % exception'):
+        logging.info('name = %s', name)
+        self.assertEqual('', get_stderr_message(stderr, name))
+
+    expected_logs = [['stderr', None, assert_stderr]]
+
+    info_log = u'''\
+I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] G\u00eete: Ch\u00e2tonnaye
+I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] G\u00eete: Ch\u00e2tonnaye
+I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] b'G\\xc3\\xaete: b'Ch\\xc3\\xa2tonnaye''
+I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] G\u00eete: b'Ch\\xc3\\xa2tonnaye'
+I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] b'G\\xc3\\xaete: Ch\u00e2tonnaye'
+I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] G\u00eete: b'Ch\\xe2tonnaye'
+I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] exception: Ch\u00e2tonnaye
+'''
+    expected_logs.append(['absl_log_file', 'INFO', info_log])
+
+    self._exec_test(
+        _verify_ok,
+        expected_logs,
+        test_name='unicode',
+        use_absl_log_file=True)
+
+
+if __name__ == '__main__':
+  absltest.main()
