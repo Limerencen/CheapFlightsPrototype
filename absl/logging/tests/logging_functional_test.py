@@ -456,3 +456,194 @@ class FunctionalTest(parameterized.TestCase):
   def test_py_logging(self, logtostderr):
     # Python logging by default logs to stderr.
     self._exec_test(
+        _verify_ok,
+        [['stderr', None, self._get_logs(logging.INFO)]],
+        pass_logtostderr=logtostderr)
+
+  def test_py_logging_use_absl_log_file(self):
+    # Python logging calling use_absl_log_file causes also log to files.
+    self._exec_test(
+        _verify_ok,
+        [['stderr', None, ''],
+         ['absl_log_file', 'INFO', self._get_logs(logging.INFO)]],
+        use_absl_log_file=True)
+
+  def test_py_logging_use_absl_log_file_logtostderr(self):
+    # Python logging asked to log to stderr even though use_absl_log_file
+    # is called.
+    self._exec_test(
+        _verify_ok,
+        [['stderr', None, self._get_logs(logging.INFO)]],
+        pass_logtostderr=True,
+        use_absl_log_file=True)
+
+  @parameterized.named_parameters(
+      ('', False),
+      ('logtostderr', True))
+  def test_py_logging_noshowprefixforinfo(self, logtostderr):
+    self._exec_test(
+        _verify_ok,
+        [['stderr', None, self._get_logs(logging.INFO,
+                                         include_info_prefix=False)]],
+        pass_logtostderr=logtostderr,
+        show_info_prefix=0)
+
+  def test_py_logging_noshowprefixforinfo_use_absl_log_file(self):
+    self._exec_test(
+        _verify_ok,
+        [['stderr', None, ''],
+         ['absl_log_file', 'INFO', self._get_logs(logging.INFO)]],
+        show_info_prefix=0,
+        use_absl_log_file=True)
+
+  def test_py_logging_noshowprefixforinfo_use_absl_log_file_logtostderr(self):
+    self._exec_test(
+        _verify_ok,
+        [['stderr', None, self._get_logs(logging.INFO,
+                                         include_info_prefix=False)]],
+        pass_logtostderr=True,
+        show_info_prefix=0,
+        use_absl_log_file=True)
+
+  def test_py_logging_noshowprefixforinfo_verbosity(self):
+    self._exec_test(
+        _verify_ok,
+        [['stderr', None, self._get_logs(logging.DEBUG)]],
+        pass_logtostderr=True,
+        show_info_prefix=0,
+        use_absl_log_file=True,
+        extra_args=['-v=1'])
+
+  def test_py_logging_fatal_main_thread_only(self):
+    self._exec_test(
+        _verify_fatal,
+        [['stderr', None, _get_fatal_log_expectation(
+            self, 'fatal_main_thread_only', False)]],
+        test_name='fatal_main_thread_only')
+
+  def test_py_logging_fatal_with_other_threads(self):
+    self._exec_test(
+        _verify_fatal,
+        [['stderr', None, _get_fatal_log_expectation(
+            self, 'fatal_with_other_threads', False)]],
+        test_name='fatal_with_other_threads')
+
+  def test_py_logging_fatal_non_main_thread(self):
+    self._exec_test(
+        _verify_fatal,
+        [['stderr', None, _get_fatal_log_expectation(
+            self, 'fatal_non_main_thread', False)]],
+        test_name='fatal_non_main_thread')
+
+  def test_py_logging_critical_non_absl(self):
+    self._exec_test(
+        _verify_ok,
+        [['stderr', None, _CRITICAL_DOWNGRADE_TO_ERROR_MESSAGE]],
+        test_name='critical_from_non_absl_logger')
+
+  def test_py_logging_skip_log_prefix(self):
+    self._exec_test(
+        _verify_ok,
+        [['stderr', None, '']],
+        test_name='register_frame_to_skip')
+
+  def test_py_logging_flush(self):
+    self._exec_test(
+        _verify_ok,
+        [['stderr', None, '']],
+        test_name='flush')
+
+  @parameterized.named_parameters(*_VERBOSITY_FLAG_TEST_PARAMETERS)
+  def test_py_logging_verbosity_stderr(self, verbosity):
+    """Tests -v/--verbosity flag with python logging to stderr."""
+    v_flag = '-v=%d' % verbosity
+    self._exec_test(
+        _verify_ok,
+        [['stderr', None, self._get_logs(verbosity)]],
+        extra_args=[v_flag])
+
+  @parameterized.named_parameters(*_VERBOSITY_FLAG_TEST_PARAMETERS)
+  def test_py_logging_verbosity_file(self, verbosity):
+    """Tests -v/--verbosity flag with Python logging to stderr."""
+    v_flag = '-v=%d' % verbosity
+    self._exec_test(
+        _verify_ok,
+        [['stderr', None, ''],
+         # When using python logging, it only creates a file named INFO,
+         # unlike C++ it also creates WARNING and ERROR files.
+         ['absl_log_file', 'INFO', self._get_logs(verbosity)]],
+        use_absl_log_file=True,
+        extra_args=[v_flag])
+
+  def test_stderrthreshold_py_logging(self):
+    """Tests --stderrthreshold."""
+
+    stderr_logs = '''\
+I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] FLAGS.stderrthreshold=debug, debug log
+I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] FLAGS.stderrthreshold=debug, info log
+W0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] FLAGS.stderrthreshold=debug, warning log
+E0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] FLAGS.stderrthreshold=debug, error log
+I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] FLAGS.stderrthreshold=info, info log
+W0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] FLAGS.stderrthreshold=info, warning log
+E0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] FLAGS.stderrthreshold=info, error log
+W0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] FLAGS.stderrthreshold=warning, warning log
+E0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] FLAGS.stderrthreshold=warning, error log
+E0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] FLAGS.stderrthreshold=error, error log
+'''
+
+    expected_logs = [
+        ['stderr', None, stderr_logs],
+        ['absl_log_file', 'INFO', None],
+    ]
+    # Set verbosity to debug to test stderrthreshold == debug.
+    extra_args = ['-v=1']
+
+    self._exec_test(
+        _verify_ok,
+        expected_logs,
+        test_name='stderrthreshold',
+        extra_args=extra_args,
+        use_absl_log_file=True)
+
+  def test_std_logging_py_logging(self):
+    """Tests logs from std logging."""
+    stderr_logs = '''\
+I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] std debug log
+I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] std info log
+W0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] std warning log
+E0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] std error log
+'''
+    expected_logs = [['stderr', None, stderr_logs]]
+
+    extra_args = ['-v=1', '--logtostderr']
+    self._exec_test(
+        _verify_ok,
+        expected_logs,
+        test_name='std_logging',
+        extra_args=extra_args)
+
+  def test_bad_exc_info_py_logging(self):
+
+    def assert_stderr(stderr):
+      # The exact message differs among different Python versions. So it just
+      # asserts some certain information is there.
+      self.assertIn('Traceback (most recent call last):', stderr)
+      self.assertIn('IndexError', stderr)
+
+    expected_logs = [
+        ['stderr', None, assert_stderr],
+        ['absl_log_file', 'INFO', '']]
+
+    self._exec_test(
+        _verify_ok,
+        expected_logs,
+        test_name='bad_exc_info',
+        use_absl_log_file=True)
+
+  def test_verbosity_logger_levels_flag_ordering(self):
+    """Make sure last-specified flag wins."""
+
+    def assert_error_level_logged(stderr):
+      lines = stderr.splitlines()
+      for line in lines:
+        self.assertIn('std error log', line)
