@@ -254,3 +254,205 @@ def _munge_log(buf):
 def _verify_status(expected, actual, output):
   if expected != actual:
     raise AssertionError(
+        'Test exited with unexpected status code %d (expected %d). '
+        'Output was:\n%s' % (actual, expected, output))
+
+
+def _verify_ok(status, output):
+  """Check that helper exited with no errors."""
+  _verify_status(0, status, output)
+
+
+def _verify_fatal(status, output):
+  """Check that helper died as expected."""
+  # os.abort generates a SIGABRT signal (-6). On Windows, the process
+  # immediately returns an exit code of 3.
+  # See https://docs.python.org/3.6/library/os.html#os.abort.
+  expected_exit_code = 3 if os.name == 'nt' else -6
+  _verify_status(expected_exit_code, status, output)
+
+
+def _verify_assert(status, output):
+  """.Check that helper failed with assertion."""
+  _verify_status(1, status, output)
+
+
+class FunctionalTest(parameterized.TestCase):
+  """Functional tests using the logging_functional_test_helper script."""
+
+  def _get_helper(self):
+    helper_name = 'absl/logging/tests/logging_functional_test_helper'
+    return _bazelize_command.get_executable_path(helper_name)
+
+  def _get_logs(self,
+                verbosity,
+                include_info_prefix=True):
+    logs = []
+    if verbosity >= 3:
+      logs.append(_PY_VLOG3_LOG_MESSAGE)
+    if verbosity >= 2:
+      logs.append(_PY_VLOG2_LOG_MESSAGE)
+    if verbosity >= logging.DEBUG:
+      logs.append(_PY_DEBUG_LOG_MESSAGE)
+
+    if verbosity >= logging.INFO:
+      if include_info_prefix:
+        logs.append(_PY_INFO_LOG_MESSAGE)
+      else:
+        logs.append(_PY_INFO_LOG_MESSAGE_NOPREFIX)
+    if verbosity >= logging.WARN:
+      logs.append(_PY_WARNING_LOG_MESSAGE)
+    if verbosity >= logging.ERROR:
+      logs.append(_PY_ERROR_LOG_MESSAGE)
+
+    expected_logs = ''.join(logs)
+    expected_logs = expected_logs.replace(
+        "<type 'exceptions.OSError'>", "<class 'OSError'>")
+    return expected_logs
+
+  def setUp(self):
+    super(FunctionalTest, self).setUp()
+    self._log_dir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
+
+  def tearDown(self):
+    shutil.rmtree(self._log_dir)
+    super(FunctionalTest, self).tearDown()
+
+  def _exec_test(self,
+                 verify_exit_fn,
+                 expected_logs,
+                 test_name='do_logging',
+                 pass_logtostderr=False,
+                 use_absl_log_file=False,
+                 show_info_prefix=1,
+                 call_dict_config=False,
+                 extra_args=()):
+    """Execute the helper script and verify its output.
+
+    Args:
+      verify_exit_fn: A function taking (status, output).
+      expected_logs: List of tuples, or None if output shouldn't be checked.
+          Tuple is (log prefix, log type, expected contents):
+          - log prefix: A program name, or 'stderr'.
+          - log type: 'INFO', 'ERROR', etc.
+          - expected: Can be the following:
+            - A string
+            - A callable, called with the logs as a single argument
+            - None, means don't check contents of log file
+      test_name: Name to pass to helper.
+      pass_logtostderr: Pass --logtostderr to the helper script if True.
+      use_absl_log_file: If True, call
+          logging.get_absl_handler().use_absl_log_file() before test_fn in
+          logging_functional_test_helper.
+      show_info_prefix: --showprefixforinfo value passed to the helper script.
+      call_dict_config: True if helper script should call
+          logging.config.dictConfig.
+      extra_args: Iterable of str (optional, defaults to ()) - extra arguments
+          to pass to the helper script.
+
+    Raises:
+      AssertionError: Assertion error when test fails.
+    """
+    args = ['--log_dir=%s' % self._log_dir]
+    if pass_logtostderr:
+      args.append('--logtostderr')
+    if not show_info_prefix:
+      args.append('--noshowprefixforinfo')
+    args += extra_args
+
+    # Execute helper in subprocess.
+    env = os.environ.copy()
+    env.update({
+        'TEST_NAME': test_name,
+        'USE_ABSL_LOG_FILE': '%d' % (use_absl_log_file,),
+        'CALL_DICT_CONFIG': '%d' % (call_dict_config,),
+    })
+    cmd = [self._get_helper()] + args
+
+    print('env: %s' % env, file=sys.stderr)
+    print('cmd: %s' % cmd, file=sys.stderr)
+    process = subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env,
+        universal_newlines=True)
+    output, _ = process.communicate()
+    status = process.returncode
+
+    # Verify exit status.
+    verify_exit_fn(status, output)
+
+    # Check outputs?
+    if expected_logs is None:
+      return
+
+    # Get list of log files.
+    logs = os.listdir(self._log_dir)
+    logs = fnmatch.filter(logs, '*.log.*')
+    logs.append('stderr')
+
+    # Look for a log matching each expected pattern.
+    matched = []
+    unmatched = []
+    unexpected = logs[:]
+    for log_prefix, log_type, expected in expected_logs:
+      # What pattern?
+      if log_prefix == 'stderr':
+        assert log_type is None
+        pattern = 'stderr'
+      else:
+        pattern = r'%s[.].*[.]log[.]%s[.][\d.-]*$' % (log_prefix, log_type)
+
+      # Is it there
+      for basename in logs:
+        if re.match(pattern, basename):
+          matched.append([expected, basename])
+          unexpected.remove(basename)
+          break
+      else:
+        unmatched.append(pattern)
+
+    # Mismatch?
+    errors = ''
+    if unmatched:
+      errors += 'The following log files were expected but not found: %s' % (
+          '\n '.join(unmatched))
+    if unexpected:
+      if errors:
+        errors += '\n'
+      errors += 'The following log files were not expected: %s' % (
+          '\n '.join(unexpected))
+    if errors:
+      raise AssertionError(errors)
+
+    # Compare contents of matches.
+    for (expected, basename) in matched:
+      if expected is None:
+        continue
+
+      if basename == 'stderr':
+        actual = output
+      else:
+        path = os.path.join(self._log_dir, basename)
+        with open(path, encoding='utf-8') as f:
+          actual = f.read()
+
+      if callable(expected):
+        try:
+          expected(actual)
+        except AssertionError:
+          print('expected_logs assertion failed, actual {} log:\n{}'.format(
+              basename, actual), file=sys.stderr)
+          raise
+      elif isinstance(expected, str):
+        self.assertMultiLineEqual(_munge_log(expected), _munge_log(actual),
+                                  '%s differs' % basename)
+      else:
+        self.fail(
+            'Invalid value found for expected logs: {}, type: {}'.format(
+                expected, type(expected)))
+
+  @parameterized.named_parameters(
+      ('', False),
+      ('logtostderr', True))
+  def test_py_logging(self, logtostderr):
+    # Python logging by default logs to stderr.
+    self._exec_test(
