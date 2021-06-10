@@ -31,4 +31,14 @@ FLAGS = flags.FLAGS
 
 
 class VerboseDel(object):
-  """
+  """Dummy class to test __del__ running."""
+
+  def __init__(self, msg):
+    self._msg = msg
+
+  def __del__(self):
+    sys.stderr.write(self._msg)
+    sys.stderr.flush()
+
+
+def _test_do_logging()
