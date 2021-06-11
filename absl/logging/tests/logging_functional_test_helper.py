@@ -53,4 +53,9 @@ def _test_do_logging():
   logging.log(1, 'This line is log level 1')
   logging.debug('This line is DEBUG')
 
-  logging.vlog(0, 'This line is VLOG level 0
+  logging.vlog(0, 'This line is VLOG level 0')
+  logging.log(0, 'This line is log level 0')
+  logging.info('Interesting Stuff\0')
+  logging.info('Interesting Stuff with Arguments: %d', 42)
+  logging.info('%(a)s Stuff with %(b)s',
+               {'a': 'I
