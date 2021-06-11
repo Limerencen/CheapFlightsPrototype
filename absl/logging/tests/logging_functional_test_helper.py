@@ -58,4 +58,9 @@ def _test_do_logging():
   logging.info('Interesting Stuff\0')
   logging.info('Interesting Stuff with Arguments: %d', 42)
   logging.info('%(a)s Stuff with %(b)s',
-               {'a': 'I
+               {'a': 'Interesting', 'b': 'Dictionary'})
+
+  with mock.patch.object(timeit, 'default_timer') as mock_timer:
+    mock_timer.return_value = 0
+    while timeit.default_timer() < 9:
+      logging.log_every_n_seconds(logging.INFO, 'This shoul
