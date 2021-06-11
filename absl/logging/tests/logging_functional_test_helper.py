@@ -41,4 +41,10 @@ class VerboseDel(object):
     sys.stderr.flush()
 
 
-def _test_do_logging()
+def _test_do_logging():
+  """Do some log operations."""
+  logging.vlog(3, 'This line is VLOG level 3')
+  logging.vlog(2, 'This line is VLOG level 2')
+  logging.log(2, 'This line is log level 2')
+  if logging.vlog_is_on(2):
+    logging.log(1, 'VLO
