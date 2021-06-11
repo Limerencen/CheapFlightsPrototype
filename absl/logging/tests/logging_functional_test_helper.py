@@ -68,4 +68,10 @@ def _test_do_logging():
       mock_timer.return_value = mock_timer() + .2
 
   for i in range(1, 5):
-    logging.log_first_n(logging.INFO, 'Info first %d of %d', 
+    logging.log_first_n(logging.INFO, 'Info first %d of %d', 2, i, 2)
+    logging.log_every_n(logging.INFO, 'Info %d (every %d)', 3, i, 3)
+
+  logging.vlog(-1, 'This line is VLOG level -1')
+  logging.log(-1, 'This line is log level -1')
+  logging.warning('Worrying Stuff')
+  for 
