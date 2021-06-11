@@ -47,4 +47,10 @@ def _test_do_logging():
   logging.vlog(2, 'This line is VLOG level 2')
   logging.log(2, 'This line is log level 2')
   if logging.vlog_is_on(2):
-    logging.log(1, 'VLO
+    logging.log(1, 'VLOG level 1, but only if VLOG level 2 is active')
+
+  logging.vlog(1, 'This line is VLOG level 1')
+  logging.log(1, 'This line is log level 1')
+  logging.debug('This line is DEBUG')
+
+  logging.vlog(0, 'This line is VLOG level 0
