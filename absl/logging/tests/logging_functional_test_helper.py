@@ -85,4 +85,11 @@ def _test_do_logging():
   except OSError:
     saved_exc_info = sys.exc_info()
     logging.exception('An Exception %s')
-    logging.exception('Once more, %(reas
+    logging.exception('Once more, %(reason)s', {'reason': 'just because'})
+    logging.error('Exception 2 %s', exc_info=True)
+    logging.error('Non-exception', exc_info=False)
+
+  try:
+    sys.exc_clear()
+  except AttributeError:
+    # No sys.exc_clear()
