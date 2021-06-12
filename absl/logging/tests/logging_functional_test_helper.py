@@ -109,4 +109,12 @@ def _test_fatal_main_thread_only():
   """Test logging.fatal from main thread, no other threads running."""
   v = VerboseDel('fatal_main_thread_only main del called\n')
   try:
- 
+    logging.fatal('fatal_main_thread_only message')
+  finally:
+    del v
+
+
+def _test_fatal_with_other_threads():
+  """Test logging.fatal from main thread, other threads running."""
+
+  lock 
