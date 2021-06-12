@@ -74,4 +74,8 @@ def _test_do_logging():
   logging.vlog(-1, 'This line is VLOG level -1')
   logging.log(-1, 'This line is log level -1')
   logging.warning('Worrying Stuff')
-  for 
+  for i in range(1, 5):
+    logging.log_first_n(logging.WARNING, 'Warn first %d of %d', 2, i, 2)
+    logging.log_every_n(logging.WARNING, 'Warn %d (every %d)', 3, i, 3)
+
+  logging.vlog(-2, 'This line is VLOG lev
