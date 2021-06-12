@@ -103,3 +103,10 @@ def _test_do_logging():
     logging.log_first_n(logging.ERROR, 'Error first %d of %d', 2, i, 2)
     logging.log_every_n(logging.ERROR, 'Error %d (every %d)', 3, i, 3)
   logging.flush()
+
+
+def _test_fatal_main_thread_only():
+  """Test logging.fatal from main thread, no other threads running."""
+  v = VerboseDel('fatal_main_thread_only main del called\n')
+  try:
+ 
