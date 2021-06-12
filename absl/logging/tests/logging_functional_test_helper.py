@@ -78,4 +78,11 @@ def _test_do_logging():
     logging.log_first_n(logging.WARNING, 'Warn first %d of %d', 2, i, 2)
     logging.log_every_n(logging.WARNING, 'Warn %d (every %d)', 3, i, 3)
 
-  logging.vlog(-2, 'This line is VLOG lev
+  logging.vlog(-2, 'This line is VLOG level -2')
+  logging.log(-2, 'This line is log level -2')
+  try:
+    raise OSError('Fake Error')
+  except OSError:
+    saved_exc_info = sys.exc_info()
+    logging.exception('An Exception %s')
+    logging.exception('Once more, %(reas
