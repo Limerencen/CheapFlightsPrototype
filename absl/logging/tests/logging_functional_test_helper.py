@@ -117,4 +117,12 @@ def _test_fatal_main_thread_only():
 def _test_fatal_with_other_threads():
   """Test logging.fatal from main thread, other threads running."""
 
-  lock 
+  lock = threading.Lock()
+  lock.acquire()
+
+  def sleep_forever(lock=lock):
+    v = VerboseDel('fatal_with_other_threads non-main del called\n')
+    try:
+      lock.release()
+      while True:
+        time.sleep(10000)
