@@ -126,3 +126,14 @@ def _test_fatal_with_other_threads():
       lock.release()
       while True:
         time.sleep(10000)
+    finally:
+      del v
+
+  v = VerboseDel('fatal_with_other_threads main del called\n')
+  try:
+    # Start new thread
+    t = threading.Thread(target=sleep_forever)
+    t.start()
+
+    # Wait for other thread
+    lock.a
