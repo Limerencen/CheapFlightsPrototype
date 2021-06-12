@@ -92,4 +92,8 @@ def _test_do_logging():
   try:
     sys.exc_clear()
   except AttributeError:
-    # No sys.exc_clear()
+    # No sys.exc_clear() in Python 3, but this will clear sys.exc_info() too.
+    pass
+
+  logging.error('Exception %s', '3', exc_info=saved_exc_info)
+  logging.error('No traceback', exc_info=saved_exc_info[:2] + (None,))
