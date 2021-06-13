@@ -136,4 +136,16 @@ def _test_fatal_with_other_threads():
     t.start()
 
     # Wait for other thread
-    lock.a
+    lock.acquire()
+    lock.release()
+
+    # Die
+    logging.fatal('fatal_with_other_threads message')
+    while True:
+      time.sleep(10000)
+  finally:
+    del v
+
+
+def _test_fatal_non_main_thread():
+  """Test loggi
