@@ -148,4 +148,12 @@ def _test_fatal_with_other_threads():
 
 
 def _test_fatal_non_main_thread():
-  """Test loggi
+  """Test logging.fatal from non main thread."""
+
+  lock = threading.Lock()
+  lock.acquire()
+
+  def die_soon(lock=lock):
+    v = VerboseDel('fatal_non_main_thread non-main del called\n')
+    try:
+      # Wait for 
