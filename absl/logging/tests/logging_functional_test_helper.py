@@ -184,4 +184,13 @@ def _test_fatal_non_main_thread():
 def _test_critical_from_non_absl_logger():
   """Test CRITICAL logs from non-absl loggers."""
 
-  std_logging.c
+  std_logging.critical('A critical message')
+
+
+def _test_register_frame_to_skip():
+  """Test skipping frames for line number reporting."""
+
+  def _getline():
+
+    def _getline_inner():
+      return log
