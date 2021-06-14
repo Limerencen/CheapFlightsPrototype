@@ -193,4 +193,10 @@ def _test_register_frame_to_skip():
   def _getline():
 
     def _getline_inner():
-      return log
+      return logging.get_absl_logger().findCaller()[1]
+
+    return _getline_inner()
+
+  # Check register_frame_to_skip function to see if log frame skipping works.
+  line1 = _getline()
+  line2 = _getline
