@@ -162,4 +162,16 @@ def _test_fatal_non_main_thread():
       logging.fatal('fatal_non_main_thread message')
       while True:
         time.sleep(10000)
-  
+    finally:
+      del v
+
+  v = VerboseDel('fatal_non_main_thread main del called\n')
+  try:
+    # Start new thread
+    t = threading.Thread(target=die_soon)
+    t.start()
+
+    # Signal other thread
+    lock.release()
+
+    # Wait fo
