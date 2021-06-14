@@ -174,4 +174,14 @@ def _test_fatal_non_main_thread():
     # Signal other thread
     lock.release()
 
-    # Wait fo
+    # Wait for it to die
+    while True:
+      time.sleep(10000)
+  finally:
+    del v
+
+
+def _test_critical_from_non_absl_logger():
+  """Test CRITICAL logs from non-absl loggers."""
+
+  std_logging.c
