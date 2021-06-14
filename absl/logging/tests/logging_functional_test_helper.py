@@ -156,4 +156,10 @@ def _test_fatal_non_main_thread():
   def die_soon(lock=lock):
     v = VerboseDel('fatal_non_main_thread non-main del called\n')
     try:
-      # Wait for 
+      # Wait for signal from other thread
+      lock.acquire()
+      lock.release()
+      logging.fatal('fatal_non_main_thread message')
+      while True:
+        time.sleep(10000)
+  
