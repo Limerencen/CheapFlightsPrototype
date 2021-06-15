@@ -199,4 +199,9 @@ def _test_register_frame_to_skip():
 
   # Check register_frame_to_skip function to see if log frame skipping works.
   line1 = _getline()
-  line2 = _getline
+  line2 = _getline()
+  logging.get_absl_logger().register_frame_to_skip(__file__, '_getline')
+  line3 = _getline()
+  # Both should be line number of the _getline_inner() call.
+  assert (line1 == line2), (line1, line2)
+  # line3 sho
