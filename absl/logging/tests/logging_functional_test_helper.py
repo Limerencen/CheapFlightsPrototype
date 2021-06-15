@@ -204,4 +204,11 @@ def _test_register_frame_to_skip():
   line3 = _getline()
   # Both should be line number of the _getline_inner() call.
   assert (line1 == line2), (line1, line2)
-  # line3 sho
+  # line3 should be a line number in this function.
+  assert (line2 != line3), (line2, line3)
+
+
+def _test_flush():
+  """Test flush in various difficult cases."""
+  # Flush, but one of the logfiles is closed
+  
