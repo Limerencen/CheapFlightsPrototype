@@ -211,4 +211,7 @@ def _test_register_frame_to_skip():
 def _test_flush():
   """Test flush in various difficult cases."""
   # Flush, but one of the logfiles is closed
-  
+  log_filename = os.path.join(FLAGS.log_dir, 'a_thread_with_logfile.txt')
+  with open(log_filename, 'w') as log_file:
+    logging.get_absl_handler().python_handler.stream = log_file
+  loggi
