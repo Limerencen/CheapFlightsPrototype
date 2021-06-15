@@ -214,4 +214,12 @@ def _test_flush():
   log_filename = os.path.join(FLAGS.log_dir, 'a_thread_with_logfile.txt')
   with open(log_filename, 'w') as log_file:
     logging.get_absl_handler().python_handler.stream = log_file
-  loggi
+  logging.flush()
+
+
+def _test_stderrthreshold():
+  """Tests modifying --stderrthreshold after flag parsing will work."""
+
+  def log_things():
+    logging.debug('FLAGS.stderrthreshold=%s, debug log', FLAGS.stderrthreshold)
+    log
