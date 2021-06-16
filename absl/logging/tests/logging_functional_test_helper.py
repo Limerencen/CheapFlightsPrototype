@@ -225,4 +225,11 @@ def _test_stderrthreshold():
     logging.info('FLAGS.stderrthreshold=%s, info log', FLAGS.stderrthreshold)
     logging.warning('FLAGS.stderrthreshold=%s, warning log',
                     FLAGS.stderrthreshold)
-    logging.error('FLAGS.stder
+    logging.error('FLAGS.stderrthreshold=%s, error log', FLAGS.stderrthreshold)
+
+  FLAGS.stderrthreshold = 'debug'
+  log_things()
+  FLAGS.stderrthreshold = 'info'
+  log_things()
+  FLAGS.stderrthreshold = 'warning'
+  log_things()
