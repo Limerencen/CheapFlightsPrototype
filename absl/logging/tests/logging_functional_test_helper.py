@@ -241,4 +241,13 @@ def _test_std_logging():
   """Tests logs from std logging."""
   std_logging.debug('std debug log')
   std_logging.info('std info log')
-  std_logging.warning('st
+  std_logging.warning('std warning log')
+  std_logging.error('std error log')
+
+
+def _test_bad_exc_info():
+  """Tests when a bad exc_info valud is provided."""
+  logging.info('Bad exc_info', exc_info=(None, None))
+
+
+def _test_n
