@@ -250,4 +250,10 @@ def _test_bad_exc_info():
   logging.info('Bad exc_info', exc_info=(None, None))
 
 
-def _test_n
+def _test_none_exc_info():
+  """Tests when exc_info is requested but not available."""
+  # Clear exc_info first.
+  try:
+    sys.exc_clear()
+  except AttributeError:
+    # No sys.exc_clear() in Python 3, but this will
