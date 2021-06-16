@@ -233,3 +233,12 @@ def _test_stderrthreshold():
   log_things()
   FLAGS.stderrthreshold = 'warning'
   log_things()
+  FLAGS.stderrthreshold = 'error'
+  log_things()
+
+
+def _test_std_logging():
+  """Tests logs from std logging."""
+  std_logging.debug('std debug log')
+  std_logging.info('std info log')
+  std_logging.warning('st
