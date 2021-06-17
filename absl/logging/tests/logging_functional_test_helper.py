@@ -256,4 +256,15 @@ def _test_none_exc_info():
   try:
     sys.exc_clear()
   except AttributeError:
-    # No sys.exc_clear() in Python 3, but this will
+    # No sys.exc_clear() in Python 3, but this will clear sys.exc_info() too.
+    pass
+  logging.info('None exc_info', exc_info=True)
+
+
+def _test_unicode():
+  """Tests unicode handling."""
+
+  test_names = []
+
+  def log(name, msg, *args):
+    """Logs the message
