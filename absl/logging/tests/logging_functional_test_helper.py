@@ -308,4 +308,5 @@ def main(argv):
 if __name__ == '__main__':
   sys.argv[0] = 'py_argv_0'
   if os.environ.get('CALL_DICT_CONFIG') == '1':
-    std_logging_config.dictConfig({'v
+    std_logging_config.dictConfig({'version': 1})
+  app.run(main)
