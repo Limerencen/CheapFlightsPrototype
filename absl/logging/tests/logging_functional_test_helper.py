@@ -267,4 +267,7 @@ def _test_unicode():
   test_names = []
 
   def log(name, msg, *args):
-    """Logs the message
+    """Logs the message, and ensures the same name is not logged again."""
+    assert name not in test_names, ('test_unicode expects unique names to work,'
+                                    ' found existing name {}').format(name)
+    test_nam
