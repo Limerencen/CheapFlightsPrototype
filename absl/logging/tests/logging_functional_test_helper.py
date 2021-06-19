@@ -276,4 +276,8 @@ def _test_unicode():
     # message.
     sys.stderr.write('-- begin {} --\n'.format(name))
     logging.info(msg, *args)
-    sys.s
+    sys.stderr.write('-- end {} --\n'.format(name))
+
+  log('unicode', u'G\u00eete: Ch\u00e2tonnaye')
+  log('unicode % unicode', u'G\u00eete: %s', u'Ch\u00e2tonnaye')
+  log('bytes % bytes', u'G\u00eete: %s'
