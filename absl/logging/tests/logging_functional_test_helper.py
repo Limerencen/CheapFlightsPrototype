@@ -300,4 +300,12 @@ def main(argv):
   # file with use_absl_log_file.
   logging.flush()
   if os.environ.get('USE_ABSL_LOG_FILE') == '1':
-    logging.get_absl_handl
+    logging.get_absl_handler().use_absl_log_file('absl_log_file', FLAGS.log_dir)
+
+  test_fn()
+
+
+if __name__ == '__main__':
+  sys.argv[0] = 'py_argv_0'
+  if os.environ.get('CALL_DICT_CONFIG') == '1':
+    std_logging_config.dictConfig({'v
