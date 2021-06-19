@@ -295,4 +295,9 @@ def main(argv):
   test_name = os.environ.get('TEST_NAME', None)
   test_fn = globals().get('_test_%s' % test_name)
   if test_fn is None:
-    raise AssertionError('TEST_NAME must be set to
+    raise AssertionError('TEST_NAME must be set to a valid value')
+  # Flush so previous messages are written to file before we switch to a new
+  # file with use_absl_log_file.
+  logging.flush()
+  if os.environ.get('USE_ABSL_LOG_FILE') == '1':
+    logging.get_absl_handl
