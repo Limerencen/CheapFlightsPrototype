@@ -283,4 +283,10 @@ def _test_unicode():
   log('bytes % bytes', u'G\u00eete: %s'.encode('utf-8'),
       u'Ch\u00e2tonnaye'.encode('utf-8'))
   log('unicode % bytes', u'G\u00eete: %s', u'Ch\u00e2tonnaye'.encode('utf-8'))
-  log('bytes % unicode', u'G\u00eete: %s'.encode('utf-8'), u'Ch\u
+  log('bytes % unicode', u'G\u00eete: %s'.encode('utf-8'), u'Ch\u00e2tonnaye')
+  log('unicode % iso8859-15', u'G\u00eete: %s',
+      u'Ch\u00e2tonnaye'.encode('iso-8859-15'))
+  log('str % exception', 'exception: %s', Exception(u'Ch\u00e2tonnaye'))
+
+
+def main(arg
