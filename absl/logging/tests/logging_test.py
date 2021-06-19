@@ -196,3 +196,212 @@ class PythonHandlerTest(absltest.TestCase):
   def test_flush_with_value_error(self):
     stream = mock.Mock()
     stream.flush.side_effect = ValueError
+    handler = logging.PythonHandler(stream)
+    handler.flush()
+    stream.flush.assert_called_once()
+
+  def test_flush_with_environment_error(self):
+    stream = mock.Mock()
+    stream.flush.side_effect = EnvironmentError
+    handler = logging.PythonHandler(stream)
+    handler.flush()
+    stream.flush.assert_called_once()
+
+  def test_flush_with_assertion_error(self):
+    stream = mock.Mock()
+    stream.flush.side_effect = AssertionError
+    handler = logging.PythonHandler(stream)
+    with self.assertRaises(AssertionError):
+      handler.flush()
+
+  def test_ignore_flush_if_stream_is_none(self):
+    # Happens if creating a Windows executable without console.
+    with mock.patch.object(sys, 'stderr', new=None):
+      handler = logging.PythonHandler(None)
+      # Test that this does not fail.
+      handler.flush()
+
+  def test_ignore_flush_if_stream_does_not_support_flushing(self):
+    class BadStream:
+      pass
+
+    handler = logging.PythonHandler(BadStream())
+    # Test that this does not fail.
+    handler.flush()
+
+  def test_log_to_std_err(self):
+    record = std_logging.LogRecord(
+        'name', std_logging.INFO, 'path', 12, 'logging_msg', [], False)
+    with mock.patch.object(std_logging.StreamHandler, 'emit'):
+      self.python_handler._log_to_stderr(record)
+      std_logging.StreamHandler.emit.assert_called_once_with(record)
+
+  @flagsaver.flagsaver(logtostderr=True)
+  def test_emit_log_to_stderr(self):
+    record = std_logging.LogRecord(
+        'name', std_logging.INFO, 'path', 12, 'logging_msg', [], False)
+    with mock.patch.object(self.python_handler, '_log_to_stderr'):
+      self.python_handler.emit(record)
+      self.python_handler._log_to_stderr.assert_called_once_with(record)
+
+  def test_emit(self):
+    stream = io.StringIO()
+    handler = logging.PythonHandler(stream)
+    handler.stderr_threshold = std_logging.FATAL
+    record = std_logging.LogRecord(
+        'name', std_logging.INFO, 'path', 12, 'logging_msg', [], False)
+    handler.emit(record)
+    self.assertEqual(1, stream.getvalue().count('logging_msg'))
+
+  @flagsaver.flagsaver(stderrthreshold='debug')
+  def test_emit_and_stderr_threshold(self):
+    mock_stderr = io.StringIO()
+    stream = io.StringIO()
+    handler = logging.PythonHandler(stream)
+    record = std_logging.LogRecord(
+        'name', std_logging.INFO, 'path', 12, 'logging_msg', [], False)
+    with mock.patch.object(sys, 'stderr', new=mock_stderr) as mock_stderr:
+      handler.emit(record)
+      self.assertEqual(1, stream.getvalue().count('logging_msg'))
+      self.assertEqual(1, mock_stderr.getvalue().count('logging_msg'))
+
+  @flagsaver.flagsaver(alsologtostderr=True)
+  def test_emit_also_log_to_stderr(self):
+    mock_stderr = io.StringIO()
+    stream = io.StringIO()
+    handler = logging.PythonHandler(stream)
+    handler.stderr_threshold = std_logging.FATAL
+    record = std_logging.LogRecord(
+        'name', std_logging.INFO, 'path', 12, 'logging_msg', [], False)
+    with mock.patch.object(sys, 'stderr', new=mock_stderr) as mock_stderr:
+      handler.emit(record)
+      self.assertEqual(1, stream.getvalue().count('logging_msg'))
+      self.assertEqual(1, mock_stderr.getvalue().count('logging_msg'))
+
+  def test_emit_on_stderr(self):
+    mock_stderr = io.StringIO()
+    with mock.patch.object(sys, 'stderr', new=mock_stderr) as mock_stderr:
+      handler = logging.PythonHandler()
+      handler.stderr_threshold = std_logging.INFO
+      record = std_logging.LogRecord(
+          'name', std_logging.INFO, 'path', 12, 'logging_msg', [], False)
+      handler.emit(record)
+      self.assertEqual(1, mock_stderr.getvalue().count('logging_msg'))
+
+  def test_emit_fatal_absl(self):
+    stream = io.StringIO()
+    handler = logging.PythonHandler(stream)
+    record = std_logging.LogRecord(
+        'name', std_logging.FATAL, 'path', 12, 'logging_msg', [], False)
+    record.__dict__[logging._ABSL_LOG_FATAL] = True
+    with mock.patch.object(handler, 'flush') as mock_flush:
+      with mock.patch.object(os, 'abort') as mock_abort:
+        handler.emit(record)
+        mock_abort.assert_called_once()
+        mock_flush.assert_called()  # flush is also called by super class.
+
+  def test_emit_fatal_non_absl(self):
+    stream = io.StringIO()
+    handler = logging.PythonHandler(stream)
+    record = std_logging.LogRecord(
+        'name', std_logging.FATAL, 'path', 12, 'logging_msg', [], False)
+    with mock.patch.object(os, 'abort') as mock_abort:
+      handler.emit(record)
+      mock_abort.assert_not_called()
+
+  def test_close(self):
+    stream = mock.Mock()
+    stream.isatty.return_value = True
+    handler = logging.PythonHandler(stream)
+    with mock.patch.object(handler, 'flush') as mock_flush:
+      with mock.patch.object(std_logging.StreamHandler, 'close') as super_close:
+        handler.close()
+        mock_flush.assert_called_once()
+        super_close.assert_called_once()
+        stream.close.assert_not_called()
+
+  def test_close_afile(self):
+    stream = mock.Mock()
+    stream.isatty.return_value = False
+    stream.close.side_effect = ValueError
+    handler = logging.PythonHandler(stream)
+    with mock.patch.object(handler, 'flush') as mock_flush:
+      with mock.patch.object(std_logging.StreamHandler, 'close') as super_close:
+        handler.close()
+        mock_flush.assert_called_once()
+        super_close.assert_called_once()
+
+  def test_close_stderr(self):
+    with mock.patch.object(sys, 'stderr') as mock_stderr:
+      mock_stderr.isatty.return_value = False
+      handler = logging.PythonHandler(sys.stderr)
+      handler.close()
+      mock_stderr.close.assert_not_called()
+
+  def test_close_stdout(self):
+    with mock.patch.object(sys, 'stdout') as mock_stdout:
+      mock_stdout.isatty.return_value = False
+      handler = logging.PythonHandler(sys.stdout)
+      handler.close()
+      mock_stdout.close.assert_not_called()
+
+  def test_close_original_stderr(self):
+    with mock.patch.object(sys, '__stderr__') as mock_original_stderr:
+      mock_original_stderr.isatty.return_value = False
+      handler = logging.PythonHandler(sys.__stderr__)
+      handler.close()
+      mock_original_stderr.close.assert_not_called()
+
+  def test_close_original_stdout(self):
+    with mock.patch.object(sys, '__stdout__') as mock_original_stdout:
+      mock_original_stdout.isatty.return_value = False
+      handler = logging.PythonHandler(sys.__stdout__)
+      handler.close()
+      mock_original_stdout.close.assert_not_called()
+
+  def test_close_fake_file(self):
+
+    class FakeFile(object):
+      """A file-like object that does not implement "isatty"."""
+
+      def __init__(self):
+        self.closed = False
+
+      def close(self):
+        self.closed = True
+
+      def flush(self):
+        pass
+
+    fake_file = FakeFile()
+    handler = logging.PythonHandler(fake_file)
+    handler.close()
+    self.assertTrue(fake_file.closed)
+
+
+class ABSLHandlerTest(absltest.TestCase):
+
+  def setUp(self):
+    super().setUp()
+    formatter = logging.PythonFormatter()
+    self.absl_handler = logging.ABSLHandler(formatter)
+
+  def test_activate_python_handler(self):
+    self.absl_handler.activate_python_handler()
+    self.assertEqual(
+        self.absl_handler._current_handler, self.absl_handler.python_handler)
+
+
+class ABSLLoggerTest(absltest.TestCase):
+  """Tests the ABSLLogger class."""
+
+  def set_up_mock_frames(self):
+    """Sets up mock frames for use with the testFindCaller methods."""
+    logging_file = os.path.join('absl', 'logging', '__init__.py')
+
+    # Set up mock frame 0
+    mock_frame_0 = mock.Mock()
+    mock_code_0 = mock.Mock()
+    mock_code_0.co_filename = logging_file
+    mock_code_0.co_name = 'LoggingLog'
+    mock_code_0.co_firstlineno = 124
