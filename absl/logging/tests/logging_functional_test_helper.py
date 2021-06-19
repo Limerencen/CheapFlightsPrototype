@@ -270,4 +270,10 @@ def _test_unicode():
     """Logs the message, and ensures the same name is not logged again."""
     assert name not in test_names, ('test_unicode expects unique names to work,'
                                     ' found existing name {}').format(name)
-    test_nam
+    test_names.append(name)
+
+    # Add line separators so that tests can verify the output for each log
+    # message.
+    sys.stderr.write('-- begin {} --\n'.format(name))
+    logging.info(msg, *args)
+    sys.s
