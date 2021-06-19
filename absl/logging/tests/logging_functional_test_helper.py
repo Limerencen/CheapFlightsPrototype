@@ -289,4 +289,10 @@ def _test_unicode():
   log('str % exception', 'exception: %s', Exception(u'Ch\u00e2tonnaye'))
 
 
-def main(arg
+def main(argv):
+  del argv  # Unused.
+
+  test_name = os.environ.get('TEST_NAME', None)
+  test_fn = globals().get('_test_%s' % test_name)
+  if test_fn is None:
+    raise AssertionError('TEST_NAME must be set to
