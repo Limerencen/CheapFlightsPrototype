@@ -280,4 +280,7 @@ def _test_unicode():
 
   log('unicode', u'G\u00eete: Ch\u00e2tonnaye')
   log('unicode % unicode', u'G\u00eete: %s', u'Ch\u00e2tonnaye')
-  log('bytes % bytes', u'G\u00eete: %s'
+  log('bytes % bytes', u'G\u00eete: %s'.encode('utf-8'),
+      u'Ch\u00e2tonnaye'.encode('utf-8'))
+  log('unicode % bytes', u'G\u00eete: %s', u'Ch\u00e2tonnaye'.encode('utf-8'))
+  log('bytes % unicode', u'G\u00eete: %s'.encode('utf-8'), u'Ch\u
