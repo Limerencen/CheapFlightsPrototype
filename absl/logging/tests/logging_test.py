@@ -624,3 +624,206 @@ class ABSLLogPrefixTest(parameterized.TestCase):
   def test_absl_prefix_regex(self):
     self.record.created = 1226888258.0521369
     # Use UTC so the test passes regardless of the local time zone.
+    with mock.patch.object(time, 'localtime', side_effect=time.gmtime):
+      prefix = logging.get_absl_log_prefix(self.record)
+
+    match = re.search(logging.ABSL_LOGGING_PREFIX_REGEX, prefix)
+    self.assertTrue(match)
+
+    expect = {'severity': 'I',
+              'month': '11',
+              'day': '17',
+              'hour': '02',
+              'minute': '17',
+              'second': '38',
+              'microsecond': '052136',
+              'thread_id': str(logging._get_thread_id()),
+              'filename': 'source.py',
+              'line': '13',
+             }
+    actual = {name: match.group(name) for name in expect}
+    self.assertEqual(expect, actual)
+
+  def test_critical_absl(self):
+    self.record.levelno = std_logging.CRITICAL
+    self.record.created = 1494293880.378885
+    self.record._absl_log_fatal = True
+    thread_id = '{: >5}'.format(logging._get_thread_id())
+    # Use UTC so the test passes regardless of the local time zone.
+    with mock.patch.object(time, 'localtime', side_effect=time.gmtime):
+      self.assertEqual(
+          'F0509 01:38:00.378885 {} source.py:13] '.format(thread_id),
+          logging.get_absl_log_prefix(self.record))
+      time.localtime.assert_called_once_with(self.record.created)
+
+  def test_critical_non_absl(self):
+    self.record.levelno = std_logging.CRITICAL
+    self.record.created = 1494293880.378885
+    thread_id = '{: >5}'.format(logging._get_thread_id())
+    # Use UTC so the test passes regardless of the local time zone.
+    with mock.patch.object(time, 'localtime', side_effect=time.gmtime):
+      self.assertEqual(
+          'E0509 01:38:00.378885 {} source.py:13] CRITICAL - '.format(
+              thread_id),
+          logging.get_absl_log_prefix(self.record))
+      time.localtime.assert_called_once_with(self.record.created)
+
+
+class LogCountTest(absltest.TestCase):
+
+  def test_counter_threadsafe(self):
+    threads_start = threading.Event()
+    counts = set()
+    k = object()
+
+    def t():
+      threads_start.wait()
+      counts.add(logging._get_next_log_count_per_token(k))
+
+    threads = [threading.Thread(target=t) for _ in range(100)]
+    for thread in threads:
+      thread.start()
+    threads_start.set()
+    for thread in threads:
+      thread.join()
+    self.assertEqual(counts, {i for i in range(100)})
+
+
+class LoggingTest(absltest.TestCase):
+
+  def test_fatal(self):
+    with mock.patch.object(os, 'abort') as mock_abort:
+      logging.fatal('Die!')
+      mock_abort.assert_called_once()
+
+  def test_find_log_dir_with_arg(self):
+    with mock.patch.object(os, 'access'), \
+        mock.patch.object(os.path, 'isdir'):
+      os.path.isdir.return_value = True
+      os.access.return_value = True
+      log_dir = logging.find_log_dir(log_dir='./')
+      self.assertEqual('./', log_dir)
+
+  @flagsaver.flagsaver(log_dir='./')
+  def test_find_log_dir_with_flag(self):
+    with mock.patch.object(os, 'access'), \
+        mock.patch.object(os.path, 'isdir'):
+      os.path.isdir.return_value = True
+      os.access.return_value = True
+      log_dir = logging.find_log_dir()
+      self.assertEqual('./', log_dir)
+
+  @flagsaver.flagsaver(log_dir='')
+  def test_find_log_dir_with_hda_tmp(self):
+    with mock.patch.object(os, 'access'), \
+        mock.patch.object(os.path, 'exists'), \
+        mock.patch.object(os.path, 'isdir'):
+      os.path.exists.return_value = True
+      os.path.isdir.return_value = True
+      os.access.return_value = True
+      log_dir = logging.find_log_dir()
+      self.assertEqual(tempfile.gettempdir(), log_dir)
+
+  @flagsaver.flagsaver(log_dir='')
+  def test_find_log_dir_with_tmp(self):
+    with mock.patch.object(os, 'access'), \
+        mock.patch.object(os.path, 'exists'), \
+        mock.patch.object(os.path, 'isdir'):
+      os.path.exists.return_value = False
+      os.path.isdir.side_effect = lambda path: path == tempfile.gettempdir()
+      os.access.return_value = True
+      log_dir = logging.find_log_dir()
+      self.assertEqual(tempfile.gettempdir(), log_dir)
+
+  def test_find_log_dir_with_nothing(self):
+    with mock.patch.object(os.path, 'exists'), \
+        mock.patch.object(os.path, 'isdir'):
+      os.path.exists.return_value = False
+      os.path.isdir.return_value = False
+      with self.assertRaises(FileNotFoundError):
+        logging.find_log_dir()
+
+  def test_find_log_dir_and_names_with_args(self):
+    user = 'test_user'
+    host = 'test_host'
+    log_dir = 'here'
+    program_name = 'prog1'
+    with mock.patch.object(getpass, 'getuser'), \
+        mock.patch.object(logging, 'find_log_dir') as mock_find_log_dir, \
+        mock.patch.object(socket, 'gethostname') as mock_gethostname:
+      getpass.getuser.return_value = user
+      mock_gethostname.return_value = host
+      mock_find_log_dir.return_value = log_dir
+
+      prefix = '%s.%s.%s.log' % (program_name, host, user)
+      self.assertEqual((log_dir, prefix, program_name),
+                       logging.find_log_dir_and_names(
+                           program_name=program_name, log_dir=log_dir))
+
+  def test_find_log_dir_and_names_without_args(self):
+    user = 'test_user'
+    host = 'test_host'
+    log_dir = 'here'
+    py_program_name = 'py_prog1'
+    sys.argv[0] = 'path/to/prog1'
+    with mock.patch.object(getpass, 'getuser'), \
+        mock.patch.object(logging, 'find_log_dir') as mock_find_log_dir, \
+        mock.patch.object(socket, 'gethostname'):
+      getpass.getuser.return_value = user
+      socket.gethostname.return_value = host
+      mock_find_log_dir.return_value = log_dir
+      prefix = '%s.%s.%s.log' % (py_program_name, host, user)
+      self.assertEqual((log_dir, prefix, py_program_name),
+                       logging.find_log_dir_and_names())
+
+  def test_find_log_dir_and_names_wo_username(self):
+    # Windows doesn't have os.getuid at all
+    if hasattr(os, 'getuid'):
+      mock_getuid = mock.patch.object(os, 'getuid')
+      uid = 100
+      logged_uid = '100'
+    else:
+      # The function doesn't exist, but our test code still tries to mock
+      # it, so just use a fake thing.
+      mock_getuid = _mock_windows_os_getuid()
+      uid = -1
+      logged_uid = 'unknown'
+
+    host = 'test_host'
+    log_dir = 'here'
+    program_name = 'prog1'
+    with mock.patch.object(getpass, 'getuser'), \
+        mock_getuid as getuid, \
+        mock.patch.object(logging, 'find_log_dir') as mock_find_log_dir, \
+        mock.patch.object(socket, 'gethostname') as mock_gethostname:
+      getpass.getuser.side_effect = KeyError()
+      getuid.return_value = uid
+      mock_gethostname.return_value = host
+      mock_find_log_dir.return_value = log_dir
+
+      prefix = '%s.%s.%s.log' % (program_name, host, logged_uid)
+      self.assertEqual((log_dir, prefix, program_name),
+                       logging.find_log_dir_and_names(
+                           program_name=program_name, log_dir=log_dir))
+
+  def test_errors_in_logging(self):
+    with mock.patch.object(sys, 'stderr', new=io.StringIO()) as stderr:
+      logging.info('not enough args: %s %s', 'foo')  # pylint: disable=logging-too-few-args
+      self.assertIn('Traceback (most recent call last):', stderr.getvalue())
+      self.assertIn('TypeError', stderr.getvalue())
+
+  def test_dict_arg(self):
+    # Tests that passing a dictionary as a single argument does not crash.
+    logging.info('%(test)s', {'test': 'Hello world!'})
+
+  def test_exception_dict_format(self):
+    # Just verify that this doesn't raise a TypeError.
+    logging.exception('%(test)s', {'test': 'Hello world!'})
+
+  def test_logging_levels(self):
+    old_level = logging.get_verbosity()
+
+    logging.set_verbosity(logging.DEBUG)
+    self.assertEqual(logging.get_verbosity(), logging.DEBUG)
+    self.assertTrue(logging.level_debug())
+    self.assertTrue(logging.level_info())
