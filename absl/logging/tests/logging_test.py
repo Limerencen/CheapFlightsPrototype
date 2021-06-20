@@ -1012,3 +1012,7 @@ class GetLogFileNameTest(parameterized.TestCase):
 @contextlib.contextmanager
 def _mock_windows_os_getuid():
   yield mock.MagicMock()
+
+
+if __name__ == '__main__':
+  absltest.main()
