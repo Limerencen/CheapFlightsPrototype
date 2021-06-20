@@ -827,3 +827,188 @@ class LoggingTest(absltest.TestCase):
     self.assertEqual(logging.get_verbosity(), logging.DEBUG)
     self.assertTrue(logging.level_debug())
     self.assertTrue(logging.level_info())
+    self.assertTrue(logging.level_warning())
+    self.assertTrue(logging.level_error())
+
+    logging.set_verbosity(logging.INFO)
+    self.assertEqual(logging.get_verbosity(), logging.INFO)
+    self.assertFalse(logging.level_debug())
+    self.assertTrue(logging.level_info())
+    self.assertTrue(logging.level_warning())
+    self.assertTrue(logging.level_error())
+
+    logging.set_verbosity(logging.WARNING)
+    self.assertEqual(logging.get_verbosity(), logging.WARNING)
+    self.assertFalse(logging.level_debug())
+    self.assertFalse(logging.level_info())
+    self.assertTrue(logging.level_warning())
+    self.assertTrue(logging.level_error())
+
+    logging.set_verbosity(logging.ERROR)
+    self.assertEqual(logging.get_verbosity(), logging.ERROR)
+    self.assertFalse(logging.level_debug())
+    self.assertFalse(logging.level_info())
+    self.assertTrue(logging.level_error())
+
+    logging.set_verbosity(old_level)
+
+  def test_set_verbosity_strings(self):
+    old_level = logging.get_verbosity()
+
+    # Lowercase names.
+    logging.set_verbosity('debug')
+    self.assertEqual(logging.get_verbosity(), logging.DEBUG)
+    logging.set_verbosity('info')
+    self.assertEqual(logging.get_verbosity(), logging.INFO)
+    logging.set_verbosity('warning')
+    self.assertEqual(logging.get_verbosity(), logging.WARNING)
+    logging.set_verbosity('warn')
+    self.assertEqual(logging.get_verbosity(), logging.WARNING)
+    logging.set_verbosity('error')
+    self.assertEqual(logging.get_verbosity(), logging.ERROR)
+    logging.set_verbosity('fatal')
+
+    # Uppercase names.
+    self.assertEqual(logging.get_verbosity(), logging.FATAL)
+    logging.set_verbosity('DEBUG')
+    self.assertEqual(logging.get_verbosity(), logging.DEBUG)
+    logging.set_verbosity('INFO')
+    self.assertEqual(logging.get_verbosity(), logging.INFO)
+    logging.set_verbosity('WARNING')
+    self.assertEqual(logging.get_verbosity(), logging.WARNING)
+    logging.set_verbosity('WARN')
+    self.assertEqual(logging.get_verbosity(), logging.WARNING)
+    logging.set_verbosity('ERROR')
+    self.assertEqual(logging.get_verbosity(), logging.ERROR)
+    logging.set_verbosity('FATAL')
+    self.assertEqual(logging.get_verbosity(), logging.FATAL)
+
+    # Integers as strings.
+    logging.set_verbosity(str(logging.DEBUG))
+    self.assertEqual(logging.get_verbosity(), logging.DEBUG)
+    logging.set_verbosity(str(logging.INFO))
+    self.assertEqual(logging.get_verbosity(), logging.INFO)
+    logging.set_verbosity(str(logging.WARNING))
+    self.assertEqual(logging.get_verbosity(), logging.WARNING)
+    logging.set_verbosity(str(logging.ERROR))
+    self.assertEqual(logging.get_verbosity(), logging.ERROR)
+    logging.set_verbosity(str(logging.FATAL))
+    self.assertEqual(logging.get_verbosity(), logging.FATAL)
+
+    logging.set_verbosity(old_level)
+
+  def test_key_flags(self):
+    key_flags = FLAGS.get_key_flags_for_module(logging)
+    key_flag_names = [flag.name for flag in key_flags]
+    self.assertIn('stderrthreshold', key_flag_names)
+    self.assertIn('verbosity', key_flag_names)
+
+  def test_get_absl_logger(self):
+    self.assertIsInstance(
+        logging.get_absl_logger(), logging.ABSLLogger)
+
+  def test_get_absl_handler(self):
+    self.assertIsInstance(
+        logging.get_absl_handler(), logging.ABSLHandler)
+
+
+@mock.patch.object(logging.ABSLLogger, 'register_frame_to_skip')
+class LogSkipPrefixTest(absltest.TestCase):
+  """Tests for logging.skip_log_prefix."""
+
+  def _log_some_info(self):
+    """Logging helper function for LogSkipPrefixTest."""
+    logging.info('info')
+
+  def _log_nested_outer(self):
+    """Nested logging helper functions for LogSkipPrefixTest."""
+    def _log_nested_inner():
+      logging.info('info nested')
+    return _log_nested_inner
+
+  def test_skip_log_prefix_with_name(self, mock_skip_register):
+    retval = logging.skip_log_prefix('_log_some_info')
+    mock_skip_register.assert_called_once_with(__file__, '_log_some_info', None)
+    self.assertEqual(retval, '_log_some_info')
+
+  def test_skip_log_prefix_with_func(self, mock_skip_register):
+    retval = logging.skip_log_prefix(self._log_some_info)
+    mock_skip_register.assert_called_once_with(
+        __file__, '_log_some_info', mock.ANY)
+    self.assertEqual(retval, self._log_some_info)
+
+  def test_skip_log_prefix_with_functools_partial(self, mock_skip_register):
+    partial_input = functools.partial(self._log_some_info)
+    with self.assertRaises(ValueError):
+      _ = logging.skip_log_prefix(partial_input)
+    mock_skip_register.assert_not_called()
+
+  def test_skip_log_prefix_with_lambda(self, mock_skip_register):
+    lambda_input = lambda _: self._log_some_info()
+    retval = logging.skip_log_prefix(lambda_input)
+    mock_skip_register.assert_called_once_with(__file__, '<lambda>', mock.ANY)
+    self.assertEqual(retval, lambda_input)
+
+  def test_skip_log_prefix_with_bad_input(self, mock_skip_register):
+    dict_input = {1: 2, 2: 3}
+    with self.assertRaises(TypeError):
+      _ = logging.skip_log_prefix(dict_input)
+    mock_skip_register.assert_not_called()
+
+  def test_skip_log_prefix_with_nested_func(self, mock_skip_register):
+    nested_input = self._log_nested_outer()
+    retval = logging.skip_log_prefix(nested_input)
+    mock_skip_register.assert_called_once_with(
+        __file__, '_log_nested_inner', mock.ANY)
+    self.assertEqual(retval, nested_input)
+
+  def test_skip_log_prefix_decorator(self, mock_skip_register):
+
+    @logging.skip_log_prefix
+    def _log_decorated():
+      logging.info('decorated')
+
+    del _log_decorated
+    mock_skip_register.assert_called_once_with(
+        __file__, '_log_decorated', mock.ANY)
+
+
+@contextlib.contextmanager
+def override_python_handler_stream(stream):
+  handler = logging.get_absl_handler().python_handler
+  old_stream = handler.stream
+  handler.stream = stream
+  try:
+    yield
+  finally:
+    handler.stream = old_stream
+
+
+class GetLogFileNameTest(parameterized.TestCase):
+
+  @parameterized.named_parameters(
+      ('err', sys.stderr),
+      ('out', sys.stdout),
+  )
+  def test_get_log_file_name_py_std(self, stream):
+    with override_python_handler_stream(stream):
+      self.assertEqual('', logging.get_log_file_name())
+
+  def test_get_log_file_name_py_no_name(self):
+
+    class FakeFile(object):
+      pass
+
+    with override_python_handler_stream(FakeFile()):
+      self.assertEqual('', logging.get_log_file_name())
+
+  def test_get_log_file_name_py_file(self):
+    _, filename = tempfile.mkstemp(dir=absltest.TEST_TMPDIR.value)
+    with open(filename, 'a') as stream:
+      with override_python_handler_stream(stream):
+        self.assertEqual(filename, logging.get_log_file_name())
+
+
+@contextlib.contextmanager
+def _mock_windows_os_getuid():
+  yield mock.MagicMock()
