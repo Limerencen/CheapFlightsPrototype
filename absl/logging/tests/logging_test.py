@@ -405,3 +405,222 @@ class ABSLLoggerTest(absltest.TestCase):
     mock_code_0.co_filename = logging_file
     mock_code_0.co_name = 'LoggingLog'
     mock_code_0.co_firstlineno = 124
+    mock_frame_0.f_code = mock_code_0
+    mock_frame_0.f_lineno = 125
+
+    # Set up mock frame 1
+    mock_frame_1 = mock.Mock()
+    mock_code_1 = mock.Mock()
+    mock_code_1.co_filename = 'myfile.py'
+    mock_code_1.co_name = 'Method1'
+    mock_code_1.co_firstlineno = 124
+    mock_frame_1.f_code = mock_code_1
+    mock_frame_1.f_lineno = 125
+
+    # Set up mock frame 2
+    mock_frame_2 = mock.Mock()
+    mock_code_2 = mock.Mock()
+    mock_code_2.co_filename = 'myfile.py'
+    mock_code_2.co_name = 'Method2'
+    mock_code_2.co_firstlineno = 124
+    mock_frame_2.f_code = mock_code_2
+    mock_frame_2.f_lineno = 125
+
+    # Set up mock frame 3
+    mock_frame_3 = mock.Mock()
+    mock_code_3 = mock.Mock()
+    mock_code_3.co_filename = 'myfile.py'
+    mock_code_3.co_name = 'Method3'
+    mock_code_3.co_firstlineno = 124
+    mock_frame_3.f_code = mock_code_3
+    mock_frame_3.f_lineno = 125
+
+    # Set up mock frame 4 that has the same function name as frame 2.
+    mock_frame_4 = mock.Mock()
+    mock_code_4 = mock.Mock()
+    mock_code_4.co_filename = 'myfile.py'
+    mock_code_4.co_name = 'Method2'
+    mock_code_4.co_firstlineno = 248
+    mock_frame_4.f_code = mock_code_4
+    mock_frame_4.f_lineno = 249
+
+    # Tie them together.
+    mock_frame_4.f_back = None
+    mock_frame_3.f_back = mock_frame_4
+    mock_frame_2.f_back = mock_frame_3
+    mock_frame_1.f_back = mock_frame_2
+    mock_frame_0.f_back = mock_frame_1
+
+    mock.patch.object(sys, '_getframe').start()
+    sys._getframe.return_value = mock_frame_0
+
+  def setUp(self):
+    super().setUp()
+    self.message = 'Hello Nurse'
+    self.logger = logging.ABSLLogger('')
+
+  def tearDown(self):
+    mock.patch.stopall()
+    self.logger._frames_to_skip.clear()
+    super().tearDown()
+
+  def test_constructor_without_level(self):
+    self.logger = logging.ABSLLogger('')
+    self.assertEqual(std_logging.NOTSET, self.logger.getEffectiveLevel())
+
+  def test_constructor_with_level(self):
+    self.logger = logging.ABSLLogger('', std_logging.DEBUG)
+    self.assertEqual(std_logging.DEBUG, self.logger.getEffectiveLevel())
+
+  def test_find_caller_normal(self):
+    self.set_up_mock_frames()
+    expected_name = 'Method1'
+    self.assertEqual(expected_name, self.logger.findCaller()[2])
+
+  def test_find_caller_skip_method1(self):
+    self.set_up_mock_frames()
+    self.logger.register_frame_to_skip('myfile.py', 'Method1')
+    expected_name = 'Method2'
+    self.assertEqual(expected_name, self.logger.findCaller()[2])
+
+  def test_find_caller_skip_method1_and_method2(self):
+    self.set_up_mock_frames()
+    self.logger.register_frame_to_skip('myfile.py', 'Method1')
+    self.logger.register_frame_to_skip('myfile.py', 'Method2')
+    expected_name = 'Method3'
+    self.assertEqual(expected_name, self.logger.findCaller()[2])
+
+  def test_find_caller_skip_method1_and_method3(self):
+    self.set_up_mock_frames()
+    self.logger.register_frame_to_skip('myfile.py', 'Method1')
+    # Skipping Method3 should change nothing since Method2 should be hit.
+    self.logger.register_frame_to_skip('myfile.py', 'Method3')
+    expected_name = 'Method2'
+    self.assertEqual(expected_name, self.logger.findCaller()[2])
+
+  def test_find_caller_skip_method1_and_method4(self):
+    self.set_up_mock_frames()
+    self.logger.register_frame_to_skip('myfile.py', 'Method1')
+    # Skipping frame 4's Method2 should change nothing for frame 2's Method2.
+    self.logger.register_frame_to_skip('myfile.py', 'Method2', 248)
+    expected_name = 'Method2'
+    expected_frame_lineno = 125
+    self.assertEqual(expected_name, self.logger.findCaller()[2])
+    self.assertEqual(expected_frame_lineno, self.logger.findCaller()[1])
+
+  def test_find_caller_skip_method1_method2_and_method3(self):
+    self.set_up_mock_frames()
+    self.logger.register_frame_to_skip('myfile.py', 'Method1')
+    self.logger.register_frame_to_skip('myfile.py', 'Method2', 124)
+    self.logger.register_frame_to_skip('myfile.py', 'Method3')
+    expected_name = 'Method2'
+    expected_frame_lineno = 249
+    self.assertEqual(expected_name, self.logger.findCaller()[2])
+    self.assertEqual(expected_frame_lineno, self.logger.findCaller()[1])
+
+  def test_find_caller_stack_info(self):
+    self.set_up_mock_frames()
+    self.logger.register_frame_to_skip('myfile.py', 'Method1')
+    with mock.patch.object(traceback, 'print_stack') as print_stack:
+      self.assertEqual(
+          ('myfile.py', 125, 'Method2', 'Stack (most recent call last):'),
+          self.logger.findCaller(stack_info=True))
+    print_stack.assert_called_once()
+
+  def test_critical(self):
+    with mock.patch.object(self.logger, 'log'):
+      self.logger.critical(self.message)
+      self.logger.log.assert_called_once_with(
+          std_logging.CRITICAL, self.message)
+
+  def test_fatal(self):
+    with mock.patch.object(self.logger, 'log'):
+      self.logger.fatal(self.message)
+      self.logger.log.assert_called_once_with(std_logging.FATAL, self.message)
+
+  def test_error(self):
+    with mock.patch.object(self.logger, 'log'):
+      self.logger.error(self.message)
+      self.logger.log.assert_called_once_with(std_logging.ERROR, self.message)
+
+  def test_warn(self):
+    with mock.patch.object(self.logger, 'log'):
+      self.logger.warn(self.message)
+      self.logger.log.assert_called_once_with(std_logging.WARN, self.message)
+
+  def test_warning(self):
+    with mock.patch.object(self.logger, 'log'):
+      self.logger.warning(self.message)
+      self.logger.log.assert_called_once_with(std_logging.WARNING, self.message)
+
+  def test_info(self):
+    with mock.patch.object(self.logger, 'log'):
+      self.logger.info(self.message)
+      self.logger.log.assert_called_once_with(std_logging.INFO, self.message)
+
+  def test_debug(self):
+    with mock.patch.object(self.logger, 'log'):
+      self.logger.debug(self.message)
+      self.logger.log.assert_called_once_with(std_logging.DEBUG, self.message)
+
+  def test_log_debug_with_python(self):
+    with mock.patch.object(self.logger, 'log'):
+      FLAGS.verbosity = 1
+      self.logger.debug(self.message)
+      self.logger.log.assert_called_once_with(std_logging.DEBUG, self.message)
+
+  def test_log_fatal_with_python(self):
+    with mock.patch.object(self.logger, 'log'):
+      self.logger.fatal(self.message)
+      self.logger.log.assert_called_once_with(std_logging.FATAL, self.message)
+
+  def test_register_frame_to_skip(self):
+    # This is basically just making sure that if I put something in a
+    # list, it actually appears in that list.
+    frame_tuple = ('file', 'method')
+    self.logger.register_frame_to_skip(*frame_tuple)
+    self.assertIn(frame_tuple, self.logger._frames_to_skip)
+
+  def test_register_frame_to_skip_with_lineno(self):
+    frame_tuple = ('file', 'method', 123)
+    self.logger.register_frame_to_skip(*frame_tuple)
+    self.assertIn(frame_tuple, self.logger._frames_to_skip)
+
+  def test_logger_cannot_be_disabled(self):
+    self.logger.disabled = True
+    record = self.logger.makeRecord(
+        'name', std_logging.INFO, 'fn', 20, 'msg', [], False)
+    with mock.patch.object(self.logger, 'callHandlers') as mock_call_handlers:
+      self.logger.handle(record)
+    mock_call_handlers.assert_called_once()
+
+
+class ABSLLogPrefixTest(parameterized.TestCase):
+
+  def setUp(self):
+    super().setUp()
+    self.record = std_logging.LogRecord(
+        'name', std_logging.INFO, 'path/to/source.py', 13, 'log message',
+        None, None)
+
+  @parameterized.named_parameters(
+      ('debug', std_logging.DEBUG, 'I'),
+      ('info', std_logging.INFO, 'I'),
+      ('warning', std_logging.WARNING, 'W'),
+      ('error', std_logging.ERROR, 'E'),
+  )
+  def test_default_prefixes(self, levelno, level_prefix):
+    self.record.levelno = levelno
+    self.record.created = 1494293880.378885
+    thread_id = '{: >5}'.format(logging._get_thread_id())
+    # Use UTC so the test passes regardless of the local time zone.
+    with mock.patch.object(time, 'localtime', side_effect=time.gmtime):
+      self.assertEqual(
+          '{}0509 01:38:00.378885 {} source.py:13] '.format(
+              level_prefix, thread_id),
+          logging.get_absl_log_prefix(self.record))
+      time.localtime.assert_called_once_with(self.record.created)
+
+  def test_absl_prefix_regex(self):
+    self.record.created = 1226888258.0521369
+    # Use UTC so the test passes regardless of the local time zone.
