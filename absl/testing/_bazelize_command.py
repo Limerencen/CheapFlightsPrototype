@@ -21,4 +21,10 @@ from absl import flags
 FLAGS = flags.FLAGS
 
 
-def get_executable_path(py_binar
+def get_executable_path(py_binary_name):
+  """Returns the executable path of a py_binary.
+
+  This returns the executable path of a py_binary that is in another Bazel
+  target's data dependencies.
+
+  On Linux/macOS, the path and __file__ has the s
