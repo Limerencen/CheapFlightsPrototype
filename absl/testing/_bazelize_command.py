@@ -32,4 +32,13 @@ def get_executable_path(py_binary_name):
   the location the actual binary.
 
   Args:
-    py_binary_name: string, the name of a py_binary tha
+    py_binary_name: string, the name of a py_binary that is in another Bazel
+        target's data dependencies.
+
+  Raises:
+    RuntimeError: Raised when it cannot locate the executable path.
+  """
+
+  if os.name == 'nt':
+    py_binary_name += '.exe'
+    man
