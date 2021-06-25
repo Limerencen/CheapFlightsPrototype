@@ -55,4 +55,9 @@ def get_executable_path(py_binary_name):
         'Cannot locate executable path for {}, MANIFEST file: {}.'.format(
             py_binary_name, manifest_file))
   else:
-    # NOTE: __file__ may be .py or .pyc, depending
+    # NOTE: __file__ may be .py or .pyc, depending on how the module was
+    # loaded and executed.
+    path = __file__
+
+    # Use the package name to find the root directory: every dot is
+    # a directory, plus one for oursel
