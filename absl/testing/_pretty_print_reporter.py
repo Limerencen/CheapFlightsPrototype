@@ -30,4 +30,10 @@ class TextTestResult(unittest.TextTestResult):
     if self._per_test_output:
       test_id = test.id()
       if test_id.startswith('__main__.'):
-        test_id = te
+        test_id = test_id[len('__main__.'):]
+      print('[%s] %s' % (tag, test_id), file=self.stream)
+      self.stream.flush()
+
+  def startTest(self, test):
+    super(TextTestResult, self).startTest(test)
+    self._print_s
