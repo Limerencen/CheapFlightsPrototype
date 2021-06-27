@@ -24,4 +24,10 @@ class TextTestResult(unittest.TextTestResult):
     # Disable the verbose per-test output from the superclass, since it would
     # conflict with our customized output.
     super(TextTestResult, self).__init__(stream, descriptions, 0)
-    self._pe
+    self._per_test_output = verbosity > 0
+
+  def _print_status(self, tag, test):
+    if self._per_test_output:
+      test_id = test.id()
+      if test_id.startswith('__main__.'):
+        test_id = te
