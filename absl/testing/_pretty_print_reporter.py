@@ -20,4 +20,8 @@ import unittest
 class TextTestResult(unittest.TextTestResult):
   """TestResult class that provides the default text result formatting."""
 
-  def __init__(self, stream, descriptions, v
+  def __init__(self, stream, descriptions, verbosity):
+    # Disable the verbose per-test output from the superclass, since it would
+    # conflict with our customized output.
+    super(TextTestResult, self).__init__(stream, descriptions, 0)
+    self._pe
