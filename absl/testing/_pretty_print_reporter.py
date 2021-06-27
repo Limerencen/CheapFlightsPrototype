@@ -12,4 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""TestResult implementing default output for
+"""TestResult implementing default output for test execution status."""
+
+import unittest
+
+
+class TextTestResult(unittest.TextTestResult):
+  """TestResult class that provides the default text result formatting."""
+
+  def __init__(self, stream, descriptions, v
