@@ -60,4 +60,9 @@ def get_executable_path(py_binary_name):
     path = __file__
 
     # Use the package name to find the root directory: every dot is
-    # a directory, plus one for oursel
+    # a directory, plus one for ourselves.
+    for _ in range(__name__.count('.') + 1):
+      path = os.path.dirname(path)
+
+    root_directory = path
+    return os.path.join(root_directory, py_binary_name)
