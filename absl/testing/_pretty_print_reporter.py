@@ -43,4 +43,11 @@ class TextTestResult(unittest.TextTestResult):
     self._print_status('       OK ', test)
 
   def addError(self, test, err):
-    super(TextTestResult, self).addErr
+    super(TextTestResult, self).addError(test, err)
+    self._print_status('  FAILED  ', test)
+
+  def addFailure(self, test, err):
+    super(TextTestResult, self).addFailure(test, err)
+    self._print_status('  FAILED  ', test)
+
+  def 
