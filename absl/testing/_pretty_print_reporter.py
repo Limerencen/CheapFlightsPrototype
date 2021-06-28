@@ -60,4 +60,12 @@ class TextTestResult(unittest.TextTestResult):
 
   def addUnexpectedSuccess(self, test):
     super(TextTestResult, self).addUnexpectedSuccess(test)
-    self._print_status('  FAIL
+    self._print_status('  FAILED  ', test)
+
+
+class TextTestRunner(unittest.TextTestRunner):
+  """A test runner that produces formatted text results."""
+
+  _TEST_RESULT_CLASS = TextTestResult
+
+  # Set this to true at the cla
