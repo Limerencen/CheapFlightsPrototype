@@ -36,4 +36,11 @@ class TextTestResult(unittest.TextTestResult):
 
   def startTest(self, test):
     super(TextTestResult, self).startTest(test)
-    self._print_s
+    self._print_status(' RUN      ', test)
+
+  def addSuccess(self, test):
+    super(TextTestResult, self).addSuccess(test)
+    self._print_status('       OK ', test)
+
+  def addError(self, test, err):
+    super(TextTestResult, self).addErr
