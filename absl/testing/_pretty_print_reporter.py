@@ -55,4 +55,9 @@ class TextTestResult(unittest.TextTestResult):
     self._print_status('  SKIPPED ', test)
 
   def addExpectedFailure(self, test, err):
-    super(TextTestResult
+    super(TextTestResult, self).addExpectedFailure(test, err)
+    self._print_status('       OK ', test)
+
+  def addUnexpectedSuccess(self, test):
+    super(TextTestResult, self).addUnexpectedSuccess(test)
+    self._print_status('  FAIL
