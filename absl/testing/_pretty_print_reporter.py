@@ -68,4 +68,7 @@ class TextTestRunner(unittest.TextTestRunner):
 
   _TEST_RESULT_CLASS = TextTestResult
 
-  # Set this to true at the cla
+  # Set this to true at the class or instance level to run tests using a
+  # debug-friendly method (e.g, one that doesn't catch exceptions and interacts
+  # better with debuggers).
+  # Usually this is set using --pdb_post_mort
