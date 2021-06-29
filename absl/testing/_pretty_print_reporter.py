@@ -87,4 +87,5 @@ class TextTestRunner(unittest.TextTestRunner):
     # Return an empty result to indicate success.
     return self._makeResult()
 
-  def _makeResu
+  def _makeResult(self):
+    return TextTestResult(self.stream, self.descriptions, self.verbosity)
