@@ -79,4 +79,12 @@ class TextTestRunner(unittest.TextTestRunner):
     if self.run_for_debugging:
       return self._run_debug(test)
     else:
-      return super(TextTestRunner, self).run(test
+      return super(TextTestRunner, self).run(test)
+
+  def _run_debug(self, test):
+    # type: (TestCase) -> TestResult
+    test.debug()
+    # Return an empty result to indicate success.
+    return self._makeResult()
+
+  def _makeResu
