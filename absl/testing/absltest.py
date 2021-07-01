@@ -530,3 +530,194 @@ class _TempFile(object):
     return cm
 
   # TODO(b/123775699): Once pytype supports typing.Literal, use overload and
+  # Literal to express more precise return types. The contained type is
+  # currently `Any` to avoid [bad-return-type] errors in the open_* methods.
+  @contextlib.contextmanager
+  def _open(
+      self,
+      mode: str,
+      encoding: Optional[str] = 'utf8',
+      errors: Optional[str] = 'strict',
+  ) -> Iterator[Any]:
+    with io.open(
+        self.full_path, mode=mode, encoding=encoding, errors=errors) as fp:
+      yield fp
+
+
+class _method(object):
+  """A decorator that supports both instance and classmethod invocations.
+
+  Using similar semantics to the @property builtin, this decorator can augment
+  an instance method to support conditional logic when invoked on a class
+  object. This breaks support for invoking an instance method via the class
+  (e.g. Cls.method(self, ...)) but is still situationally useful.
+  """
+
+  def __init__(self, finstancemethod):
+    # type: (Callable[..., Any]) -> None
+    self._finstancemethod = finstancemethod
+    self._fclassmethod = None
+
+  def classmethod(self, fclassmethod):
+    # type: (Callable[..., Any]) -> _method
+    self._fclassmethod = classmethod(fclassmethod)
+    return self
+
+  def __doc__(self):
+    # type: () -> str
+    if getattr(self._finstancemethod, '__doc__'):
+      return self._finstancemethod.__doc__
+    elif getattr(self._fclassmethod, '__doc__'):
+      return self._fclassmethod.__doc__
+    return ''
+
+  def __get__(self, obj, type_):
+    # type: (Optional[Any], Optional[Type[Any]]) -> Callable[..., Any]
+    func = self._fclassmethod if obj is None else self._finstancemethod
+    return func.__get__(obj, type_)  # pytype: disable=attribute-error
+
+
+class TestCase(unittest.TestCase):
+  """Extension of unittest.TestCase providing more power."""
+
+  # When to cleanup files/directories created by our `create_tempfile()` and
+  # `create_tempdir()` methods after each test case completes. This does *not*
+  # affect e.g., files created outside of those methods, e.g., using the stdlib
+  # tempfile module. This can be overridden at the class level, instance level,
+  # or with the `cleanup` arg of `create_tempfile()` and `create_tempdir()`. See
+  # `TempFileCleanup` for details on the different values.
+  # TODO(b/70517332): Remove the type comment and the disable once pytype has
+  # better support for enums.
+  tempfile_cleanup = TempFileCleanup.ALWAYS  # type: TempFileCleanup  # pytype: disable=annotation-type-mismatch
+
+  maxDiff = 80 * 20
+  longMessage = True
+
+  # Exit stacks for per-test and per-class scopes.
+  _exit_stack = None
+  _cls_exit_stack = None
+
+  def __init__(self, *args, **kwargs):
+    super(TestCase, self).__init__(*args, **kwargs)
+    # This is to work around missing type stubs in unittest.pyi
+    self._outcome = getattr(self, '_outcome')  # type: Optional[_OutcomeType]
+
+  def setUp(self):
+    super(TestCase, self).setUp()
+    # NOTE: Only Python 3 contextlib has ExitStack
+    if hasattr(contextlib, 'ExitStack'):
+      self._exit_stack = contextlib.ExitStack()
+      self.addCleanup(self._exit_stack.close)
+
+  @classmethod
+  def setUpClass(cls):
+    super(TestCase, cls).setUpClass()
+    # NOTE: Only Python 3 contextlib has ExitStack and only Python 3.8+ has
+    # addClassCleanup.
+    if hasattr(contextlib, 'ExitStack') and hasattr(cls, 'addClassCleanup'):
+      cls._cls_exit_stack = contextlib.ExitStack()
+      cls.addClassCleanup(cls._cls_exit_stack.close)
+
+  def create_tempdir(self, name=None, cleanup=None):
+    # type: (Optional[Text], Optional[TempFileCleanup]) -> _TempDir
+    """Create a temporary directory specific to the test.
+
+    NOTE: The directory and its contents will be recursively cleared before
+    creation. This ensures that there is no pre-existing state.
+
+    This creates a named directory on disk that is isolated to this test, and
+    will be properly cleaned up by the test. This avoids several pitfalls of
+    creating temporary directories for test purposes, as well as makes it easier
+    to setup directories and verify their contents. For example::
+
+        def test_foo(self):
+          out_dir = self.create_tempdir()
+          out_log = out_dir.create_file('output.log')
+          expected_outputs = [
+              os.path.join(out_dir, 'data-0.txt'),
+              os.path.join(out_dir, 'data-1.txt'),
+          ]
+          code_under_test(out_dir)
+          self.assertTrue(os.path.exists(expected_paths[0]))
+          self.assertTrue(os.path.exists(expected_paths[1]))
+          self.assertEqual('foo', out_log.read_text())
+
+    See also: :meth:`create_tempfile` for creating temporary files.
+
+    Args:
+      name: Optional name of the directory. If not given, a unique
+        name will be generated and used.
+      cleanup: Optional cleanup policy on when/if to remove the directory (and
+        all its contents) at the end of the test. If None, then uses
+        :attr:`tempfile_cleanup`.
+
+    Returns:
+      A _TempDir representing the created directory; see _TempDir class docs
+      for usage.
+    """
+    test_path = self._get_tempdir_path_test()
+
+    if name:
+      path = os.path.join(test_path, name)
+      cleanup_path = os.path.join(test_path, _get_first_part(name))
+    else:
+      os.makedirs(test_path, exist_ok=True)
+      path = tempfile.mkdtemp(dir=test_path)
+      cleanup_path = path
+
+    _rmtree_ignore_errors(cleanup_path)
+    os.makedirs(path, exist_ok=True)
+
+    self._maybe_add_temp_path_cleanup(cleanup_path, cleanup)
+
+    return _TempDir(path)
+
+  # pylint: disable=line-too-long
+  def create_tempfile(self, file_path=None, content=None, mode='w',
+                      encoding='utf8', errors='strict', cleanup=None):
+    # type: (Optional[Text], Optional[AnyStr], Text, Text, Text, Optional[TempFileCleanup]) -> _TempFile
+    # pylint: enable=line-too-long
+    """Create a temporary file specific to the test.
+
+    This creates a named file on disk that is isolated to this test, and will
+    be properly cleaned up by the test. This avoids several pitfalls of
+    creating temporary files for test purposes, as well as makes it easier
+    to setup files, their data, read them back, and inspect them when
+    a test fails. For example::
+
+        def test_foo(self):
+          output = self.create_tempfile()
+          code_under_test(output)
+          self.assertGreater(os.path.getsize(output), 0)
+          self.assertEqual('foo', output.read_text())
+
+    NOTE: This will zero-out the file. This ensures there is no pre-existing
+    state.
+    NOTE: If the file already exists, it will be made writable and overwritten.
+
+    See also: :meth:`create_tempdir` for creating temporary directories, and
+    ``_TempDir.create_file`` for creating files within a temporary directory.
+
+    Args:
+      file_path: Optional file path for the temp file. If not given, a unique
+        file name will be generated and used. Slashes are allowed in the name;
+        any missing intermediate directories will be created. NOTE: This path is
+        the path that will be cleaned up, including any directories in the path,
+        e.g., ``'foo/bar/baz.txt'`` will ``rm -r foo``.
+      content: Optional string or
+        bytes to initially write to the file. If not
+        specified, then an empty file is created.
+      mode: Mode string to use when writing content. Only used if `content` is
+        non-empty.
+      encoding: Encoding to use when writing string content. Only used if
+        `content` is text.
+      errors: How to handle text to bytes encoding errors. Only used if
+        `content` is text.
+      cleanup: Optional cleanup policy on when/if to remove the directory (and
+        all its contents) at the end of the test. If None, then uses
+        :attr:`tempfile_cleanup`.
+
+    Returns:
+      A _TempFile representing the created file; see _TempFile class docs for
+      usage.
+    """
