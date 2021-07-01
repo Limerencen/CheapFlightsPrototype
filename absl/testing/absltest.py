@@ -721,3 +721,211 @@ class TestCase(unittest.TestCase):
       A _TempFile representing the created file; see _TempFile class docs for
       usage.
     """
+    test_path = self._get_tempdir_path_test()
+    tf, cleanup_path = _TempFile._create(test_path, file_path, content=content,
+                                         mode=mode, encoding=encoding,
+                                         errors=errors)
+    self._maybe_add_temp_path_cleanup(cleanup_path, cleanup)
+    return tf
+
+  @_method
+  def enter_context(self, manager):
+    # type: (ContextManager[_T]) -> _T
+    """Returns the CM's value after registering it with the exit stack.
+
+    Entering a context pushes it onto a stack of contexts. When `enter_context`
+    is called on the test instance (e.g. `self.enter_context`), the context is
+    exited after the test case's tearDown call. When called on the test class
+    (e.g. `TestCase.enter_context`), the context is exited after the test
+    class's tearDownClass call.
+
+    Contexts are exited in the reverse order of entering. They will always
+    be exited, regardless of test failure/success.
+
+    This is useful to eliminate per-test boilerplate when context managers
+    are used. For example, instead of decorating every test with `@mock.patch`,
+    simply do `self.foo = self.enter_context(mock.patch(...))' in `setUp()`.
+
+    NOTE: The context managers will always be exited without any error
+    information. This is an unfortunate implementation detail due to some
+    internals of how unittest runs tests.
+
+    Args:
+      manager: The context manager to enter.
+    """
+    if not self._exit_stack:
+      raise AssertionError(
+          'self._exit_stack is not set: enter_context is Py3-only; also make '
+          'sure that AbslTest.setUp() is called.')
+    return self._exit_stack.enter_context(manager)
+
+  @enter_context.classmethod
+  def enter_context(cls, manager):  # pylint: disable=no-self-argument
+    # type: (ContextManager[_T]) -> _T
+    if not cls._cls_exit_stack:
+      raise AssertionError(
+          'cls._cls_exit_stack is not set: cls.enter_context requires '
+          'Python 3.8+; also make sure that AbslTest.setUpClass() is called.')
+    return cls._cls_exit_stack.enter_context(manager)
+
+  @classmethod
+  def _get_tempdir_path_cls(cls):
+    # type: () -> Text
+    return os.path.join(TEST_TMPDIR.value,
+                        cls.__qualname__.replace('__main__.', ''))
+
+  def _get_tempdir_path_test(self):
+    # type: () -> Text
+    return os.path.join(self._get_tempdir_path_cls(), self._testMethodName)
+
+  def _get_tempfile_cleanup(self, override):
+    # type: (Optional[TempFileCleanup]) -> TempFileCleanup
+    if override is not None:
+      return override
+    return self.tempfile_cleanup
+
+  def _maybe_add_temp_path_cleanup(self, path, cleanup):
+    # type: (Text, Optional[TempFileCleanup]) -> None
+    cleanup = self._get_tempfile_cleanup(cleanup)
+    if cleanup == TempFileCleanup.OFF:
+      return
+    elif cleanup == TempFileCleanup.ALWAYS:
+      self.addCleanup(_rmtree_ignore_errors, path)
+    elif cleanup == TempFileCleanup.SUCCESS:
+      self._internal_add_cleanup_on_success(_rmtree_ignore_errors, path)
+    else:
+      raise AssertionError('Unexpected cleanup value: {}'.format(cleanup))
+
+  def _internal_add_cleanup_on_success(
+      self,
+      function: Callable[..., Any],
+      *args: Any,
+      **kwargs: Any,
+  ) -> None:
+    """Adds `function` as cleanup when the test case succeeds."""
+    outcome = self._outcome
+    previous_failure_count = (
+        len(outcome.result.failures)
+        + len(outcome.result.errors)
+        + len(outcome.result.unexpectedSuccesses)
+    )
+    def _call_cleaner_on_success(*args, **kwargs):
+      if not self._internal_ran_and_passed_when_called_during_cleanup(
+          previous_failure_count):
+        return
+      function(*args, **kwargs)
+    self.addCleanup(_call_cleaner_on_success, *args, **kwargs)
+
+  def _internal_ran_and_passed_when_called_during_cleanup(
+      self,
+      previous_failure_count: int,
+  ) -> bool:
+    """Returns whether test is passed. Expected to be called during cleanup."""
+    outcome = self._outcome
+    if sys.version_info[:2] >= (3, 11):
+      current_failure_count = (
+          len(outcome.result.failures)
+          + len(outcome.result.errors)
+          + len(outcome.result.unexpectedSuccesses)
+      )
+      return current_failure_count == previous_failure_count
+    else:
+      # Before Python 3.11 https://github.com/python/cpython/pull/28180, errors
+      # were bufferred in _Outcome before calling cleanup.
+      result = self.defaultTestResult()
+      self._feedErrorsToResult(result, outcome.errors)  # pytype: disable=attribute-error
+      return result.wasSuccessful()
+
+  def shortDescription(self):
+    # type: () -> Text
+    """Formats both the test method name and the first line of its docstring.
+
+    If no docstring is given, only returns the method name.
+
+    This method overrides unittest.TestCase.shortDescription(), which
+    only returns the first line of the docstring, obscuring the name
+    of the test upon failure.
+
+    Returns:
+      desc: A short description of a test method.
+    """
+    desc = self.id()
+
+    # Omit the main name so that test name can be directly copy/pasted to
+    # the command line.
+    if desc.startswith('__main__.'):
+      desc = desc[len('__main__.'):]
+
+    # NOTE: super() is used here instead of directly invoking
+    # unittest.TestCase.shortDescription(self), because of the
+    # following line that occurs later on:
+    #       unittest.TestCase = TestCase
+    # Because of this, direct invocation of what we think is the
+    # superclass will actually cause infinite recursion.
+    doc_first_line = super(TestCase, self).shortDescription()
+    if doc_first_line is not None:
+      desc = '\n'.join((desc, doc_first_line))
+    return desc
+
+  def assertStartsWith(self, actual, expected_start, msg=None):
+    """Asserts that actual.startswith(expected_start) is True.
+
+    Args:
+      actual: str
+      expected_start: str
+      msg: Optional message to report on failure.
+    """
+    if not actual.startswith(expected_start):
+      self.fail('%r does not start with %r' % (actual, expected_start), msg)
+
+  def assertNotStartsWith(self, actual, unexpected_start, msg=None):
+    """Asserts that actual.startswith(unexpected_start) is False.
+
+    Args:
+      actual: str
+      unexpected_start: str
+      msg: Optional message to report on failure.
+    """
+    if actual.startswith(unexpected_start):
+      self.fail('%r does start with %r' % (actual, unexpected_start), msg)
+
+  def assertEndsWith(self, actual, expected_end, msg=None):
+    """Asserts that actual.endswith(expected_end) is True.
+
+    Args:
+      actual: str
+      expected_end: str
+      msg: Optional message to report on failure.
+    """
+    if not actual.endswith(expected_end):
+      self.fail('%r does not end with %r' % (actual, expected_end), msg)
+
+  def assertNotEndsWith(self, actual, unexpected_end, msg=None):
+    """Asserts that actual.endswith(unexpected_end) is False.
+
+    Args:
+      actual: str
+      unexpected_end: str
+      msg: Optional message to report on failure.
+    """
+    if actual.endswith(unexpected_end):
+      self.fail('%r does end with %r' % (actual, unexpected_end), msg)
+
+  def assertSequenceStartsWith(self, prefix, whole, msg=None):
+    """An equality assertion for the beginning of ordered sequences.
+
+    If prefix is an empty sequence, it will raise an error unless whole is also
+    an empty sequence.
+
+    If prefix is not a sequence, it will raise an error if the first element of
+    whole does not match.
+
+    Args:
+      prefix: A sequence expected at the beginning of the whole parameter.
+      whole: The sequence in which to look for prefix.
+      msg: Optional message to report on failure.
+    """
+    try:
+      prefix_len = len(prefix)
+    except (TypeError, NotImplementedError):
+      prefix = [prefix]
