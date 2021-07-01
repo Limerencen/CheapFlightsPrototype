@@ -341,3 +341,192 @@ class _TempDir(object):
         file name will be generated and used. Slashes are allowed in the name;
         any missing intermediate directories will be created. NOTE: This path
         is the path that will be cleaned up, including any directories in the
+        path, e.g., 'foo/bar/baz.txt' will `rm -r foo`
+      content: Optional string or bytes to initially write to the file. If not
+        specified, then an empty file is created.
+      mode: Mode string to use when writing content. Only used if `content` is
+        non-empty.
+      encoding: Encoding to use when writing string content. Only used if
+        `content` is text.
+      errors: How to handle text to bytes encoding errors. Only used if
+        `content` is text.
+
+    Returns:
+      A _TempFile representing the created file.
+    """
+    tf, _ = _TempFile._create(self._path, file_path, content, mode, encoding,
+                              errors)
+    return tf
+
+  def mkdir(self, dir_path=None):
+    # type: (Optional[Text]) -> _TempDir
+    """Create a directory in the directory.
+
+    Args:
+      dir_path: Optional path to the directory to create. If not given,
+        a unique name will be generated and used.
+
+    Returns:
+      A _TempDir representing the created directory.
+    """
+    if dir_path:
+      path = os.path.join(self._path, dir_path)
+    else:
+      path = tempfile.mkdtemp(dir=self._path)
+
+    # Note: there's no need to clear the directory since the containing
+    # dir was cleared by the tempdir() function.
+    os.makedirs(path, exist_ok=True)
+    return _TempDir(path)
+
+
+class _TempFile(object):
+  """Represents a tempfile for tests.
+
+  Creation of this class is internal. Using its public methods is OK.
+
+  This class implements the `os.PathLike` interface (specifically,
+  `os.PathLike[str]`). This means, in Python 3, it can be directly passed
+  to e.g. `os.path.join()`.
+  """
+
+  def __init__(self, path):
+    # type: (Text) -> None
+    """Private: use _create instead."""
+    self._path = path
+
+  # pylint: disable=line-too-long
+  @classmethod
+  def _create(cls, base_path, file_path, content, mode, encoding, errors):
+    # type: (Text, Optional[Text], AnyStr, Text, Text, Text) -> Tuple[_TempFile, Text]
+    # pylint: enable=line-too-long
+    """Module-private: create a tempfile instance."""
+    if file_path:
+      cleanup_path = os.path.join(base_path, _get_first_part(file_path))
+      path = os.path.join(base_path, file_path)
+      os.makedirs(os.path.dirname(path), exist_ok=True)
+      # The file may already exist, in which case, ensure it's writable so that
+      # it can be truncated.
+      if os.path.exists(path) and not os.access(path, os.W_OK):
+        stat_info = os.stat(path)
+        os.chmod(path, stat_info.st_mode | stat.S_IWUSR)
+    else:
+      os.makedirs(base_path, exist_ok=True)
+      fd, path = tempfile.mkstemp(dir=str(base_path))
+      os.close(fd)
+      cleanup_path = path
+
+    tf = cls(path)
+
+    if content:
+      if isinstance(content, str):
+        tf.write_text(content, mode=mode, encoding=encoding, errors=errors)
+      else:
+        tf.write_bytes(content, mode)
+
+    else:
+      tf.write_bytes(b'')
+
+    return tf, cleanup_path
+
+  @property
+  def full_path(self):
+    # type: () -> Text
+    """Returns the path, as a string, for the file.
+
+    TIP: Instead of e.g. `os.path.join(temp_file.full_path)`, you can simply
+    do `os.path.join(temp_file)` because `__fspath__()` is implemented.
+    """
+    return self._path
+
+  def __fspath__(self):
+    # type: () -> Text
+    """See os.PathLike."""
+    return self.full_path
+
+  def read_text(self, encoding='utf8', errors='strict'):
+    # type: (Text, Text) -> Text
+    """Return the contents of the file as text."""
+    with self.open_text(encoding=encoding, errors=errors) as fp:
+      return fp.read()
+
+  def read_bytes(self):
+    # type: () -> bytes
+    """Return the content of the file as bytes."""
+    with self.open_bytes() as fp:
+      return fp.read()
+
+  def write_text(self, text, mode='w', encoding='utf8', errors='strict'):
+    # type: (Text, Text, Text, Text) -> None
+    """Write text to the file.
+
+    Args:
+      text: Text to write. In Python 2, it can be bytes, which will be
+        decoded using the `encoding` arg (this is as an aid for code that
+        is 2 and 3 compatible).
+      mode: The mode to open the file for writing.
+      encoding: The encoding to use when writing the text to the file.
+      errors: The error handling strategy to use when converting text to bytes.
+    """
+    with self.open_text(mode, encoding=encoding, errors=errors) as fp:
+      fp.write(text)
+
+  def write_bytes(self, data, mode='wb'):
+    # type: (bytes, Text) -> None
+    """Write bytes to the file.
+
+    Args:
+      data: bytes to write.
+      mode: Mode to open the file for writing. The "b" flag is implicit if
+        not already present. It must not have the "t" flag.
+    """
+    with self.open_bytes(mode) as fp:
+      fp.write(data)
+
+  def open_text(self, mode='rt', encoding='utf8', errors='strict'):
+    # type: (Text, Text, Text) -> ContextManager[TextIO]
+    """Return a context manager for opening the file in text mode.
+
+    Args:
+      mode: The mode to open the file in. The "t" flag is implicit if not
+        already present. It must not have the "b" flag.
+      encoding: The encoding to use when opening the file.
+      errors: How to handle decoding errors.
+
+    Returns:
+      Context manager that yields an open file.
+
+    Raises:
+      ValueError: if invalid inputs are provided.
+    """
+    if 'b' in mode:
+      raise ValueError('Invalid mode {!r}: "b" flag not allowed when opening '
+                       'file in text mode'.format(mode))
+    if 't' not in mode:
+      mode += 't'
+    cm = self._open(mode, encoding, errors)
+    return cm
+
+  def open_bytes(self, mode='rb'):
+    # type: (Text) -> ContextManager[BinaryIO]
+    """Return a context manager for opening the file in binary mode.
+
+    Args:
+      mode: The mode to open the file in. The "b" mode is implicit if not
+        already present. It must not have the "t" flag.
+
+    Returns:
+      Context manager that yields an open file.
+
+    Raises:
+      ValueError: if invalid inputs are provided.
+    """
+    if 't' in mode:
+      raise ValueError('Invalid mode {!r}: "t" flag not allowed when opening '
+                       'file in binary mode'.format(mode))
+    if 'b' not in mode:
+      mode += 'b'
+    cm = self._open(mode, encoding=None, errors=None)
+    return cm
+
+  # TODO(b/123775699): Once pytype supports typing.Literal, use overload and
