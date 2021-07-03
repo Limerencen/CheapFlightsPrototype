@@ -929,3 +929,209 @@ class TestCase(unittest.TestCase):
       prefix_len = len(prefix)
     except (TypeError, NotImplementedError):
       prefix = [prefix]
+      prefix_len = 1
+
+    try:
+      whole_len = len(whole)
+    except (TypeError, NotImplementedError):
+      self.fail('For whole: len(%s) is not supported, it appears to be type: '
+                '%s' % (whole, type(whole)), msg)
+
+    assert prefix_len <= whole_len, self._formatMessage(
+        msg,
+        'Prefix length (%d) is longer than whole length (%d).' %
+        (prefix_len, whole_len)
+    )
+
+    if not prefix_len and whole_len:
+      self.fail('Prefix length is 0 but whole length is %d: %s' %
+                (len(whole), whole), msg)
+
+    try:
+      self.assertSequenceEqual(prefix, whole[:prefix_len], msg)
+    except AssertionError:
+      self.fail('prefix: %s not found at start of whole: %s.' %
+                (prefix, whole), msg)
+
+  def assertEmpty(self, container, msg=None):
+    """Asserts that an object has zero length.
+
+    Args:
+      container: Anything that implements the collections.abc.Sized interface.
+      msg: Optional message to report on failure.
+    """
+    if not isinstance(container, abc.Sized):
+      self.fail('Expected a Sized object, got: '
+                '{!r}'.format(type(container).__name__), msg)
+
+    # explicitly check the length since some Sized objects (e.g. numpy.ndarray)
+    # have strange __nonzero__/__bool__ behavior.
+    if len(container):  # pylint: disable=g-explicit-length-test
+      self.fail('{!r} has length of {}.'.format(container, len(container)), msg)
+
+  def assertNotEmpty(self, container, msg=None):
+    """Asserts that an object has non-zero length.
+
+    Args:
+      container: Anything that implements the collections.abc.Sized interface.
+      msg: Optional message to report on failure.
+    """
+    if not isinstance(container, abc.Sized):
+      self.fail('Expected a Sized object, got: '
+                '{!r}'.format(type(container).__name__), msg)
+
+    # explicitly check the length since some Sized objects (e.g. numpy.ndarray)
+    # have strange __nonzero__/__bool__ behavior.
+    if not len(container):  # pylint: disable=g-explicit-length-test
+      self.fail('{!r} has length of 0.'.format(container), msg)
+
+  def assertLen(self, container, expected_len, msg=None):
+    """Asserts that an object has the expected length.
+
+    Args:
+      container: Anything that implements the collections.abc.Sized interface.
+      expected_len: The expected length of the container.
+      msg: Optional message to report on failure.
+    """
+    if not isinstance(container, abc.Sized):
+      self.fail('Expected a Sized object, got: '
+                '{!r}'.format(type(container).__name__), msg)
+    if len(container) != expected_len:
+      container_repr = unittest.util.safe_repr(container)  # pytype: disable=module-attr
+      self.fail('{} has length of {}, expected {}.'.format(
+          container_repr, len(container), expected_len), msg)
+
+  def assertSequenceAlmostEqual(self, expected_seq, actual_seq, places=None,
+                                msg=None, delta=None):
+    """An approximate equality assertion for ordered sequences.
+
+    Fail if the two sequences are unequal as determined by their value
+    differences rounded to the given number of decimal places (default 7) and
+    comparing to zero, or by comparing that the difference between each value
+    in the two sequences is more than the given delta.
+
+    Note that decimal places (from zero) are usually not the same as significant
+    digits (measured from the most significant digit).
+
+    If the two sequences compare equal then they will automatically compare
+    almost equal.
+
+    Args:
+      expected_seq: A sequence containing elements we are expecting.
+      actual_seq: The sequence that we are testing.
+      places: The number of decimal places to compare.
+      msg: The message to be printed if the test fails.
+      delta: The OK difference between compared values.
+    """
+    if len(expected_seq) != len(actual_seq):
+      self.fail('Sequence size mismatch: {} vs {}'.format(
+          len(expected_seq), len(actual_seq)), msg)
+
+    err_list = []
+    for idx, (exp_elem, act_elem) in enumerate(zip(expected_seq, actual_seq)):
+      try:
+        # assertAlmostEqual should be called with at most one of `places` and
+        # `delta`. However, it's okay for assertSequenceAlmostEqual to pass
+        # both because we want the latter to fail if the former does.
+        # pytype: disable=wrong-keyword-args
+        self.assertAlmostEqual(exp_elem, act_elem, places=places, msg=msg,
+                               delta=delta)
+        # pytype: enable=wrong-keyword-args
+      except self.failureException as err:
+        err_list.append('At index {}: {}'.format(idx, err))
+
+    if err_list:
+      if len(err_list) > 30:
+        err_list = err_list[:30] + ['...']
+      msg = self._formatMessage(msg, '\n'.join(err_list))
+      self.fail(msg)
+
+  def assertContainsSubset(self, expected_subset, actual_set, msg=None):
+    """Checks whether actual iterable is a superset of expected iterable."""
+    missing = set(expected_subset) - set(actual_set)
+    if not missing:
+      return
+
+    self.fail('Missing elements %s\nExpected: %s\nActual: %s' % (
+        missing, expected_subset, actual_set), msg)
+
+  def assertNoCommonElements(self, expected_seq, actual_seq, msg=None):
+    """Checks whether actual iterable and expected iterable are disjoint."""
+    common = set(expected_seq) & set(actual_seq)
+    if not common:
+      return
+
+    self.fail('Common elements %s\nExpected: %s\nActual: %s' % (
+        common, expected_seq, actual_seq), msg)
+
+  def assertItemsEqual(self, expected_seq, actual_seq, msg=None):
+    """Deprecated, please use assertCountEqual instead.
+
+    This is equivalent to assertCountEqual.
+
+    Args:
+      expected_seq: A sequence containing elements we are expecting.
+      actual_seq: The sequence that we are testing.
+      msg: The message to be printed if the test fails.
+    """
+    super().assertCountEqual(expected_seq, actual_seq, msg)
+
+  def assertSameElements(self, expected_seq, actual_seq, msg=None):
+    """Asserts that two sequences have the same elements (in any order).
+
+    This method, unlike assertCountEqual, doesn't care about any
+    duplicates in the expected and actual sequences::
+
+        # Doesn't raise an AssertionError
+        assertSameElements([1, 1, 1, 0, 0, 0], [0, 1])
+
+    If possible, you should use assertCountEqual instead of
+    assertSameElements.
+
+    Args:
+      expected_seq: A sequence containing elements we are expecting.
+      actual_seq: The sequence that we are testing.
+      msg: The message to be printed if the test fails.
+    """
+    # `unittest2.TestCase` used to have assertSameElements, but it was
+    # removed in favor of assertItemsEqual. As there's a unit test
+    # that explicitly checks this behavior, I am leaving this method
+    # alone.
+    # Fail on strings: empirically, passing strings to this test method
+    # is almost always a bug. If comparing the character sets of two strings
+    # is desired, cast the inputs to sets or lists explicitly.
+    if (isinstance(expected_seq, _TEXT_OR_BINARY_TYPES) or
+        isinstance(actual_seq, _TEXT_OR_BINARY_TYPES)):
+      self.fail('Passing string/bytes to assertSameElements is usually a bug. '
+                'Did you mean to use assertEqual?\n'
+                'Expected: %s\nActual: %s' % (expected_seq, actual_seq))
+    try:
+      expected = dict([(element, None) for element in expected_seq])
+      actual = dict([(element, None) for element in actual_seq])
+      missing = [element for element in expected if element not in actual]
+      unexpected = [element for element in actual if element not in expected]
+      missing.sort()
+      unexpected.sort()
+    except TypeError:
+      # Fall back to slower list-compare if any of the objects are
+      # not hashable.
+      expected = list(expected_seq)
+      actual = list(actual_seq)
+      expected.sort()
+      actual.sort()
+      missing, unexpected = _sorted_list_difference(expected, actual)
+    errors = []
+    if msg:
+      errors.extend((msg, ':\n'))
+    if missing:
+      errors.append('Expected, but missing:\n  %r\n' % missing)
+    if unexpected:
+      errors.append('Unexpected, but present:\n  %r\n' % unexpected)
+    if missing or unexpected:
+      self.fail(''.join(errors))
+
+  # unittest.TestCase.assertMultiLineEqual works very similarly, but it
+  # has a different error format. However, I find this slightly more readable.
+  def assertMultiLineEqual(self, first, second, msg=None, **kwargs):
+    """Asserts that two multi-line strings are equal."""
+    assert isinstance(first,
