@@ -1299,3 +1299,192 @@ class TestCase(unittest.TestCase):
 
     # We need bytes regexes here because `err` is bytes.
     # Accommodate code which listed their output regexes w/o the b'' prefix by
+    # converting them to bytes for the user.
+    if isinstance(regexes[0], str):
+      regexes = [regex.encode('utf-8') for regex in regexes]
+
+    command_string = get_command_string(command)
+    self.assertNotEqual(
+        ret_code, 0,
+        self._formatMessage(msg, 'The following command succeeded '
+                            'while expected to fail:\n%s' %
+                            _quote_long_string(command_string)))
+    self.assertRegexMatch(
+        err,
+        regexes,
+        message=self._formatMessage(
+            msg,
+            'Running command\n'
+            '%s failed with error code %s and message\n'
+            '%s which matches no regex in %s' % (
+                _quote_long_string(command_string),
+                ret_code,
+                _quote_long_string(err),
+                regexes)))
+
+  class _AssertRaisesContext(object):
+
+    def __init__(self, expected_exception, test_case, test_func, msg=None):
+      self.expected_exception = expected_exception
+      self.test_case = test_case
+      self.test_func = test_func
+      self.msg = msg
+
+    def __enter__(self):
+      return self
+
+    def __exit__(self, exc_type, exc_value, tb):
+      if exc_type is None:
+        self.test_case.fail(self.expected_exception.__name__ + ' not raised',
+                            self.msg)
+      if not issubclass(exc_type, self.expected_exception):
+        return False
+      self.test_func(exc_value)
+      if exc_value:
+        self.exception = exc_value.with_traceback(None)
+      return True
+
+  @typing.overload
+  def assertRaisesWithPredicateMatch(
+      self, expected_exception, predicate) -> _AssertRaisesContext:
+    # The purpose of this return statement is to work around
+    # https://github.com/PyCQA/pylint/issues/5273; it is otherwise ignored.
+    return self._AssertRaisesContext(None, None, None)
+
+  @typing.overload
+  def assertRaisesWithPredicateMatch(
+      self, expected_exception, predicate, callable_obj: Callable[..., Any],
+      *args, **kwargs) -> None:
+    # The purpose of this return statement is to work around
+    # https://github.com/PyCQA/pylint/issues/5273; it is otherwise ignored.
+    return self._AssertRaisesContext(None, None, None)
+
+  def assertRaisesWithPredicateMatch(self, expected_exception, predicate,
+                                     callable_obj=None, *args, **kwargs):
+    """Asserts that exception is thrown and predicate(exception) is true.
+
+    Args:
+      expected_exception: Exception class expected to be raised.
+      predicate: Function of one argument that inspects the passed-in exception
+          and returns True (success) or False (please fail the test).
+      callable_obj: Function to be called.
+      *args: Extra args.
+      **kwargs: Extra keyword args.
+
+    Returns:
+      A context manager if callable_obj is None. Otherwise, None.
+
+    Raises:
+      self.failureException if callable_obj does not raise a matching exception.
+    """
+    def Check(err):
+      self.assertTrue(predicate(err),
+                      '%r does not match predicate %r' % (err, predicate))
+
+    context = self._AssertRaisesContext(expected_exception, self, Check)
+    if callable_obj is None:
+      return context
+    with context:
+      callable_obj(*args, **kwargs)
+
+  @typing.overload
+  def assertRaisesWithLiteralMatch(
+      self, expected_exception, expected_exception_message
+  ) -> _AssertRaisesContext:
+    # The purpose of this return statement is to work around
+    # https://github.com/PyCQA/pylint/issues/5273; it is otherwise ignored.
+    return self._AssertRaisesContext(None, None, None)
+
+  @typing.overload
+  def assertRaisesWithLiteralMatch(
+      self, expected_exception, expected_exception_message,
+      callable_obj: Callable[..., Any], *args, **kwargs) -> None:
+    # The purpose of this return statement is to work around
+    # https://github.com/PyCQA/pylint/issues/5273; it is otherwise ignored.
+    return self._AssertRaisesContext(None, None, None)
+
+  def assertRaisesWithLiteralMatch(self, expected_exception,
+                                   expected_exception_message,
+                                   callable_obj=None, *args, **kwargs):
+    """Asserts that the message in a raised exception equals the given string.
+
+    Unlike assertRaisesRegex, this method takes a literal string, not
+    a regular expression.
+
+    with self.assertRaisesWithLiteralMatch(ExType, 'message'):
+      DoSomething()
+
+    Args:
+      expected_exception: Exception class expected to be raised.
+      expected_exception_message: String message expected in the raised
+          exception.  For a raise exception e, expected_exception_message must
+          equal str(e).
+      callable_obj: Function to be called, or None to return a context.
+      *args: Extra args.
+      **kwargs: Extra kwargs.
+
+    Returns:
+      A context manager if callable_obj is None. Otherwise, None.
+
+    Raises:
+      self.failureException if callable_obj does not raise a matching exception.
+    """
+    def Check(err):
+      actual_exception_message = str(err)
+      self.assertTrue(expected_exception_message == actual_exception_message,
+                      'Exception message does not match.\n'
+                      'Expected: %r\n'
+                      'Actual: %r' % (expected_exception_message,
+                                      actual_exception_message))
+
+    context = self._AssertRaisesContext(expected_exception, self, Check)
+    if callable_obj is None:
+      return context
+    with context:
+      callable_obj(*args, **kwargs)
+
+  def assertContainsInOrder(self, strings, target, msg=None):
+    """Asserts that the strings provided are found in the target in order.
+
+    This may be useful for checking HTML output.
+
+    Args:
+      strings: A list of strings, such as [ 'fox', 'dog' ]
+      target: A target string in which to look for the strings, such as
+          'The quick brown fox jumped over the lazy dog'.
+      msg: Optional message to report on failure.
+    """
+    if isinstance(strings, (bytes, unicode if str is bytes else str)):
+      strings = (strings,)
+
+    current_index = 0
+    last_string = None
+    for string in strings:
+      index = target.find(str(string), current_index)
+      if index == -1 and current_index == 0:
+        self.fail("Did not find '%s' in '%s'" %
+                  (string, target), msg)
+      elif index == -1:
+        self.fail("Did not find '%s' after '%s' in '%s'" %
+                  (string, last_string, target), msg)
+      last_string = string
+      current_index = index
+
+  def assertContainsSubsequence(self, container, subsequence, msg=None):
+    """Asserts that "container" contains "subsequence" as a subsequence.
+
+    Asserts that "container" contains all the elements of "subsequence", in
+    order, but possibly with other elements interspersed. For example, [1, 2, 3]
+    is a subsequence of [0, 0, 1, 2, 0, 3, 0] but not of [0, 0, 1, 3, 0, 2, 0].
+
+    Args:
+      container: the list we're testing for subsequence inclusion.
+      subsequence: the list we hope will be a subsequence of container.
+      msg: Optional message to report on failure.
+    """
+    first_nonmatching = None
+    reversed_container = list(reversed(container))
+    subsequence = list(subsequence)
+
+    for e in subsequence:
+      if e not in reversed_container:
