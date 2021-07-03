@@ -1135,3 +1135,167 @@ class TestCase(unittest.TestCase):
   def assertMultiLineEqual(self, first, second, msg=None, **kwargs):
     """Asserts that two multi-line strings are equal."""
     assert isinstance(first,
+                      str), ('First argument is not a string: %r' % (first,))
+    assert isinstance(second,
+                      str), ('Second argument is not a string: %r' % (second,))
+    line_limit = kwargs.pop('line_limit', 0)
+    if kwargs:
+      raise TypeError('Unexpected keyword args {}'.format(tuple(kwargs)))
+
+    if first == second:
+      return
+    if msg:
+      failure_message = [msg + ':\n']
+    else:
+      failure_message = ['\n']
+    if line_limit:
+      line_limit += len(failure_message)
+    for line in difflib.ndiff(first.splitlines(True), second.splitlines(True)):
+      failure_message.append(line)
+      if not line.endswith('\n'):
+        failure_message.append('\n')
+    if line_limit and len(failure_message) > line_limit:
+      n_omitted = len(failure_message) - line_limit
+      failure_message = failure_message[:line_limit]
+      failure_message.append(
+          '(... and {} more delta lines omitted for brevity.)\n'.format(
+              n_omitted))
+
+    raise self.failureException(''.join(failure_message))
+
+  def assertBetween(self, value, minv, maxv, msg=None):
+    """Asserts that value is between minv and maxv (inclusive)."""
+    msg = self._formatMessage(msg,
+                              '"%r" unexpectedly not between "%r" and "%r"' %
+                              (value, minv, maxv))
+    self.assertTrue(minv <= value, msg)
+    self.assertTrue(maxv >= value, msg)
+
+  def assertRegexMatch(self, actual_str, regexes, message=None):
+    r"""Asserts that at least one regex in regexes matches str.
+
+    If possible you should use `assertRegex`, which is a simpler
+    version of this method. `assertRegex` takes a single regular
+    expression (a string or re compiled object) instead of a list.
+
+    Notes:
+
+    1. This function uses substring matching, i.e. the matching
+       succeeds if *any* substring of the error message matches *any*
+       regex in the list.  This is more convenient for the user than
+       full-string matching.
+
+    2. If regexes is the empty list, the matching will always fail.
+
+    3. Use regexes=[''] for a regex that will always pass.
+
+    4. '.' matches any single character *except* the newline.  To
+       match any character, use '(.|\n)'.
+
+    5. '^' matches the beginning of each line, not just the beginning
+       of the string.  Similarly, '$' matches the end of each line.
+
+    6. An exception will be thrown if regexes contains an invalid
+       regex.
+
+    Args:
+      actual_str:  The string we try to match with the items in regexes.
+      regexes:  The regular expressions we want to match against str.
+          See "Notes" above for detailed notes on how this is interpreted.
+      message:  The message to be printed if the test fails.
+    """
+    if isinstance(regexes, _TEXT_OR_BINARY_TYPES):
+      self.fail('regexes is string or bytes; use assertRegex instead.',
+                message)
+    if not regexes:
+      self.fail('No regexes specified.', message)
+
+    regex_type = type(regexes[0])
+    for regex in regexes[1:]:
+      if type(regex) is not regex_type:  # pylint: disable=unidiomatic-typecheck
+        self.fail('regexes list must all be the same type.', message)
+
+    if regex_type is bytes and isinstance(actual_str, str):
+      regexes = [regex.decode('utf-8') for regex in regexes]
+      regex_type = str
+    elif regex_type is str and isinstance(actual_str, bytes):
+      regexes = [regex.encode('utf-8') for regex in regexes]
+      regex_type = bytes
+
+    if regex_type is str:
+      regex = u'(?:%s)' % u')|(?:'.join(regexes)
+    elif regex_type is bytes:
+      regex = b'(?:' + (b')|(?:'.join(regexes)) + b')'
+    else:
+      self.fail('Only know how to deal with unicode str or bytes regexes.',
+                message)
+
+    if not re.search(regex, actual_str, re.MULTILINE):
+      self.fail('"%s" does not contain any of these regexes: %s.' %
+                (actual_str, regexes), message)
+
+  def assertCommandSucceeds(self, command, regexes=(b'',), env=None,
+                            close_fds=True, msg=None):
+    """Asserts that a shell command succeeds (i.e. exits with code 0).
+
+    Args:
+      command: List or string representing the command to run.
+      regexes: List of regular expression byte strings that match success.
+      env: Dictionary of environment variable settings. If None, no environment
+          variables will be set for the child process. This is to make tests
+          more hermetic. NOTE: this behavior is different than the standard
+          subprocess module.
+      close_fds: Whether or not to close all open fd's in the child after
+          forking.
+      msg: Optional message to report on failure.
+    """
+    (ret_code, err) = get_command_stderr(command, env, close_fds)
+
+    # We need bytes regexes here because `err` is bytes.
+    # Accommodate code which listed their output regexes w/o the b'' prefix by
+    # converting them to bytes for the user.
+    if isinstance(regexes[0], str):
+      regexes = [regex.encode('utf-8') for regex in regexes]
+
+    command_string = get_command_string(command)
+    self.assertEqual(
+        ret_code, 0,
+        self._formatMessage(msg,
+                            'Running command\n'
+                            '%s failed with error code %s and message\n'
+                            '%s' % (_quote_long_string(command_string),
+                                    ret_code,
+                                    _quote_long_string(err)))
+    )
+    self.assertRegexMatch(
+        err,
+        regexes,
+        message=self._formatMessage(
+            msg,
+            'Running command\n'
+            '%s failed with error code %s and message\n'
+            '%s which matches no regex in %s' % (
+                _quote_long_string(command_string),
+                ret_code,
+                _quote_long_string(err),
+                regexes)))
+
+  def assertCommandFails(self, command, regexes, env=None, close_fds=True,
+                         msg=None):
+    """Asserts a shell command fails and the error matches a regex in a list.
+
+    Args:
+      command: List or string representing the command to run.
+      regexes: the list of regular expression strings.
+      env: Dictionary of environment variable settings. If None, no environment
+          variables will be set for the child process. This is to make tests
+          more hermetic. NOTE: this behavior is different than the standard
+          subprocess module.
+      close_fds: Whether or not to close all open fd's in the child after
+          forking.
+      msg: Optional message to report on failure.
+    """
+    (ret_code, err) = get_command_stderr(command, env, close_fds)
+
+    # We need bytes regexes here because `err` is bytes.
+    # Accommodate code which listed their output regexes w/o the b'' prefix by
