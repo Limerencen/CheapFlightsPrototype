@@ -1691,3 +1691,223 @@ class TestCase(unittest.TestCase):
       # Sort the entries based on their repr, not based on their sort order,
       # which will be non-deterministic across executions, for many types.
       entries = sorted((safe_repr(k), safe_repr(v)) for k, v in dikt.items())
+      return '{%s}' % (', '.join('%s: %s' % pair for pair in entries))
+
+    message = ['%s != %s%s' % (Repr(a), Repr(b), ' (%s)' % msg if msg else '')]
+
+    # The standard library default output confounds lexical difference with
+    # value difference; treat them separately.
+    for a_key, a_value in a_items:
+      if a_key not in b:
+        missing.append((a_key, a_value))
+      elif a_value != b[a_key]:
+        different.append((a_key, a_value, b[a_key]))
+
+    for b_key, b_value in b_items:
+      if b_key not in a:
+        unexpected.append((b_key, b_value))
+
+    if unexpected:
+      message.append(
+          'Unexpected, but present entries:\n%s' % ''.join(
+              '%s: %s\n' % (safe_repr(k), safe_repr(v)) for k, v in unexpected))
+
+    if different:
+      message.append(
+          'repr() of differing entries:\n%s' % ''.join(
+              '%s: %s != %s\n' % (safe_repr(k), safe_repr(a_value),
+                                  safe_repr(b_value))
+              for k, a_value, b_value in different))
+
+    if missing:
+      message.append(
+          'Missing entries:\n%s' % ''.join(
+              ('%s: %s\n' % (safe_repr(k), safe_repr(v)) for k, v in missing)))
+
+    raise self.failureException('\n'.join(message))
+
+  def assertUrlEqual(self, a, b, msg=None):
+    """Asserts that urls are equal, ignoring ordering of query params."""
+    parsed_a = parse.urlparse(a)
+    parsed_b = parse.urlparse(b)
+    self.assertEqual(parsed_a.scheme, parsed_b.scheme, msg)
+    self.assertEqual(parsed_a.netloc, parsed_b.netloc, msg)
+    self.assertEqual(parsed_a.path, parsed_b.path, msg)
+    self.assertEqual(parsed_a.fragment, parsed_b.fragment, msg)
+    self.assertEqual(sorted(parsed_a.params.split(';')),
+                     sorted(parsed_b.params.split(';')), msg)
+    self.assertDictEqual(
+        parse.parse_qs(parsed_a.query, keep_blank_values=True),
+        parse.parse_qs(parsed_b.query, keep_blank_values=True), msg)
+
+  def assertSameStructure(self, a, b, aname='a', bname='b', msg=None):
+    """Asserts that two values contain the same structural content.
+
+    The two arguments should be data trees consisting of trees of dicts and
+    lists. They will be deeply compared by walking into the contents of dicts
+    and lists; other items will be compared using the == operator.
+    If the two structures differ in content, the failure message will indicate
+    the location within the structures where the first difference is found.
+    This may be helpful when comparing large structures.
+
+    Mixed Sequence and Set types are supported. Mixed Mapping types are
+    supported, but the order of the keys will not be considered in the
+    comparison.
+
+    Args:
+      a: The first structure to compare.
+      b: The second structure to compare.
+      aname: Variable name to use for the first structure in assertion messages.
+      bname: Variable name to use for the second structure.
+      msg: Additional text to include in the failure message.
+    """
+
+    # Accumulate all the problems found so we can report all of them at once
+    # rather than just stopping at the first
+    problems = []
+
+    _walk_structure_for_problems(a, b, aname, bname, problems)
+
+    # Avoid spamming the user toooo much
+    if self.maxDiff is not None:
+      max_problems_to_show = self.maxDiff // 80
+      if len(problems) > max_problems_to_show:
+        problems = problems[0:max_problems_to_show-1] + ['...']
+
+    if problems:
+      self.fail('; '.join(problems), msg)
+
+  def assertJsonEqual(self, first, second, msg=None):
+    """Asserts that the JSON objects defined in two strings are equal.
+
+    A summary of the differences will be included in the failure message
+    using assertSameStructure.
+
+    Args:
+      first: A string containing JSON to decode and compare to second.
+      second: A string containing JSON to decode and compare to first.
+      msg: Additional text to include in the failure message.
+    """
+    try:
+      first_structured = json.loads(first)
+    except ValueError as e:
+      raise ValueError(self._formatMessage(
+          msg,
+          'could not decode first JSON value %s: %s' % (first, e)))
+
+    try:
+      second_structured = json.loads(second)
+    except ValueError as e:
+      raise ValueError(self._formatMessage(
+          msg,
+          'could not decode second JSON value %s: %s' % (second, e)))
+
+    self.assertSameStructure(first_structured, second_structured,
+                             aname='first', bname='second', msg=msg)
+
+  def _getAssertEqualityFunc(self, first, second):
+    # type: (Any, Any) -> Callable[..., None]
+    try:
+      return super(TestCase, self)._getAssertEqualityFunc(first, second)
+    except AttributeError:
+      # This is a workaround if unittest.TestCase.__init__ was never run.
+      # It usually means that somebody created a subclass just for the
+      # assertions and has overridden __init__. "assertTrue" is a safe
+      # value that will not make __init__ raise a ValueError.
+      test_method = getattr(self, '_testMethodName', 'assertTrue')
+      super(TestCase, self).__init__(test_method)
+
+    return super(TestCase, self)._getAssertEqualityFunc(first, second)
+
+  def fail(self, msg=None, prefix=None):
+    """Fail immediately with the given message, optionally prefixed."""
+    return super(TestCase, self).fail(self._formatMessage(prefix, msg))
+
+
+def _sorted_list_difference(expected, actual):
+  # type: (List[_T], List[_T]) -> Tuple[List[_T], List[_T]]
+  """Finds elements in only one or the other of two, sorted input lists.
+
+  Returns a two-element tuple of lists.  The first list contains those
+  elements in the "expected" list but not in the "actual" list, and the
+  second contains those elements in the "actual" list but not in the
+  "expected" list.  Duplicate elements in either input list are ignored.
+
+  Args:
+    expected:  The list we expected.
+    actual:  The list we actually got.
+  Returns:
+    (missing, unexpected)
+    missing: items in expected that are not in actual.
+    unexpected: items in actual that are not in expected.
+  """
+  i = j = 0
+  missing = []
+  unexpected = []
+  while True:
+    try:
+      e = expected[i]
+      a = actual[j]
+      if e < a:
+        missing.append(e)
+        i += 1
+        while expected[i] == e:
+          i += 1
+      elif e > a:
+        unexpected.append(a)
+        j += 1
+        while actual[j] == a:
+          j += 1
+      else:
+        i += 1
+        try:
+          while expected[i] == e:
+            i += 1
+        finally:
+          j += 1
+          while actual[j] == a:
+            j += 1
+    except IndexError:
+      missing.extend(expected[i:])
+      unexpected.extend(actual[j:])
+      break
+  return missing, unexpected
+
+
+def _are_both_of_integer_type(a, b):
+  # type: (object, object) -> bool
+  return isinstance(a, int) and isinstance(b, int)
+
+
+def _are_both_of_sequence_type(a, b):
+  # type: (object, object) -> bool
+  return isinstance(a, abc.Sequence) and isinstance(
+      b, abc.Sequence) and not isinstance(
+          a, _TEXT_OR_BINARY_TYPES) and not isinstance(b, _TEXT_OR_BINARY_TYPES)
+
+
+def _are_both_of_set_type(a, b):
+  # type: (object, object) -> bool
+  return isinstance(a, abc.Set) and isinstance(b, abc.Set)
+
+
+def _are_both_of_mapping_type(a, b):
+  # type: (object, object) -> bool
+  return isinstance(a, abc.Mapping) and isinstance(
+      b, abc.Mapping)
+
+
+def _walk_structure_for_problems(a, b, aname, bname, problem_list):
+  """The recursive comparison behind assertSameStructure."""
+  if type(a) != type(b) and not (  # pylint: disable=unidiomatic-typecheck
+      _are_both_of_integer_type(a, b) or _are_both_of_sequence_type(a, b) or
+      _are_both_of_set_type(a, b) or _are_both_of_mapping_type(a, b)):
+    # We do not distinguish between int and long types as 99.99% of Python 2
+    # code should never care.  They collapse into a single type in Python 3.
+    problem_list.append('%s is a %r but %s is a %r' %
+                        (aname, type(a), bname, type(b)))
+    # If they have different types there's no point continuing
+    return
+
+  if isinstance(a, abc.Set):
+    for k in a:
