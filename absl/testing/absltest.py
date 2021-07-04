@@ -1488,3 +1488,206 @@ class TestCase(unittest.TestCase):
 
     for e in subsequence:
       if e not in reversed_container:
+        first_nonmatching = e
+        break
+      while e != reversed_container.pop():
+        pass
+
+    if first_nonmatching is not None:
+      self.fail('%s not a subsequence of %s. First non-matching element: %s' %
+                (subsequence, container, first_nonmatching), msg)
+
+  def assertContainsExactSubsequence(self, container, subsequence, msg=None):
+    """Asserts that "container" contains "subsequence" as an exact subsequence.
+
+    Asserts that "container" contains all the elements of "subsequence", in
+    order, and without other elements interspersed. For example, [1, 2, 3] is an
+    exact subsequence of [0, 0, 1, 2, 3, 0] but not of [0, 0, 1, 2, 0, 3, 0].
+
+    Args:
+      container: the list we're testing for subsequence inclusion.
+      subsequence: the list we hope will be an exact subsequence of container.
+      msg: Optional message to report on failure.
+    """
+    container = list(container)
+    subsequence = list(subsequence)
+    longest_match = 0
+
+    for start in range(1 + len(container) - len(subsequence)):
+      if longest_match == len(subsequence):
+        break
+      index = 0
+      while (index < len(subsequence) and
+             subsequence[index] == container[start + index]):
+        index += 1
+      longest_match = max(longest_match, index)
+
+    if longest_match < len(subsequence):
+      self.fail('%s not an exact subsequence of %s. '
+                'Longest matching prefix: %s' %
+                (subsequence, container, subsequence[:longest_match]), msg)
+
+  def assertTotallyOrdered(self, *groups, **kwargs):
+    """Asserts that total ordering has been implemented correctly.
+
+    For example, say you have a class A that compares only on its attribute x.
+    Comparators other than ``__lt__`` are omitted for brevity::
+
+        class A(object):
+          def __init__(self, x, y):
+            self.x = x
+            self.y = y
+
+          def __hash__(self):
+            return hash(self.x)
+
+          def __lt__(self, other):
+            try:
+              return self.x < other.x
+            except AttributeError:
+              return NotImplemented
+
+    assertTotallyOrdered will check that instances can be ordered correctly.
+    For example::
+
+        self.assertTotallyOrdered(
+            [None],  # None should come before everything else.
+            [1],  # Integers sort earlier.
+            [A(1, 'a')],
+            [A(2, 'b')],  # 2 is after 1.
+            [A(3, 'c'), A(3, 'd')],  # The second argument is irrelevant.
+            [A(4, 'z')],
+            ['foo'])  # Strings sort last.
+
+    Args:
+      *groups: A list of groups of elements.  Each group of elements is a list
+        of objects that are equal.  The elements in each group must be less
+        than the elements in the group after it.  For example, these groups are
+        totally ordered: ``[None]``, ``[1]``, ``[2, 2]``, ``[3]``.
+      **kwargs: optional msg keyword argument can be passed.
+    """
+
+    def CheckOrder(small, big):
+      """Ensures small is ordered before big."""
+      self.assertFalse(small == big,
+                       self._formatMessage(msg, '%r unexpectedly equals %r' %
+                                           (small, big)))
+      self.assertTrue(small != big,
+                      self._formatMessage(msg, '%r unexpectedly equals %r' %
+                                          (small, big)))
+      self.assertLess(small, big, msg)
+      self.assertFalse(big < small,
+                       self._formatMessage(msg,
+                                           '%r unexpectedly less than %r' %
+                                           (big, small)))
+      self.assertLessEqual(small, big, msg)
+      self.assertFalse(big <= small, self._formatMessage(
+          '%r unexpectedly less than or equal to %r' % (big, small), msg
+      ))
+      self.assertGreater(big, small, msg)
+      self.assertFalse(small > big,
+                       self._formatMessage(msg,
+                                           '%r unexpectedly greater than %r' %
+                                           (small, big)))
+      self.assertGreaterEqual(big, small)
+      self.assertFalse(small >= big, self._formatMessage(
+          msg,
+          '%r unexpectedly greater than or equal to %r' % (small, big)))
+
+    def CheckEqual(a, b):
+      """Ensures that a and b are equal."""
+      self.assertEqual(a, b, msg)
+      self.assertFalse(a != b,
+                       self._formatMessage(msg, '%r unexpectedly unequals %r' %
+                                           (a, b)))
+
+      # Objects that compare equal must hash to the same value, but this only
+      # applies if both objects are hashable.
+      if (isinstance(a, abc.Hashable) and
+          isinstance(b, abc.Hashable)):
+        self.assertEqual(
+            hash(a), hash(b),
+            self._formatMessage(
+                msg, 'hash %d of %r unexpectedly not equal to hash %d of %r' %
+                (hash(a), a, hash(b), b)))
+
+      self.assertFalse(a < b,
+                       self._formatMessage(msg,
+                                           '%r unexpectedly less than %r' %
+                                           (a, b)))
+      self.assertFalse(b < a,
+                       self._formatMessage(msg,
+                                           '%r unexpectedly less than %r' %
+                                           (b, a)))
+      self.assertLessEqual(a, b, msg)
+      self.assertLessEqual(b, a, msg)  # pylint: disable=arguments-out-of-order
+      self.assertFalse(a > b,
+                       self._formatMessage(msg,
+                                           '%r unexpectedly greater than %r' %
+                                           (a, b)))
+      self.assertFalse(b > a,
+                       self._formatMessage(msg,
+                                           '%r unexpectedly greater than %r' %
+                                           (b, a)))
+      self.assertGreaterEqual(a, b, msg)
+      self.assertGreaterEqual(b, a, msg)  # pylint: disable=arguments-out-of-order
+
+    msg = kwargs.get('msg')
+
+    # For every combination of elements, check the order of every pair of
+    # elements.
+    for elements in itertools.product(*groups):
+      elements = list(elements)
+      for index, small in enumerate(elements[:-1]):
+        for big in elements[index + 1:]:
+          CheckOrder(small, big)
+
+    # Check that every element in each group is equal.
+    for group in groups:
+      for a in group:
+        CheckEqual(a, a)
+      for a, b in itertools.product(group, group):
+        CheckEqual(a, b)
+
+  def assertDictEqual(self, a, b, msg=None):
+    """Raises AssertionError if a and b are not equal dictionaries.
+
+    Args:
+      a: A dict, the expected value.
+      b: A dict, the actual value.
+      msg: An optional str, the associated message.
+
+    Raises:
+      AssertionError: if the dictionaries are not equal.
+    """
+    self.assertIsInstance(a, dict, self._formatMessage(
+        msg,
+        'First argument is not a dictionary'
+    ))
+    self.assertIsInstance(b, dict, self._formatMessage(
+        msg,
+        'Second argument is not a dictionary'
+    ))
+
+    def Sorted(list_of_items):
+      try:
+        return sorted(list_of_items)  # In 3.3, unordered are possible.
+      except TypeError:
+        return list_of_items
+
+    if a == b:
+      return
+    a_items = Sorted(list(a.items()))
+    b_items = Sorted(list(b.items()))
+
+    unexpected = []
+    missing = []
+    different = []
+
+    safe_repr = unittest.util.safe_repr  # pytype: disable=module-attr
+
+    def Repr(dikt):
+      """Deterministic repr for dict."""
+      # Sort the entries based on their repr, not based on their sort order,
+      # which will be non-deterministic across executions, for many types.
+      entries = sorted((safe_repr(k), safe_repr(v)) for k, v in dikt.items())
