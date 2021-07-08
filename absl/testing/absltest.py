@@ -2124,3 +2124,192 @@ def _run_in_app(function, args, kwargs):
         elements of sys.argv without the command-line flags.
     args: Positional arguments passed through to unittest.TestProgram.__init__.
     kwargs: Keyword arguments passed through to unittest.TestProgram.__init__.
+  """
+  if _is_in_app_main():
+    _register_sigterm_with_faulthandler()
+
+    # Change the default of alsologtostderr from False to True, so the test
+    # programs's stderr will contain all the log messages.
+    # If --alsologtostderr=false is specified in the command-line, or user
+    # has called FLAGS.alsologtostderr = False before, then the value is kept
+    # False.
+    FLAGS.set_default('alsologtostderr', True)
+
+    # Here we only want to get the `argv` without the flags. To avoid any
+    # side effects of parsing flags, we temporarily stub out the `parse` method
+    stored_parse_methods = {}
+    noop_parse = lambda _: None
+    for name in FLAGS:
+      # Avoid any side effects of parsing flags.
+      stored_parse_methods[name] = FLAGS[name].parse
+    # This must be a separate loop since multiple flag names (short_name=) can
+    # point to the same flag object.
+    for name in FLAGS:
+      FLAGS[name].parse = noop_parse
+    try:
+      argv = FLAGS(sys.argv)
+    finally:
+      for name in FLAGS:
+        FLAGS[name].parse = stored_parse_methods[name]
+      sys.stdout.flush()
+
+    function(argv, args, kwargs)
+  else:
+    # Send logging to stderr. Use --alsologtostderr instead of --logtostderr
+    # in case tests are reading their own logs.
+    FLAGS.set_default('alsologtostderr', True)
+
+    def main_function(argv):
+      _register_sigterm_with_faulthandler()
+      function(argv, args, kwargs)
+
+    app.run(main=main_function)
+
+
+def _is_suspicious_attribute(testCaseClass, name):
+  # type: (Type, Text) -> bool
+  """Returns True if an attribute is a method named like a test method."""
+  if name.startswith('Test') and len(name) > 4 and name[4].isupper():
+    attr = getattr(testCaseClass, name)
+    if inspect.isfunction(attr) or inspect.ismethod(attr):
+      args = inspect.getfullargspec(attr)
+      return (len(args.args) == 1 and args.args[0] == 'self' and
+              args.varargs is None and args.varkw is None and
+              not args.kwonlyargs)
+  return False
+
+
+def skipThisClass(reason):
+  # type: (Text) -> Callable[[_T], _T]
+  """Skip tests in the decorated TestCase, but not any of its subclasses.
+
+  This decorator indicates that this class should skip all its tests, but not
+  any of its subclasses. Useful for if you want to share testMethod or setUp
+  implementations between a number of concrete testcase classes.
+
+  Example usage, showing how you can share some common test methods between
+  subclasses. In this example, only ``BaseTest`` will be marked as skipped, and
+  not RealTest or SecondRealTest::
+
+      @absltest.skipThisClass("Shared functionality")
+      class BaseTest(absltest.TestCase):
+        def test_simple_functionality(self):
+          self.assertEqual(self.system_under_test.method(), 1)
+
+      class RealTest(BaseTest):
+        def setUp(self):
+          super().setUp()
+          self.system_under_test = MakeSystem(argument)
+
+        def test_specific_behavior(self):
+          ...
+
+      class SecondRealTest(BaseTest):
+        def setUp(self):
+          super().setUp()
+          self.system_under_test = MakeSystem(other_arguments)
+
+        def test_other_behavior(self):
+          ...
+
+  Args:
+    reason: The reason we have a skip in place. For instance: 'shared test
+      methods' or 'shared assertion methods'.
+
+  Returns:
+    Decorator function that will cause a class to be skipped.
+  """
+  if isinstance(reason, type):
+    raise TypeError('Got {!r}, expected reason as string'.format(reason))
+
+  def _skip_class(test_case_class):
+    if not issubclass(test_case_class, unittest.TestCase):
+      raise TypeError(
+          'Decorating {!r}, expected TestCase subclass'.format(test_case_class))
+
+    # Only shadow the setUpClass method if it is directly defined. If it is
+    # in the parent class we invoke it via a super() call instead of holding
+    # a reference to it.
+    shadowed_setupclass = test_case_class.__dict__.get('setUpClass', None)
+
+    @classmethod
+    def replacement_setupclass(cls, *args, **kwargs):
+      # Skip this class if it is the one that was decorated with @skipThisClass
+      if cls is test_case_class:
+        raise SkipTest(reason)
+      if shadowed_setupclass:
+        # Pass along `cls` so the MRO chain doesn't break.
+        # The original method is a `classmethod` descriptor, which can't
+        # be directly called, but `__func__` has the underlying function.
+        return shadowed_setupclass.__func__(cls, *args, **kwargs)
+      else:
+        # Because there's no setUpClass() defined directly on test_case_class,
+        # we call super() ourselves to continue execution of the inheritance
+        # chain.
+        return super(test_case_class, cls).setUpClass(*args, **kwargs)
+
+    test_case_class.setUpClass = replacement_setupclass
+    return test_case_class
+
+  return _skip_class
+
+
+class TestLoader(unittest.TestLoader):
+  """A test loader which supports common test features.
+
+  Supported features include:
+   * Banning untested methods with test-like names: methods attached to this
+     testCase with names starting with `Test` are ignored by the test runner,
+     and often represent mistakenly-omitted test cases. This loader will raise
+     a TypeError when attempting to load a TestCase with such methods.
+   * Randomization of test case execution order (optional).
+  """
+
+  _ERROR_MSG = textwrap.dedent("""Method '%s' is named like a test case but
+  is not one. This is often a bug. If you want it to be a test method,
+  name it with 'test' in lowercase. If not, rename the method to not begin
+  with 'Test'.""")
+
+  def __init__(self, *args, **kwds):
+    super(TestLoader, self).__init__(*args, **kwds)
+    seed = _get_default_randomize_ordering_seed()
+    if seed:
+      self._randomize_ordering_seed = seed
+      self._random = random.Random(self._randomize_ordering_seed)
+    else:
+      self._randomize_ordering_seed = None
+      self._random = None
+
+  def getTestCaseNames(self, testCaseClass):  # pylint:disable=invalid-name
+    """Validates and returns a (possibly randomized) list of test case names."""
+    for name in dir(testCaseClass):
+      if _is_suspicious_attribute(testCaseClass, name):
+        raise TypeError(TestLoader._ERROR_MSG % name)
+    names = super(TestLoader, self).getTestCaseNames(testCaseClass)
+    if self._randomize_ordering_seed is not None:
+      logging.info(
+          'Randomizing test order with seed: %d', self._randomize_ordering_seed)
+      logging.info(
+          'To reproduce this order, re-run with '
+          '--test_randomize_ordering_seed=%d', self._randomize_ordering_seed)
+      self._random.shuffle(names)
+    return names
+
+
+def get_default_xml_output_filename():
+  # type: () -> Optional[Text]
+  if os.environ.get('XML_OUTPUT_FILE'):
+    return os.environ['XML_OUTPUT_FILE']
+  elif os.environ.get('RUNNING_UNDER_TEST_DAEMON'):
+    return os.path.join(os.path.dirname(TEST_TMPDIR.value), 'test_detail.xml')
+  elif os.environ.get('TEST_XMLOUTPUTDIR'):
+    return os.path.join(
+        os.environ['TEST_XMLOUTPUTDIR'],
+        os.path.splitext(os.path.basename(sys.argv[0]))[0] + '.xml')
+
+
+def _setup_filtering(argv):
+  # type: (MutableSequence[Text]) -> None
+  """Implements the bazel test filtering protocol.
+
+  The following environment variable is used in this method:
