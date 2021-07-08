@@ -1911,3 +1911,216 @@ def _walk_structure_for_problems(a, b, aname, bname, problem_list):
 
   if isinstance(a, abc.Set):
     for k in a:
+      if k not in b:
+        problem_list.append(
+            '%s has %r but %s does not' % (aname, k, bname))
+    for k in b:
+      if k not in a:
+        problem_list.append('%s lacks %r but %s has it' % (aname, k, bname))
+
+  # NOTE: a or b could be a defaultdict, so we must take care that the traversal
+  # doesn't modify the data.
+  elif isinstance(a, abc.Mapping):
+    for k in a:
+      if k in b:
+        _walk_structure_for_problems(
+            a[k], b[k], '%s[%r]' % (aname, k), '%s[%r]' % (bname, k),
+            problem_list)
+      else:
+        problem_list.append(
+            "%s has [%r] with value %r but it's missing in %s" %
+            (aname, k, a[k], bname))
+    for k in b:
+      if k not in a:
+        problem_list.append(
+            '%s lacks [%r] but %s has it with value %r' %
+            (aname, k, bname, b[k]))
+
+  # Strings/bytes are Sequences but we'll just do those with regular !=
+  elif (isinstance(a, abc.Sequence) and
+        not isinstance(a, _TEXT_OR_BINARY_TYPES)):
+    minlen = min(len(a), len(b))
+    for i in range(minlen):
+      _walk_structure_for_problems(
+          a[i], b[i], '%s[%d]' % (aname, i), '%s[%d]' % (bname, i),
+          problem_list)
+    for i in range(minlen, len(a)):
+      problem_list.append('%s has [%i] with value %r but %s does not' %
+                          (aname, i, a[i], bname))
+    for i in range(minlen, len(b)):
+      problem_list.append('%s lacks [%i] but %s has it with value %r' %
+                          (aname, i, bname, b[i]))
+
+  else:
+    if a != b:
+      problem_list.append('%s is %r but %s is %r' % (aname, a, bname, b))
+
+
+def get_command_string(command):
+  """Returns an escaped string that can be used as a shell command.
+
+  Args:
+    command: List or string representing the command to run.
+  Returns:
+    A string suitable for use as a shell command.
+  """
+  if isinstance(command, str):
+    return command
+  else:
+    if os.name == 'nt':
+      return ' '.join(command)
+    else:
+      # The following is identical to Python 3's shlex.quote function.
+      command_string = ''
+      for word in command:
+        # Single quote word, and replace each ' in word with '"'"'
+        command_string += "'" + word.replace("'", "'\"'\"'") + "' "
+      return command_string[:-1]
+
+
+def get_command_stderr(command, env=None, close_fds=True):
+  """Runs the given shell command and returns a tuple.
+
+  Args:
+    command: List or string representing the command to run.
+    env: Dictionary of environment variable settings. If None, no environment
+        variables will be set for the child process. This is to make tests
+        more hermetic. NOTE: this behavior is different than the standard
+        subprocess module.
+    close_fds: Whether or not to close all open fd's in the child after forking.
+        On Windows, this is ignored and close_fds is always False.
+
+  Returns:
+    Tuple of (exit status, text printed to stdout and stderr by the command).
+  """
+  if env is None: env = {}
+  if os.name == 'nt':
+    # Windows does not support setting close_fds to True while also redirecting
+    # standard handles.
+    close_fds = False
+
+  use_shell = isinstance(command, str)
+  process = subprocess.Popen(
+      command,
+      close_fds=close_fds,
+      env=env,
+      shell=use_shell,
+      stderr=subprocess.STDOUT,
+      stdout=subprocess.PIPE)
+  output = process.communicate()[0]
+  exit_status = process.wait()
+  return (exit_status, output)
+
+
+def _quote_long_string(s):
+  # type: (Union[Text, bytes, bytearray]) -> Text
+  """Quotes a potentially multi-line string to make the start and end obvious.
+
+  Args:
+    s: A string.
+
+  Returns:
+    The quoted string.
+  """
+  if isinstance(s, (bytes, bytearray)):
+    try:
+      s = s.decode('utf-8')
+    except UnicodeDecodeError:
+      s = str(s)
+  return ('8<-----------\n' +
+          s + '\n' +
+          '----------->8\n')
+
+
+def print_python_version():
+  # type: () -> None
+  # Having this in the test output logs by default helps debugging when all
+  # you've got is the log and no other idea of which Python was used.
+  sys.stderr.write('Running tests under Python {0[0]}.{0[1]}.{0[2]}: '
+                   '{1}\n'.format(
+                       sys.version_info,
+                       sys.executable if sys.executable else 'embedded.'))
+
+
+def main(*args, **kwargs):
+  # type: (Text, Any) -> None
+  """Executes a set of Python unit tests.
+
+  Usually this function is called without arguments, so the
+  unittest.TestProgram instance will get created with the default settings,
+  so it will run all test methods of all TestCase classes in the ``__main__``
+  module.
+
+  Args:
+    *args: Positional arguments passed through to
+        ``unittest.TestProgram.__init__``.
+    **kwargs: Keyword arguments passed through to
+        ``unittest.TestProgram.__init__``.
+  """
+  print_python_version()
+  _run_in_app(run_tests, args, kwargs)
+
+
+def _is_in_app_main():
+  # type: () -> bool
+  """Returns True iff app.run is active."""
+  f = sys._getframe().f_back  # pylint: disable=protected-access
+  while f:
+    if f.f_code == app.run.__code__:
+      return True
+    f = f.f_back
+  return False
+
+
+def _register_sigterm_with_faulthandler():
+  # type: () -> None
+  """Have faulthandler dump stacks on SIGTERM.  Useful to diagnose timeouts."""
+  if faulthandler and getattr(faulthandler, 'register', None):
+    # faulthandler.register is not available on Windows.
+    # faulthandler.enable() is already called by app.run.
+    try:
+      faulthandler.register(signal.SIGTERM, chain=True)  # pytype: disable=module-attr
+    except Exception as e:  # pylint: disable=broad-except
+      sys.stderr.write('faulthandler.register(SIGTERM) failed '
+                       '%r; ignoring.\n' % e)
+
+
+def _run_in_app(function, args, kwargs):
+  # type: (Callable[..., None], Sequence[Text], Mapping[Text, Any]) -> None
+  """Executes a set of Python unit tests, ensuring app.run.
+
+  This is a private function, users should call absltest.main().
+
+  _run_in_app calculates argv to be the command-line arguments of this program
+  (without the flags), sets the default of FLAGS.alsologtostderr to True,
+  then it calls function(argv, args, kwargs), making sure that `function'
+  will get called within app.run(). _run_in_app does this by checking whether
+  it is called by app.run(), or by calling app.run() explicitly.
+
+  The reason why app.run has to be ensured is to make sure that
+  flags are parsed and stripped properly, and other initializations done by
+  the app module are also carried out, no matter if absltest.run() is called
+  from within or outside app.run().
+
+  If _run_in_app is called from within app.run(), then it will reparse
+  sys.argv and pass the result without command-line flags into the argv
+  argument of `function'. The reason why this parsing is needed is that
+  __main__.main() calls absltest.main() without passing its argv. So the
+  only way _run_in_app could get to know the argv without the flags is that
+  it reparses sys.argv.
+
+  _run_in_app changes the default of FLAGS.alsologtostderr to True so that the
+  test program's stderr will contain all the log messages unless otherwise
+  specified on the command-line. This overrides any explicit assignment to
+  FLAGS.alsologtostderr by the test program prior to the call to _run_in_app()
+  (e.g. in __main__.main).
+
+  Please note that _run_in_app (and the function it calls) is allowed to make
+  changes to kwargs.
+
+  Args:
+    function: absltest.run_tests or a similar function. It will be called as
+        function(argv, args, kwargs) where argv is a list containing the
+        elements of sys.argv without the command-line flags.
+    args: Positional arguments passed through to unittest.TestProgram.__init__.
+    kwargs: Keyword arguments passed through to unittest.TestProgram.__init__.
