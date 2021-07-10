@@ -2313,3 +2313,224 @@ def _setup_filtering(argv):
   """Implements the bazel test filtering protocol.
 
   The following environment variable is used in this method:
+
+    TESTBRIDGE_TEST_ONLY: string, if set, is forwarded to the unittest
+      framework to use as a test filter. Its value is split with shlex, then:
+      1. On Python 3.6 and before, split values are passed as positional
+         arguments on argv.
+      2. On Python 3.7+, split values are passed to unittest's `-k` flag. Tests
+         are matched by glob patterns or substring. See
+         https://docs.python.org/3/library/unittest.html#cmdoption-unittest-k
+
+  Args:
+    argv: the argv to mutate in-place.
+  """
+  test_filter = os.environ.get('TESTBRIDGE_TEST_ONLY')
+  if argv is None or not test_filter:
+    return
+
+  filters = shlex.split(test_filter)
+  if sys.version_info[:2] >= (3, 7):
+    filters = ['-k=' + test_filter for test_filter in filters]
+
+  argv[1:1] = filters
+
+
+def _setup_test_runner_fail_fast(argv):
+  # type: (MutableSequence[Text]) -> None
+  """Implements the bazel test fail fast protocol.
+
+  The following environment variable is used in this method:
+
+    TESTBRIDGE_TEST_RUNNER_FAIL_FAST=<1|0>
+
+  If set to 1, --failfast is passed to the unittest framework to return upon
+  first failure.
+
+  Args:
+    argv: the argv to mutate in-place.
+  """
+
+  if argv is None:
+    return
+
+  if os.environ.get('TESTBRIDGE_TEST_RUNNER_FAIL_FAST') != '1':
+    return
+
+  argv[1:1] = ['--failfast']
+
+
+def _setup_sharding(custom_loader=None):
+  # type: (Optional[unittest.TestLoader]) -> unittest.TestLoader
+  """Implements the bazel sharding protocol.
+
+  The following environment variables are used in this method:
+
+    TEST_SHARD_STATUS_FILE: string, if set, points to a file. We write a blank
+      file to tell the test runner that this test implements the test sharding
+      protocol.
+
+    TEST_TOTAL_SHARDS: int, if set, sharding is requested.
+
+    TEST_SHARD_INDEX: int, must be set if TEST_TOTAL_SHARDS is set. Specifies
+      the shard index for this instance of the test process. Must satisfy:
+      0 <= TEST_SHARD_INDEX < TEST_TOTAL_SHARDS.
+
+  Args:
+    custom_loader: A TestLoader to be made sharded.
+
+  Returns:
+    The test loader for shard-filtering or the standard test loader, depending
+    on the sharding environment variables.
+  """
+
+  # It may be useful to write the shard file even if the other sharding
+  # environment variables are not set. Test runners may use this functionality
+  # to query whether a test binary implements the test sharding protocol.
+  if 'TEST_SHARD_STATUS_FILE' in os.environ:
+    try:
+      with open(os.environ['TEST_SHARD_STATUS_FILE'], 'w') as f:
+        f.write('')
+    except IOError:
+      sys.stderr.write('Error opening TEST_SHARD_STATUS_FILE (%s). Exiting.'
+                       % os.environ['TEST_SHARD_STATUS_FILE'])
+      sys.exit(1)
+
+  base_loader = custom_loader or TestLoader()
+  if 'TEST_TOTAL_SHARDS' not in os.environ:
+    # Not using sharding, use the expected test loader.
+    return base_loader
+
+  total_shards = int(os.environ['TEST_TOTAL_SHARDS'])
+  shard_index = int(os.environ['TEST_SHARD_INDEX'])
+
+  if shard_index < 0 or shard_index >= total_shards:
+    sys.stderr.write('ERROR: Bad sharding values. index=%d, total=%d\n' %
+                     (shard_index, total_shards))
+    sys.exit(1)
+
+  # Replace the original getTestCaseNames with one that returns
+  # the test case names for this shard.
+  delegate_get_names = base_loader.getTestCaseNames
+
+  bucket_iterator = itertools.cycle(range(total_shards))
+
+  def getShardedTestCaseNames(testCaseClass):
+    filtered_names = []
+    # We need to sort the list of tests in order to determine which tests this
+    # shard is responsible for; however, it's important to preserve the order
+    # returned by the base loader, e.g. in the case of randomized test ordering.
+    ordered_names = delegate_get_names(testCaseClass)
+    for testcase in sorted(ordered_names):
+      bucket = next(bucket_iterator)
+      if bucket == shard_index:
+        filtered_names.append(testcase)
+    return [x for x in ordered_names if x in filtered_names]
+
+  base_loader.getTestCaseNames = getShardedTestCaseNames
+  return base_loader
+
+
+# pylint: disable=line-too-long
+def _run_and_get_tests_result(argv, args, kwargs, xml_test_runner_class):
+  # type: (MutableSequence[Text], Sequence[Any], MutableMapping[Text, Any], Type) -> unittest.TestResult
+  # pylint: enable=line-too-long
+  """Same as run_tests, except it returns the result instead of exiting."""
+
+  # The entry from kwargs overrides argv.
+  argv = kwargs.pop('argv', argv)
+
+  # Set up test filtering if requested in environment.
+  _setup_filtering(argv)
+  # Set up --failfast as requested in environment
+  _setup_test_runner_fail_fast(argv)
+
+  # Shard the (default or custom) loader if sharding is turned on.
+  kwargs['testLoader'] = _setup_sharding(kwargs.get('testLoader', None))
+
+  # XML file name is based upon (sorted by priority):
+  # --xml_output_file flag, XML_OUTPUT_FILE variable,
+  # TEST_XMLOUTPUTDIR variable or RUNNING_UNDER_TEST_DAEMON variable.
+  if not FLAGS.xml_output_file:
+    FLAGS.xml_output_file = get_default_xml_output_filename()
+  xml_output_file = FLAGS.xml_output_file
+
+  xml_buffer = None
+  if xml_output_file:
+    xml_output_dir = os.path.dirname(xml_output_file)
+    if xml_output_dir and not os.path.isdir(xml_output_dir):
+      try:
+        os.makedirs(xml_output_dir)
+      except OSError as e:
+        # File exists error can occur with concurrent tests
+        if e.errno != errno.EEXIST:
+          raise
+    # Fail early if we can't write to the XML output file. This is so that we
+    # don't waste people's time running tests that will just fail anyways.
+    with _open(xml_output_file, 'w'):
+      pass
+
+    # We can reuse testRunner if it supports XML output (e. g. by inheriting
+    # from xml_reporter.TextAndXMLTestRunner). Otherwise we need to use
+    # xml_reporter.TextAndXMLTestRunner.
+    if (kwargs.get('testRunner') is not None
+        and not hasattr(kwargs['testRunner'], 'set_default_xml_stream')):
+      sys.stderr.write('WARNING: XML_OUTPUT_FILE or --xml_output_file setting '
+                       'overrides testRunner=%r setting (possibly from --pdb)'
+                       % (kwargs['testRunner']))
+      # Passing a class object here allows TestProgram to initialize
+      # instances based on its kwargs and/or parsed command-line args.
+      kwargs['testRunner'] = xml_test_runner_class
+    if kwargs.get('testRunner') is None:
+      kwargs['testRunner'] = xml_test_runner_class
+    # Use an in-memory buffer (not backed by the actual file) to store the XML
+    # report, because some tools modify the file (e.g., create a placeholder
+    # with partial information, in case the test process crashes).
+    xml_buffer = io.StringIO()
+    kwargs['testRunner'].set_default_xml_stream(xml_buffer)  # pytype: disable=attribute-error
+
+    # If we've used a seed to randomize test case ordering, we want to record it
+    # as a top-level attribute in the `testsuites` section of the XML output.
+    randomize_ordering_seed = getattr(
+        kwargs['testLoader'], '_randomize_ordering_seed', None)
+    setter = getattr(kwargs['testRunner'], 'set_testsuites_property', None)
+    if randomize_ordering_seed and setter:
+      setter('test_randomize_ordering_seed', randomize_ordering_seed)
+  elif kwargs.get('testRunner') is None:
+    kwargs['testRunner'] = _pretty_print_reporter.TextTestRunner
+
+  if FLAGS.pdb_post_mortem:
+    runner = kwargs['testRunner']
+    # testRunner can be a class or an instance, which must be tested for
+    # differently.
+    # Overriding testRunner isn't uncommon, so only enable the debugging
+    # integration if the runner claims it does; we don't want to accidentally
+    # clobber something on the runner.
+    if ((isinstance(runner, type) and
+         issubclass(runner, _pretty_print_reporter.TextTestRunner)) or
+        isinstance(runner, _pretty_print_reporter.TextTestRunner)):
+      runner.run_for_debugging = True
+
+  # Make sure tmpdir exists.
+  if not os.path.isdir(TEST_TMPDIR.value):
+    try:
+      os.makedirs(TEST_TMPDIR.value)
+    except OSError as e:
+      # Concurrent test might have created the directory.
+      if e.errno != errno.EEXIST:
+        raise
+
+  # Let unittest.TestProgram.__init__ do its own argv parsing, e.g. for '-v',
+  # on argv, which is sys.argv without the command-line flags.
+  kwargs['argv'] = argv
+
+  try:
+    test_program = unittest.TestProgram(*args, **kwargs)
+    return test_program.result
+  finally:
+    if xml_buffer:
+      try:
+        with _open(xml_output_file, 'w') as f:
+          f.write(xml_buffer.getvalue())
+      finally:
+        xml_buffer.close()
