@@ -151,3 +151,222 @@ def as_parsed(*args, **kwargs):
 
   Returns:
     _ParsingFlagOverrider that serves as a context manager or decorator. Will
+    save previous flag state and parse new flags, then on cleanup it will
+    restore the previous flag state.
+  """
+  return _construct_overrider(_ParsingFlagOverrider, *args, **kwargs)
+
+
+# NOTE: the order of these overload declarations matters. The type checker will
+# pick the first match which could be incorrect.
+@overload
+def _construct_overrider(
+    flag_overrider_cls: Type['_ParsingFlagOverrider'],
+    *args: Tuple[flags.FlagHolder, Union[str, Sequence[str]]],
+    **kwargs: Union[str, Sequence[str]]) -> '_ParsingFlagOverrider':
+  ...
+
+
+@overload
+def _construct_overrider(flag_overrider_cls: Type['_FlagOverrider'],
+                         *args: Tuple[flags.FlagHolder, Any],
+                         **kwargs: Any) -> '_FlagOverrider':
+  ...
+
+
+@overload
+def _construct_overrider(flag_overrider_cls: Type['_FlagOverrider'],
+                         func: _CallableT) -> _CallableT:
+  ...
+
+
+def _construct_overrider(flag_overrider_cls, *args, **kwargs):
+  """Handles the args/kwargs returning an instance of flag_overrider_cls.
+
+  If flag_overrider_cls is _FlagOverrider then values should be native python
+  types matching the python types. Otherwise if flag_overrider_cls is
+  _ParsingFlagOverrider the values should be strings or sequences of strings.
+
+  Args:
+    flag_overrider_cls: The class that will do the overriding.
+    *args: Tuples of FlagHolder and the new flag value.
+    **kwargs: Keword args mapping flag name to new flag value.
+
+  Returns:
+    A _FlagOverrider to be used as a decorator or context manager.
+  """
+  if not args:
+    return flag_overrider_cls(**kwargs)
+  # args can be [func] if used as `@flagsaver` instead of `@flagsaver(...)`
+  if len(args) == 1 and callable(args[0]):
+    if kwargs:
+      raise ValueError(
+          "It's invalid to specify both positional and keyword parameters.")
+    func = args[0]
+    if inspect.isclass(func):
+      raise TypeError('@flagsaver.flagsaver cannot be applied to a class.')
+    return _wrap(flag_overrider_cls, func, {})
+  # args can be a list of (FlagHolder, value) pairs.
+  # In which case they augment any specified kwargs.
+  for arg in args:
+    if not isinstance(arg, tuple) or len(arg) != 2:
+      raise ValueError('Expected (FlagHolder, value) pair, found %r' % (arg,))
+    holder, value = arg
+    if not isinstance(holder, flags.FlagHolder):
+      raise ValueError('Expected (FlagHolder, value) pair, found %r' % (arg,))
+    if holder.name in kwargs:
+      raise ValueError('Cannot set --%s multiple times' % holder.name)
+    kwargs[holder.name] = value
+  return flag_overrider_cls(**kwargs)
+
+
+def save_flag_values(
+    flag_values: flags.FlagValues = FLAGS) -> Mapping[str, Mapping[str, Any]]:
+  """Returns copy of flag values as a dict.
+
+  Args:
+    flag_values: FlagValues, the FlagValues instance with which the flag will be
+      saved. This should almost never need to be overridden.
+
+  Returns:
+    Dictionary mapping keys to values. Keys are flag names, values are
+    corresponding ``__dict__`` members. E.g. ``{'key': value_dict, ...}``.
+  """
+  return {name: _copy_flag_dict(flag_values[name]) for name in flag_values}
+
+
+def restore_flag_values(saved_flag_values: Mapping[str, Mapping[str, Any]],
+                        flag_values: flags.FlagValues = FLAGS):
+  """Restores flag values based on the dictionary of flag values.
+
+  Args:
+    saved_flag_values: {'flag_name': value_dict, ...}
+    flag_values: FlagValues, the FlagValues instance from which the flag will be
+      restored. This should almost never need to be overridden.
+  """
+  new_flag_names = list(flag_values)
+  for name in new_flag_names:
+    saved = saved_flag_values.get(name)
+    if saved is None:
+      # If __dict__ was not saved delete "new" flag.
+      delattr(flag_values, name)
+    else:
+      if flag_values[name].value != saved['_value']:
+        flag_values[name].value = saved['_value']  # Ensure C++ value is set.
+      flag_values[name].__dict__ = saved
+
+
+@overload
+def _wrap(flag_overrider_cls: Type['_FlagOverrider'], func: _CallableT,
+          overrides: Mapping[str, Any]) -> _CallableT:
+  ...
+
+
+@overload
+def _wrap(flag_overrider_cls: Type['_ParsingFlagOverrider'], func: _CallableT,
+          overrides: Mapping[str, Union[str, Sequence[str]]]) -> _CallableT:
+  ...
+
+
+def _wrap(flag_overrider_cls, func, overrides):
+  """Creates a wrapper function that saves/restores flag values.
+
+  Args:
+    flag_overrider_cls: The class that will be used as a context manager.
+    func: This will be called between saving flags and restoring flags.
+    overrides: Flag names mapped to their values. These flags will be set after
+      saving the original flag state. The type of the values depends on if
+      _FlagOverrider or _ParsingFlagOverrider was specified.
+
+  Returns:
+    A wrapped version of func.
+  """
+
+  @functools.wraps(func)
+  def _flagsaver_wrapper(*args, **kwargs):
+    """Wrapper function that saves and restores flags."""
+    with flag_overrider_cls(**overrides):
+      return func(*args, **kwargs)
+
+  return _flagsaver_wrapper
+
+
+class _FlagOverrider(object):
+  """Overrides flags for the duration of the decorated function call.
+
+  It also restores all original values of flags after decorated method
+  completes.
+  """
+
+  def __init__(self, **overrides: Any):
+    self._overrides = overrides
+    self._saved_flag_values = None
+
+  def __call__(self, func: _CallableT) -> _CallableT:
+    if inspect.isclass(func):
+      raise TypeError('flagsaver cannot be applied to a class.')
+    return _wrap(self.__class__, func, self._overrides)
+
+  def __enter__(self):
+    self._saved_flag_values = save_flag_values(FLAGS)
+    try:
+      FLAGS._set_attributes(**self._overrides)
+    except:
+      # It may fail because of flag validators.
+      restore_flag_values(self._saved_flag_values, FLAGS)
+      raise
+
+  def __exit__(self, exc_type, exc_value, traceback):
+    restore_flag_values(self._saved_flag_values, FLAGS)
+
+
+class _ParsingFlagOverrider(_FlagOverrider):
+  """Context manager for overriding flags.
+
+  Simulates command line parsing.
+
+  This is simlar to _FlagOverrider except that all **overrides should be
+  strings or sequences of strings, and when context is entered this class calls
+  .parse(value)
+
+  This results in the flags having .present set properly.
+  """
+
+  def __init__(self, **overrides: Union[str, Sequence[str]]):
+    for flag_name, new_value in overrides.items():
+      if isinstance(new_value, str):
+        continue
+      if (isinstance(new_value, collections.abc.Sequence) and
+          all(isinstance(single_value, str) for single_value in new_value)):
+        continue
+      raise TypeError(
+          f'flagsaver.as_parsed() cannot parse {flag_name}. Expected a single '
+          f'string or sequence of strings but {type(new_value)} was provided.')
+    super().__init__(**overrides)
+
+  def __enter__(self):
+    self._saved_flag_values = save_flag_values(FLAGS)
+    try:
+      for flag_name, unparsed_value in self._overrides.items():
+        # LINT.IfChange(flag_override_parsing)
+        FLAGS[flag_name].parse(unparsed_value)
+        FLAGS[flag_name].using_default_value = False
+        # LINT.ThenChange()
+
+      # Perform the validation on all modified flags. This is something that
+      # FLAGS._set_attributes() does for you in _FlagOverrider.
+      for flag_name in self._overrides:
+        FLAGS._assert_validators(FLAGS[flag_name].validators)
+
+    except KeyError as e:
+      # If a flag doesn't exist, an UnrecognizedFlagError is more specific.
+      restore_flag_values(self._saved_flag_values, FLAGS)
+      raise flags.UnrecognizedFlagError('Unknown command line flag.') from e
+
+    except:
+      # It may fail because of flag validators or general parsing issues.
+      restore_flag_values(self._saved_flag_values, FLAGS)
+      raise
+
+
+def _copy_flag_dict(flag: flags.Flag) -> Mapping[str, Any]:
