@@ -2534,3 +2534,48 @@ def _run_and_get_tests_result(argv, args, kwargs, xml_test_runner_class):
           f.write(xml_buffer.getvalue())
       finally:
         xml_buffer.close()
+
+
+def run_tests(argv, args, kwargs):  # pylint: disable=line-too-long
+  # type: (MutableSequence[Text], Sequence[Any], MutableMapping[Text, Any]) -> None
+  # pylint: enable=line-too-long
+  """Executes a set of Python unit tests.
+
+  Most users should call absltest.main() instead of run_tests.
+
+  Please note that run_tests should be called from app.run.
+  Calling absltest.main() would ensure that.
+
+  Please note that run_tests is allowed to make changes to kwargs.
+
+  Args:
+    argv: sys.argv with the command-line flags removed from the front, i.e. the
+      argv with which :func:`app.run()<absl.app.run>` has called
+      ``__main__.main``. It is passed to
+      ``unittest.TestProgram.__init__(argv=)``, which does its own flag parsing.
+      It is ignored if kwargs contains an argv entry.
+    args: Positional arguments passed through to
+      ``unittest.TestProgram.__init__``.
+    kwargs: Keyword arguments passed through to
+      ``unittest.TestProgram.__init__``.
+  """
+  result = _run_and_get_tests_result(
+      argv, args, kwargs, xml_reporter.TextAndXMLTestRunner)
+  sys.exit(not result.wasSuccessful())
+
+
+def _rmtree_ignore_errors(path):
+  # type: (Text) -> None
+  if os.path.isfile(path):
+    try:
+      os.unlink(path)
+    except OSError:
+      pass
+  else:
+    shutil.rmtree(path, ignore_errors=True)
+
+
+def _get_first_part(path):
+  # type: (Text) -> Text
+  parts = path.split(os.sep, 1)
+  return parts[0]
