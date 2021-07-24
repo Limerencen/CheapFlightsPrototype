@@ -27,4 +27,6 @@ A simple example::
       def testAddition(self, op1, op2, result):
         self.assertEqual(result, op1 + op2)
 
-Each invo
+Each invocation is a separate test case and properly isolated just
+like a normal test method, with its own setUp/tearDown cycle. In the
+example above, there are three separate testcases, one of which
