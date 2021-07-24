@@ -19,4 +19,12 @@ argument tuples.
 
 A simple example::
 
-    class AdditionExample(par
+    class AdditionExample(parameterized.TestCase):
+      @parameterized.parameters(
+        (1, 2, 3),
+        (4, 5, 9),
+        (1, 1, 3))
+      def testAddition(self, op1, op2, result):
+        self.assertEqual(result, op1 + op2)
+
+Each invo
