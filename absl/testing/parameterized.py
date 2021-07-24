@@ -12,4 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Adds support for parameterized 
+"""Adds support for parameterized tests to Python's unittest TestCase class.
+
+A parameterized test is a method in a test case that is invoked with different
+argument tuples.
+
+A simple example::
+
+    class AdditionExample(par
