@@ -29,4 +29,10 @@ A simple example::
 
 Each invocation is a separate test case and properly isolated just
 like a normal test method, with its own setUp/tearDown cycle. In the
-example above, there are three separate testcases, one of which
+example above, there are three separate testcases, one of which will
+fail due to an assertion error (1 + 1 != 3).
+
+Parameters for individual test cases can be tuples (with positional parameters)
+or dictionaries (with named parameters)::
+
+    class AdditionExample(para
