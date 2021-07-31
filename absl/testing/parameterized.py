@@ -40,4 +40,10 @@ or dictionaries (with named parameters)::
         {'op1': 1, 'op2': 2, 'result': 3},
         {'op1': 4, 'op2': 5, 'result': 9},
       )
-      def testAddition(
+      def testAddition(self, op1, op2, result):
+        self.assertEqual(result, op1 + op2)
+
+If a parameterized test fails, the error message will show the
+original test name and the parameters for that test.
+
+The id method of the t
