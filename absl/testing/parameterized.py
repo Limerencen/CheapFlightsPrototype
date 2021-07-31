@@ -35,4 +35,9 @@ fail due to an assertion error (1 + 1 != 3).
 Parameters for individual test cases can be tuples (with positional parameters)
 or dictionaries (with named parameters)::
 
-    class AdditionExample(para
+    class AdditionExample(parameterized.TestCase):
+      @parameterized.parameters(
+        {'op1': 1, 'op2': 2, 'result': 3},
+        {'op1': 4, 'op2': 5, 'result': 9},
+      )
+      def testAddition(
