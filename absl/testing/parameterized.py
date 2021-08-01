@@ -49,4 +49,11 @@ original test name and the parameters for that test.
 The id method of the test, used internally by the unittest framework, is also
 modified to show the arguments (but note that the name reported by `id()`
 doesn't match the actual test name, see below). To make sure that test names
-stay the same across se
+stay the same across several invocations, object representations like::
+
+    >>> class Foo(object):
+    ...  pass
+    >>> repr(Foo())
+    '<__main__.Foo object at 0x23d8610>'
+
+are turned into ``__main__.Foo``. When selecting a subset of test
