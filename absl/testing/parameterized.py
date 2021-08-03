@@ -56,4 +56,7 @@ stay the same across several invocations, object representations like::
     >>> repr(Foo())
     '<__main__.Foo object at 0x23d8610>'
 
-are turned into ``__main__.Foo``. When selecting a subset of test
+are turned into ``__main__.Foo``. When selecting a subset of test cases to run
+on the command-line, the test cases contain an index suffix for each argument
+in the order they were passed to :func:`parameters` (eg. testAddition0,
+testAddition1, etc.) This naming scheme is subject to 
