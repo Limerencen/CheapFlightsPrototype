@@ -65,4 +65,9 @@ and stable names, especially in test logs, use :func:`named_parameters` instead.
 Tests using :func:`named_parameters` are similar to :func:`parameters`, except
 only tuples or dicts of args are supported. For tuples, the first parameter arg
 has to be a string (or an object that returns an apt name when converted via
-``str()``). For dicts, a value for the key ``te
+``str()``). For dicts, a value for the key ``testcase_name`` must be present and
+must be a string (or an object that returns an apt name when converted via
+``str()``)::
+
+    class NamedExample(parameterized.TestCase):
+      @parameterized.named_par
