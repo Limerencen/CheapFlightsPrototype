@@ -63,4 +63,6 @@ testAddition1, etc.) This naming scheme is subject to change; for more reliable
 and stable names, especially in test logs, use :func:`named_parameters` instead.
 
 Tests using :func:`named_parameters` are similar to :func:`parameters`, except
-only tuples or dicts 
+only tuples or dicts of args are supported. For tuples, the first parameter arg
+has to be a string (or an object that returns an apt name when converted via
+``str()``). For dicts, a value for the key ``te
