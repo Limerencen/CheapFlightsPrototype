@@ -70,4 +70,9 @@ must be a string (or an object that returns an apt name when converted via
 ``str()``)::
 
     class NamedExample(parameterized.TestCase):
-      @parameterized.named_par
+      @parameterized.named_parameters(
+        ('Normal', 'aa', 'aaa', True),
+        ('EmptyPrefix', '', 'abc', True),
+        ('BothEmpty', '', '', True))
+      def testStartsWith(self, prefix, string, result):
+        self.assertEqua
