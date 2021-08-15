@@ -89,4 +89,13 @@ must be a string (or an object that returns an apt name when converted via
         self.assertEqual(result, string.startswith(prefix))
 
 Named tests also have the benefit that they can be run individually
-f
+from the command line::
+
+    $ testmodule.py NamedExample.testStartsWithNormal
+    .
+    --------------------------------------------------------------------
+    Ran 1 test in 0.000s
+
+    OK
+
+Param
