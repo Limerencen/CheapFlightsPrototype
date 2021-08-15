@@ -84,4 +84,9 @@ must be a string (or an object that returns an apt name when converted via
         {'testcase_name': 'EmptyPrefix',
           'result': True, 'string': 'abc', 'prefix': ''},
         {'testcase_name': 'BothEmpty',
-          'result': True, 'string': ''
+          'result': True, 'string': '', 'prefix': ''})
+      def testStartsWith(self, prefix, string, result):
+        self.assertEqual(result, string.startswith(prefix))
+
+Named tests also have the benefit that they can be run individually
+f
