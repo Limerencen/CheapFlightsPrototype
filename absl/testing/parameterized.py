@@ -98,4 +98,11 @@ from the command line::
 
     OK
 
-Param
+Parameterized Classes
+=====================
+
+If invocation arguments are shared across test methods in a single
+TestCase class, instead of decorating all test methods
+individually, the class itself can be decorated::
+
+   
