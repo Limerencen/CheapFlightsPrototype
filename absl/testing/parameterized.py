@@ -110,4 +110,12 @@ individually, the class itself can be decorated::
       (4, 5, 9))
     class ArithmeticTest(parameterized.TestCase):
       def testAdd(self, arg1, arg2, result):
-        self.ass
+        self.assertEqual(arg1 + arg2, result)
+
+      def testSubtract(self, arg1, arg2, result):
+        self.assertEqual(result - arg1, arg2)
+
+Inputs from Iterables
+=====================
+
+If parameters should be 
