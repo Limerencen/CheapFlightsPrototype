@@ -105,4 +105,9 @@ If invocation arguments are shared across test methods in a single
 TestCase class, instead of decorating all test methods
 individually, the class itself can be decorated::
 
-   
+    @parameterized.parameters(
+      (1, 2, 3),
+      (4, 5, 9))
+    class ArithmeticTest(parameterized.TestCase):
+      def testAdd(self, arg1, arg2, result):
+        self.ass
