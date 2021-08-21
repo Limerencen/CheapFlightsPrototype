@@ -118,4 +118,8 @@ individually, the class itself can be decorated::
 Inputs from Iterables
 =====================
 
-If parameters should be 
+If parameters should be shared across several test cases, or are dynamically
+created from other sources, a single non-tuple iterable can be passed into
+the decorator. This iterable will be used to obtain the test cases::
+
+    class
