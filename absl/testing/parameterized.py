@@ -122,4 +122,9 @@ If parameters should be shared across several test cases, or are dynamically
 created from other sources, a single non-tuple iterable can be passed into
 the decorator. This iterable will be used to obtain the test cases::
 
-    class
+    class AdditionExample(parameterized.TestCase):
+      @parameterized.parameters(
+        c.op1, c.op2, c.result for c in testcases
+      )
+      def testAddition(self, op1, op2, result):
+        self.assertEqu
