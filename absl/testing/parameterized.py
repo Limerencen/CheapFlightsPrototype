@@ -136,4 +136,13 @@ Single-Argument Test Methods
 If a test method takes only one argument, the single arguments must not be
 wrapped into a tuple::
 
-    class NegativeNumberExamp
+    class NegativeNumberExample(parameterized.TestCase):
+      @parameterized.parameters(
+        -1, -3, -4, -5
+      )
+      def testIsNegative(self, arg):
+        self.assertTrue(IsNegative(arg))
+
+
+List/tuple as a Single Argument
+==================
