@@ -127,4 +127,13 @@ the decorator. This iterable will be used to obtain the test cases::
         c.op1, c.op2, c.result for c in testcases
       )
       def testAddition(self, op1, op2, result):
-        self.assertEqu
+        self.assertEqual(result, op1 + op2)
+
+
+Single-Argument Test Methods
+============================
+
+If a test method takes only one argument, the single arguments must not be
+wrapped into a tuple::
+
+    class NegativeNumberExamp
