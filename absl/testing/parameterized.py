@@ -145,4 +145,9 @@ wrapped into a tuple::
 
 
 List/tuple as a Single Argument
-==================
+===============================
+
+If a test method takes a single argument of a list/tuple, it must be wrapped
+inside a tuple::
+
+    class ZeroSumExample(parameterized.TestCase
