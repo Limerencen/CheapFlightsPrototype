@@ -170,4 +170,10 @@ test combinations::
       @parameterized.product(
           num=[0, 20, 80],
           modulo=[2, 4],
-          expecte
+          expected=[0]
+      )
+      def testModuloResult(self, num, modulo, expected):
+        self.assertEqual(expected, num % modulo)
+
+This results in 6 test cases being created - one for each combination of the
+para
