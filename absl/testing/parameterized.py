@@ -150,4 +150,13 @@ List/tuple as a Single Argument
 If a test method takes a single argument of a list/tuple, it must be wrapped
 inside a tuple::
 
-    class ZeroSumExample(parameterized.TestCase
+    class ZeroSumExample(parameterized.TestCase):
+      @parameterized.parameters(
+        ([-1, 0, 1], ),
+        ([-2, 0, 2], ),
+      )
+      def testSumIsZero(self, arg):
+        self.assertEqual(0, sum(arg))
+
+
+Cartesian product of Parameter Values as 
