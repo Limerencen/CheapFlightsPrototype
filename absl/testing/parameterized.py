@@ -176,4 +176,8 @@ test combinations::
         self.assertEqual(expected, num % modulo)
 
 This results in 6 test cases being created - one for each combination of the
-para
+parameters. It is also possible to supply sequences of keyword argument dicts
+as elements of the cartesian product::
+
+    @parameterized.product(
+        (dict(num=5, modulo=3, exp
