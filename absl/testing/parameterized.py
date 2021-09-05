@@ -180,4 +180,9 @@ parameters. It is also possible to supply sequences of keyword argument dicts
 as elements of the cartesian product::
 
     @parameterized.product(
-        (dict(num=5, modulo=3, exp
+        (dict(num=5, modulo=3, expected=2),
+         dict(num=7, modulo=4, expected=3)),
+        dtype=(int, float)
+    )
+    def testModuloResult(self, num, modulo, expected, dtype):
+      self.assertEqual(expected, dtype(num) % modulo
