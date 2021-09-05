@@ -185,4 +185,8 @@ as elements of the cartesian product::
         dtype=(int, float)
     )
     def testModuloResult(self, num, modulo, expected, dtype):
-      self.assertEqual(expected, dtype(num) % modulo
+      self.assertEqual(expected, dtype(num) % modulo)
+
+This results in 4 test cases being created - for each of the two sets of test
+data (supplied as kwarg dicts) and for each of the two data types (supplied as
+a named parameter). Multiple keyword argument d
