@@ -205,3 +205,10 @@ as [asynctest](https://github.com/Martiusweb/asynctest)::
       ('a', 1),
       ('b', 2),
     )
+    async def testSomeAsyncFunction(self, arg, expected):
+      actual = await someAsyncFunction(arg)
+      self.assertEqual(actual, expected)
+"""
+
+from collections import abc
+import 
