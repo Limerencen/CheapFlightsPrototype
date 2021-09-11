@@ -196,4 +196,12 @@ Async Support
 
 If a test needs to call async functions, it can inherit from both
 parameterized.TestCase and another TestCase that supports async calls, such
-as [asynctest
+as [asynctest](https://github.com/Martiusweb/asynctest)::
+
+  import asynctest
+
+  class AsyncExample(parameterized.TestCase, asynctest.TestCase):
+    @parameterized.parameters(
+      ('a', 1),
+      ('b', 2),
+    )
