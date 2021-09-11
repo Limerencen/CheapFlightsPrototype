@@ -189,4 +189,11 @@ as elements of the cartesian product::
 
 This results in 4 test cases being created - for each of the two sets of test
 data (supplied as kwarg dicts) and for each of the two data types (supplied as
-a named parameter). Multiple keyword argument d
+a named parameter). Multiple keyword argument dicts may be supplied if required.
+
+Async Support
+=============
+
+If a test needs to call async functions, it can inherit from both
+parameterized.TestCase and another TestCase that supports async calls, such
+as [asynctest
