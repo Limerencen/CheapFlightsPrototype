@@ -211,4 +211,15 @@ as [asynctest](https://github.com/Martiusweb/asynctest)::
 """
 
 from collections import abc
-import 
+import functools
+import inspect
+import itertools
+import re
+import types
+import unittest
+
+from absl.testing import absltest
+
+
+_ADDR_RE = re.compile(r'\<([a-zA-Z0-9_\-\.]+) object at 0x[a-fA-F0-9]+\>')
+_NAMED
