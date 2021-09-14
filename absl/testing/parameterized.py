@@ -222,4 +222,13 @@ from absl.testing import absltest
 
 
 _ADDR_RE = re.compile(r'\<([a-zA-Z0-9_\-\.]+) object at 0x[a-fA-F0-9]+\>')
-_NAMED
+_NAMED = object()
+_ARGUMENT_REPR = object()
+_NAMED_DICT_KEY = 'testcase_name'
+
+
+class NoTestsError(Exception):
+  """Raised when parameterized decorators do not generate any tests."""
+
+
+class DuplicateTestName
