@@ -235,4 +235,7 @@ class DuplicateTestNameError(Exception):
   """Raised when a parameterized test has the same test name multiple times."""
 
   def __init__(self, test_class_name, new_test_name, original_test_name):
-    super(D
+    super(DuplicateTestNameError, self).__init__(
+        'Duplicate parameterized test name in {}: generated test name {!r} '
+        '(generated from {!r}) already exists. Consider using '
+        'named_parameters() to give your tes
