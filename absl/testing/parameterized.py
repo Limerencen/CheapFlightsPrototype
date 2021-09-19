@@ -231,4 +231,8 @@ class NoTestsError(Exception):
   """Raised when parameterized decorators do not generate any tests."""
 
 
-class DuplicateTestName
+class DuplicateTestNameError(Exception):
+  """Raised when a parameterized test has the same test name multiple times."""
+
+  def __init__(self, test_class_name, new_test_name, original_test_name):
+    super(D
