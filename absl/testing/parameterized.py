@@ -245,3 +245,12 @@ class DuplicateTestNameError(Exception):
 
 def _clean_repr(obj):
   return _ADDR_RE.sub(r'<\1>', repr(obj))
+
+
+def _non_string_or_bytes_iterable(obj):
+  return (isinstance(obj, abc.Iterable) and not isinstance(obj, str) and
+          not isinstance(obj, bytes))
+
+
+def _format_parameter_list(testcase_params):
+  i
