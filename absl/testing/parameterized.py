@@ -238,4 +238,10 @@ class DuplicateTestNameError(Exception):
     super(DuplicateTestNameError, self).__init__(
         'Duplicate parameterized test name in {}: generated test name {!r} '
         '(generated from {!r}) already exists. Consider using '
-        'named_parameters() to give your tes
+        'named_parameters() to give your tests unique names and/or renaming '
+        'the conflicting test method.'.format(
+            test_class_name, new_test_name, original_test_name))
+
+
+def _clean_repr(obj):
+  return _ADDR_RE.sub(r'<\1>', repr(obj))
