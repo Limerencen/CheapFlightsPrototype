@@ -253,4 +253,8 @@ def _non_string_or_bytes_iterable(obj):
 
 
 def _format_parameter_list(testcase_params):
-  i
+  if isinstance(testcase_params, abc.Mapping):
+    return ', '.join('%s=%s' % (argname, _clean_repr(value))
+                     for argname, value in testcase_params.items())
+  elif _non_string_or_bytes_iterable(testcase_params):
+    retur
