@@ -272,4 +272,7 @@ def _async_wrapped(func):
 class _ParameterizedTestIter(object):
   """Callable and iterable class for producing new test cases."""
 
-  def __init__(self, test_method, testcases, na
+  def __init__(self, test_method, testcases, naming_type, original_name=None):
+    """Returns concrete test functions for a test and a list of parameters.
+
+    The naming_type is used to determine the name of the concret
