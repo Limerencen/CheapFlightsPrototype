@@ -265,4 +265,11 @@ def _format_parameter_list(testcase_params):
 def _async_wrapped(func):
   @functools.wraps(func)
   async def wrapper(*args, **kwargs):
-    retur
+    return await func(*args, **kwargs)
+  return wrapper
+
+
+class _ParameterizedTestIter(object):
+  """Callable and iterable class for producing new test cases."""
+
+  def __init__(self, test_method, testcases, na
