@@ -283,4 +283,7 @@ class _ParameterizedTestIter(object):
     Args:
       test_method: The decorated test method.
       testcases: (list of tuple/dict) A list of parameter tuples/dicts for
-          individual test invoc
+          individual test invocations.
+      naming_type: The test naming type, either _NAMED or _ARGUMENT_REPR.
+      original_name: The original test method name. When decorated on a test
+          method, None is passed to __init__ and
