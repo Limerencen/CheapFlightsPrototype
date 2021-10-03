@@ -278,4 +278,9 @@ class _ParameterizedTestIter(object):
     The naming_type is used to determine the name of the concrete
     functions as reported by the unittest framework. If naming_type is
     _FIRST_ARG, the testcases must be tuples, and the first element must
-    have a string representation that is a valid Python iden
+    have a string representation that is a valid Python identifier.
+
+    Args:
+      test_method: The decorated test method.
+      testcases: (list of tuple/dict) A list of parameter tuples/dicts for
+          individual test invoc
