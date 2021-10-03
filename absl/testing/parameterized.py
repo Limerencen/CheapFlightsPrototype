@@ -275,4 +275,7 @@ class _ParameterizedTestIter(object):
   def __init__(self, test_method, testcases, naming_type, original_name=None):
     """Returns concrete test functions for a test and a list of parameters.
 
-    The naming_type is used to determine the name of the concret
+    The naming_type is used to determine the name of the concrete
+    functions as reported by the unittest framework. If naming_type is
+    _FIRST_ARG, the testcases must be tuples, and the first element must
+    have a string representation that is a valid Python iden
