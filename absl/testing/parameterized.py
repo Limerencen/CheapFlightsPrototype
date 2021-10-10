@@ -295,4 +295,9 @@ class _ParameterizedTestIter(object):
     self.testcases = testcases
     self._naming_type = naming_type
     if original_name is None:
-      orig
+      original_name = test_method.__name__
+    self._original_name = original_name
+    self.__name__ = _ParameterizedTestIter.__name__
+
+  def __call__(self, *args, **kwargs):
+    raise RuntimeError('You appear to 
