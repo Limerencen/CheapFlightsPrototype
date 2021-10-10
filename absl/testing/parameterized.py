@@ -286,4 +286,7 @@ class _ParameterizedTestIter(object):
           individual test invocations.
       naming_type: The test naming type, either _NAMED or _ARGUMENT_REPR.
       original_name: The original test method name. When decorated on a test
-          method, None is passed to __init__ and
+          method, None is passed to __init__ and test_method.__name__ is used.
+          Note test_method.__name__ might be different than the original defined
+          test method because of the use of other decorators. A more accurate
+          value is se
