@@ -289,4 +289,10 @@ class _ParameterizedTestIter(object):
           method, None is passed to __init__ and test_method.__name__ is used.
           Note test_method.__name__ might be different than the original defined
           test method because of the use of other decorators. A more accurate
-          value is se
+          value is set by TestGeneratorMetaclass.__new__ later.
+    """
+    self._test_method = test_method
+    self.testcases = testcases
+    self._naming_type = naming_type
+    if original_name is None:
+      orig
