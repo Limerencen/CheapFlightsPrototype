@@ -300,4 +300,7 @@ class _ParameterizedTestIter(object):
     self.__name__ = _ParameterizedTestIter.__name__
 
   def __call__(self, *args, **kwargs):
-    raise RuntimeError('You appear to 
+    raise RuntimeError('You appear to be running a parameterized test case '
+                       'without having inherited from parameterized.'
+                       'TestCase. This is bad because none of '
+                       'your test cases are 
