@@ -303,4 +303,9 @@ class _ParameterizedTestIter(object):
     raise RuntimeError('You appear to be running a parameterized test case '
                        'without having inherited from parameterized.'
                        'TestCase. This is bad because none of '
-                       'your test cases are 
+                       'your test cases are actually being run. You may also '
+                       'be using another decorator before the parameterized '
+                       'one, in which case you should reverse the order.')
+
+  def __iter__(self):
+    test_m
