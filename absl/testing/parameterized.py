@@ -308,4 +308,10 @@ class _ParameterizedTestIter(object):
                        'one, in which case you should reverse the order.')
 
   def __iter__(self):
-    test_m
+    test_method = self._test_method
+    naming_type = self._naming_type
+
+    def make_bound_param_test(testcase_params):
+      @functools.wraps(test_method)
+      def bound_param_test(self):
+        if isinstanc
