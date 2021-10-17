@@ -314,4 +314,7 @@ class _ParameterizedTestIter(object):
     def make_bound_param_test(testcase_params):
       @functools.wraps(test_method)
       def bound_param_test(self):
-        if isinstanc
+        if isinstance(testcase_params, abc.Mapping):
+          return test_method(self, **testcase_params)
+        elif _non_string_or_bytes_iterable(testcase_params):
+          return test_method(self, *testcase_par
