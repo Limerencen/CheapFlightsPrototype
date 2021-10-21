@@ -317,4 +317,11 @@ class _ParameterizedTestIter(object):
         if isinstance(testcase_params, abc.Mapping):
           return test_method(self, **testcase_params)
         elif _non_string_or_bytes_iterable(testcase_params):
-          return test_method(self, *testcase_par
+          return test_method(self, *testcase_params)
+        else:
+          return test_method(self, testcase_params)
+
+      if naming_type is _NAMED:
+        # Signal the metaclass that the name of the test function is unique
+        # and descriptive.
+    
