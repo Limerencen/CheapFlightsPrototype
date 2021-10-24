@@ -329,4 +329,7 @@ class _ParameterizedTestIter(object):
         testcase_name = None
         if isinstance(testcase_params, abc.Mapping):
           if _NAMED_DICT_KEY not in testcase_params:
-            raise RuntimeEr
+            raise RuntimeError(
+                'Dict for named tests must contain key "%s"' % _NAMED_DICT_KEY)
+          # Create a new dict to avoid modifying the supplied testcase_params.
+          testcase_name = testcase_params[_NAMED_DICT_K
