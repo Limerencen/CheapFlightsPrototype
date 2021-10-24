@@ -324,4 +324,9 @@ class _ParameterizedTestIter(object):
       if naming_type is _NAMED:
         # Signal the metaclass that the name of the test function is unique
         # and descriptive.
-    
+        bound_param_test.__x_use_name__ = True
+
+        testcase_name = None
+        if isinstance(testcase_params, abc.Mapping):
+          if _NAMED_DICT_KEY not in testcase_params:
+            raise RuntimeEr
