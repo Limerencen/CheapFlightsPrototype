@@ -332,4 +332,9 @@ class _ParameterizedTestIter(object):
             raise RuntimeError(
                 'Dict for named tests must contain key "%s"' % _NAMED_DICT_KEY)
           # Create a new dict to avoid modifying the supplied testcase_params.
-          testcase_name = testcase_params[_NAMED_DICT_K
+          testcase_name = testcase_params[_NAMED_DICT_KEY]
+          testcase_params = {
+              k: v for k, v in testcase_params.items() if k != _NAMED_DICT_KEY
+          }
+        elif _non_string_or_bytes_iterable(testcase_params):
+  
