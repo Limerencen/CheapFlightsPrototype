@@ -337,4 +337,8 @@ class _ParameterizedTestIter(object):
               k: v for k, v in testcase_params.items() if k != _NAMED_DICT_KEY
           }
         elif _non_string_or_bytes_iterable(testcase_params):
-  
+          if not isinstance(testcase_params[0], str):
+            raise RuntimeError(
+                'The first element of named test parameters is the test name '
+                'suffix and must be a string')
+       
