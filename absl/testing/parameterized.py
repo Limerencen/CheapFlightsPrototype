@@ -341,4 +341,8 @@ class _ParameterizedTestIter(object):
             raise RuntimeError(
                 'The first element of named test parameters is the test name '
                 'suffix and must be a string')
-       
+          testcase_name = testcase_params[0]
+          testcase_params = testcase_params[1:]
+        else:
+          raise RuntimeError(
+              'Named tests must be passed a dict or non-string iterable.')
