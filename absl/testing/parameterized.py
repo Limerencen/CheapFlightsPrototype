@@ -346,3 +346,9 @@ class _ParameterizedTestIter(object):
         else:
           raise RuntimeError(
               'Named tests must be passed a dict or non-string iterable.')
+
+        test_method_name = self._original_name
+        # Support PEP-8 underscore style for test naming if used.
+        if (test_method_name.startswith('test_')
+            and testcase_name
+            and not testca
