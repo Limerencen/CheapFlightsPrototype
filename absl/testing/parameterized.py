@@ -351,4 +351,8 @@ class _ParameterizedTestIter(object):
         # Support PEP-8 underscore style for test naming if used.
         if (test_method_name.startswith('test_')
             and testcase_name
-            and not testca
+            and not testcase_name.startswith('_')):
+          test_method_name += '_'
+
+        bound_param_test.__name__ = test_method_name + str(testcase_name)
+      elif naming_type is _ARGUMENT_
