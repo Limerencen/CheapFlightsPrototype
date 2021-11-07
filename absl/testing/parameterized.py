@@ -355,4 +355,9 @@ class _ParameterizedTestIter(object):
           test_method_name += '_'
 
         bound_param_test.__name__ = test_method_name + str(testcase_name)
-      elif naming_type is _ARGUMENT_
+      elif naming_type is _ARGUMENT_REPR:
+        # If it's a generator, convert it to a tuple and treat them as
+        # parameters.
+        if isinstance(testcase_params, types.GeneratorType):
+          testcase_params = tuple(testcase_params)
+        # Th
