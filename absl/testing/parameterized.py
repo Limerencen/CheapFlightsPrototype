@@ -362,4 +362,8 @@ class _ParameterizedTestIter(object):
           testcase_params = tuple(testcase_params)
         # The metaclass creates a unique, but non-descriptive method name for
         # _ARGUMENT_REPR tests using an indexed suffix.
-        # To keep test names descriptive, only the original method name is 
+        # To keep test names descriptive, only the original method name is used.
+        # To make sure test names are unique, we add a unique descriptive suffix
+        # __x_params_repr__ for every test.
+        params_repr = '(%s)' % (_format_parameter_list(testcase_params),)
+      
