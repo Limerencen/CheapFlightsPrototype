@@ -360,4 +360,6 @@ class _ParameterizedTestIter(object):
         # parameters.
         if isinstance(testcase_params, types.GeneratorType):
           testcase_params = tuple(testcase_params)
-        # Th
+        # The metaclass creates a unique, but non-descriptive method name for
+        # _ARGUMENT_REPR tests using an indexed suffix.
+        # To keep test names descriptive, only the original method name is 
