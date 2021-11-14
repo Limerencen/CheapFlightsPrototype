@@ -371,4 +371,8 @@ class _ParameterizedTestIter(object):
         raise RuntimeError('%s is not a valid naming type.' % (naming_type,))
 
       bound_param_test.__doc__ = '%s(%s)' % (
-          bound_param_test.__nam
+          bound_param_test.__name__, _format_parameter_list(testcase_params))
+      if test_method.__doc__:
+        bound_param_test.__doc__ += '\n%s' % (test_method.__doc__,)
+      if inspect.iscoroutinefunction(test_method):
+       
