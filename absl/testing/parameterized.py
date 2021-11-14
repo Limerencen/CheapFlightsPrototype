@@ -366,4 +366,9 @@ class _ParameterizedTestIter(object):
         # To make sure test names are unique, we add a unique descriptive suffix
         # __x_params_repr__ for every test.
         params_repr = '(%s)' % (_format_parameter_list(testcase_params),)
-      
+        bound_param_test.__x_params_repr__ = params_repr
+      else:
+        raise RuntimeError('%s is not a valid naming type.' % (naming_type,))
+
+      bound_param_test.__doc__ = '%s(%s)' % (
+          bound_param_test.__nam
