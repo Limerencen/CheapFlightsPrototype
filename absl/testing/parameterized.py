@@ -385,4 +385,8 @@ def _modify_class(class_object, testcases, naming_type):
   assert not getattr(class_object, '_test_params_reprs', None), (
       'Cannot add parameters to %s. Either it already has parameterized '
       'methods, or its super class is also a parameterized class.' % (
-          cl
+          class_object,))
+  # NOTE: _test_params_repr is private to parameterized.TestCase and it's
+  # metaclass; do not use it outside of those classes.
+  class_object._test_params_reprs = test_params_reprs = {}
+  for name, obj in c
