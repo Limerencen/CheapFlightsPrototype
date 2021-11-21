@@ -381,4 +381,8 @@ class _ParameterizedTestIter(object):
     return (make_bound_param_test(c) for c in self.testcases)
 
 
-def _modify_class(class_object, testcases, naming
+def _modify_class(class_object, testcases, naming_type):
+  assert not getattr(class_object, '_test_params_reprs', None), (
+      'Cannot add parameters to %s. Either it already has parameterized '
+      'methods, or its super class is also a parameterized class.' % (
+          cl
