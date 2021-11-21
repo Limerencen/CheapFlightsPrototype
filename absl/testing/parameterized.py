@@ -375,4 +375,10 @@ class _ParameterizedTestIter(object):
       if test_method.__doc__:
         bound_param_test.__doc__ += '\n%s' % (test_method.__doc__,)
       if inspect.iscoroutinefunction(test_method):
-       
+        return _async_wrapped(bound_param_test)
+      return bound_param_test
+
+    return (make_bound_param_test(c) for c in self.testcases)
+
+
+def _modify_class(class_object, testcases, naming
