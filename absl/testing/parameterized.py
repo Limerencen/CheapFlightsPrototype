@@ -394,4 +394,8 @@ def _modify_class(class_object, testcases, naming_type):
         and isinstance(obj, types.FunctionType)):
       delattr(class_object, name)
       methods = {}
-      _update_class_dict_f
+      _update_class_dict_for_param_test_case(
+          class_object.__name__, methods, test_params_reprs, name,
+          _ParameterizedTestIter(obj, testcases, naming_type, name))
+      for meth_name, meth in methods.items():
+ 
