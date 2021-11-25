@@ -389,4 +389,9 @@ def _modify_class(class_object, testcases, naming_type):
   # NOTE: _test_params_repr is private to parameterized.TestCase and it's
   # metaclass; do not use it outside of those classes.
   class_object._test_params_reprs = test_params_reprs = {}
-  for name, obj in c
+  for name, obj in class_object.__dict__.copy().items():
+    if (name.startswith(unittest.TestLoader.testMethodPrefix)
+        and isinstance(obj, types.FunctionType)):
+      delattr(class_object, name)
+      methods = {}
+      _update_class_dict_f
