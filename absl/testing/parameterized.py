@@ -398,4 +398,12 @@ def _modify_class(class_object, testcases, naming_type):
           class_object.__name__, methods, test_params_reprs, name,
           _ParameterizedTestIter(obj, testcases, naming_type, name))
       for meth_name, meth in methods.items():
- 
+        setattr(class_object, meth_name, meth)
+
+
+def _parameter_decorator(naming_type, testcases):
+  """Implementation of the parameterization decorators.
+
+  Args:
+    naming_type: The naming type.
+    testcases: Testcase paramete
