@@ -406,4 +406,13 @@ def _parameter_decorator(naming_type, testcases):
 
   Args:
     naming_type: The naming type.
-    testcases: Testcase paramete
+    testcases: Testcase parameters.
+
+  Raises:
+    NoTestsError: Raised when the decorator generates no tests.
+
+  Returns:
+    A function for modifying the decorated object.
+  """
+  def _apply(obj):
+    if isinstance
