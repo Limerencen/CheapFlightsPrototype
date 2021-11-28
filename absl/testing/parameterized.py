@@ -415,4 +415,11 @@ def _parameter_decorator(naming_type, testcases):
     A function for modifying the decorated object.
   """
   def _apply(obj):
-    if isinstance
+    if isinstance(obj, type):
+      _modify_class(obj, testcases, naming_type)
+      return obj
+    else:
+      return _ParameterizedTestIter(obj, testcases, naming_type)
+
+  if (len(testcases) == 1 and
+      not isinstance(t
