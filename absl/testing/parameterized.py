@@ -422,4 +422,7 @@ def _parameter_decorator(naming_type, testcases):
       return _ParameterizedTestIter(obj, testcases, naming_type)
 
   if (len(testcases) == 1 and
-      not isinstance(t
+      not isinstance(testcases[0], tuple) and
+      not isinstance(testcases[0], abc.Mapping)):
+    # Support using a single non-tuple parameter as a list of test cases.
+    # Note that the single non-tuple parameter can
