@@ -428,4 +428,11 @@ def _parameter_decorator(naming_type, testcases):
     # Note that the single non-tuple parameter can't be Mapping either, which
     # means a single dict parameter case.
     assert _non_string_or_bytes_iterable(testcases[0]), (
-        'Single parameter argument must be a non-string non-Mapping iterable'
+        'Single parameter argument must be a non-string non-Mapping iterable')
+    testcases = testcases[0]
+
+  if not isinstance(testcases, abc.Sequence):
+    testcases = list(testcases)
+  if not testcases:
+    raise NoTestsError(
+        'param
