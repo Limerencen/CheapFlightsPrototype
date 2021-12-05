@@ -425,4 +425,7 @@ def _parameter_decorator(naming_type, testcases):
       not isinstance(testcases[0], tuple) and
       not isinstance(testcases[0], abc.Mapping)):
     # Support using a single non-tuple parameter as a list of test cases.
-    # Note that the single non-tuple parameter can
+    # Note that the single non-tuple parameter can't be Mapping either, which
+    # means a single dict parameter case.
+    assert _non_string_or_bytes_iterable(testcases[0]), (
+        'Single parameter argument must be a non-string non-Mapping iterable'
