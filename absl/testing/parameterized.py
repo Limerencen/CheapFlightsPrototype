@@ -435,4 +435,11 @@ def _parameter_decorator(naming_type, testcases):
     testcases = list(testcases)
   if not testcases:
     raise NoTestsError(
-        'param
+        'parameterized test decorators did not generate any tests. '
+        'Make sure you specify non-empty parameters, '
+        'and do not reuse generators more than once.')
+
+  return _apply
+
+
+def parameters(*testcases)
