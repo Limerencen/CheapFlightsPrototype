@@ -456,4 +456,12 @@ def parameters(*testcases):
     NoTestsError: Raised when the decorator generates no tests.
 
   Returns:
-     A test generator to be handle
+     A test generator to be handled by TestGeneratorMetaclass.
+  """
+  return _parameter_decorator(_ARGUMENT_REPR, testcases)
+
+
+def named_parameters(*testcases):
+  """A decorator for creating parameterized tests.
+
+  See the module docstrin
