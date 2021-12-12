@@ -449,4 +449,11 @@ def parameters(*testcases):
 
   Args:
     *testcases: Parameters for the decorated method, either a single
-        iterable, or a list of tuple
+        iterable, or a list of tuples/dicts/objects (for tests with only one
+        argument).
+
+  Raises:
+    NoTestsError: Raised when the decorator generates no tests.
+
+  Returns:
+     A test generator to be handle
