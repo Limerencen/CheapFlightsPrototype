@@ -442,4 +442,11 @@ def _parameter_decorator(naming_type, testcases):
   return _apply
 
 
-def parameters(*testcases)
+def parameters(*testcases):
+  """A decorator for creating parameterized tests.
+
+  See the module docstring for a usage example.
+
+  Args:
+    *testcases: Parameters for the decorated method, either a single
+        iterable, or a list of tuple
