@@ -464,4 +464,6 @@ def parameters(*testcases):
 def named_parameters(*testcases):
   """A decorator for creating parameterized tests.
 
-  See the module docstrin
+  See the module docstring for a usage example. For every parameter tuple
+  passed, the first element of the tuple should be a string and will be appended
+  to the name of the test method. Each parameter dict passed must h
