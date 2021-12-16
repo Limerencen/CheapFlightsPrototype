@@ -471,4 +471,11 @@ def named_parameters(*testcases):
   appended to the name of the test method.
 
   Args:
-    *testcases: Parameters for the decorated method, either a s
+    *testcases: Parameters for the decorated method, either a single iterable,
+        or a list of tuples or dicts.
+
+  Raises:
+    NoTestsError: Raised when the decorator generates no tests.
+
+  Returns:
+     A test generator to be handled by TestGenerat
