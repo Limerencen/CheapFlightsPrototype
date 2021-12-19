@@ -486,4 +486,9 @@ def named_parameters(*testcases):
 def product(*kwargs_seqs, **testgrid):
   """A decorator for running tests over cartesian product of parameters values.
 
-  See the module do
+  See the module docstring for a usage example. The test will be run for every
+  possible combination of the parameters.
+
+  Args:
+    *kwargs_seqs: Each positional parameter is a sequence of keyword arg dicts;
+      every test c
