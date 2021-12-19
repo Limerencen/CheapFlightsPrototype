@@ -478,4 +478,12 @@ def named_parameters(*testcases):
     NoTestsError: Raised when the decorator generates no tests.
 
   Returns:
-     A test generator to be handled by TestGenerat
+     A test generator to be handled by TestGeneratorMetaclass.
+  """
+  return _parameter_decorator(_NAMED, testcases)
+
+
+def product(*kwargs_seqs, **testgrid):
+  """A decorator for running tests over cartesian product of parameters values.
+
+  See the module do
