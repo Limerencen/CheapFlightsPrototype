@@ -491,4 +491,7 @@ def product(*kwargs_seqs, **testgrid):
 
   Args:
     *kwargs_seqs: Each positional parameter is a sequence of keyword arg dicts;
-      every test c
+      every test case generated will include exactly one kwargs dict from each
+      positional parameter; these will then be merged to form an overall list
+      of arguments for the test case.
+    **testgrid: A mapping of parameter names and their possib
