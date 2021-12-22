@@ -494,4 +494,11 @@ def product(*kwargs_seqs, **testgrid):
       every test case generated will include exactly one kwargs dict from each
       positional parameter; these will then be merged to form an overall list
       of arguments for the test case.
-    **testgrid: A mapping of parameter names and their possib
+    **testgrid: A mapping of parameter names and their possible values. Possible
+      values should given as either a list or a tuple.
+
+  Raises:
+    NoTestsError: Raised when the decorator generates no tests.
+
+  Returns:
+     A test generator to be handled
