@@ -501,4 +501,10 @@ def product(*kwargs_seqs, **testgrid):
     NoTestsError: Raised when the decorator generates no tests.
 
   Returns:
-     A test generator to be handled
+     A test generator to be handled by TestGeneratorMetaclass.
+  """
+
+  for name, values in testgrid.items():
+    assert isinstance(values, (list, tuple)), (
+        'Values of {} must be given as list or tuple, found {}'.format(
+      
