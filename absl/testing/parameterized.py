@@ -507,4 +507,9 @@ def product(*kwargs_seqs, **testgrid):
   for name, values in testgrid.items():
     assert isinstance(values, (list, tuple)), (
         'Values of {} must be given as list or tuple, found {}'.format(
-      
+            name, type(values)))
+
+  prior_arg_names = set()
+  for kwargs_seq in kwargs_seqs:
+    assert ((isinstance(kwargs_seq, (list, tuple))) and
+            all(isinstance(kwargs, dict) for kwargs in kwargs_seq
