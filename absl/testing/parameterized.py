@@ -512,4 +512,10 @@ def product(*kwargs_seqs, **testgrid):
   prior_arg_names = set()
   for kwargs_seq in kwargs_seqs:
     assert ((isinstance(kwargs_seq, (list, tuple))) and
-            all(isinstance(kwargs, dict) for kwargs in kwargs_seq
+            all(isinstance(kwargs, dict) for kwargs in kwargs_seq)), (
+                'Positional parameters must be a sequence of keyword arg'
+                'dicts, found {}'
+                .format(kwargs_seq))
+    if kwargs_seq:
+      arg_names = set(kwargs_seq[0])
+      assert all(s
