@@ -521,4 +521,8 @@ def product(*kwargs_seqs, **testgrid):
       assert all(set(kwargs) == arg_names for kwargs in kwargs_seq), (
           'Keyword argument dicts within a single parameter must all have the '
           'same keys, found {}'.format(kwargs_seq))
-      assert not (arg_names & p
+      assert not (arg_names & prior_arg_names), (
+          'Keyword argument dict sequences must all have distinct argument '
+          'names, found duplicate(s) {}'
+          .format(sorted(arg_names & prior_arg_names)))
+     
