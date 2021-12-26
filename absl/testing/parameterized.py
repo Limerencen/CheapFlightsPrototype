@@ -518,4 +518,7 @@ def product(*kwargs_seqs, **testgrid):
                 .format(kwargs_seq))
     if kwargs_seq:
       arg_names = set(kwargs_seq[0])
-      assert all(s
+      assert all(set(kwargs) == arg_names for kwargs in kwargs_seq), (
+          'Keyword argument dicts within a single parameter must all have the '
+          'same keys, found {}'.format(kwargs_seq))
+      assert not (arg_names & p
