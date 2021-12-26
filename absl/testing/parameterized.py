@@ -525,4 +525,8 @@ def product(*kwargs_seqs, **testgrid):
           'Keyword argument dict sequences must all have distinct argument '
           'names, found duplicate(s) {}'
           .format(sorted(arg_names & prior_arg_names)))
-     
+      prior_arg_names |= arg_names
+
+  assert not (prior_arg_names & set(testgrid)), (
+      'Arguments supplied in kwargs dicts in positional parameters must not '
+      'overlap with arguments supplied as named pa
