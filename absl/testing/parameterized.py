@@ -529,4 +529,8 @@ def product(*kwargs_seqs, **testgrid):
 
   assert not (prior_arg_names & set(testgrid)), (
       'Arguments supplied in kwargs dicts in positional parameters must not '
-      'overlap with arguments supplied as named pa
+      'overlap with arguments supplied as named parameters; found duplicate '
+      'argument(s) {}'.format(sorted(prior_arg_names & set(testgrid))))
+
+  # Convert testgrid into a sequence of sequences of kwargs dicts and combine
+  # w
