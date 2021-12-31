@@ -533,4 +533,7 @@ def product(*kwargs_seqs, **testgrid):
       'argument(s) {}'.format(sorted(prior_arg_names & set(testgrid))))
 
   # Convert testgrid into a sequence of sequences of kwargs dicts and combine
-  # w
+  # with the positional parameters.
+  # So foo=[1,2], bar=[3,4] --> [[{foo: 1}, {foo: 2}], [{bar: 3, bar: 4}]]
+  testgrid = (tuple({k: v} for v in vs) for k, vs in testgrid.items())
+  testgrid = tuple(kwargs_seqs) + tup
