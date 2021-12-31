@@ -536,4 +536,10 @@ def product(*kwargs_seqs, **testgrid):
   # with the positional parameters.
   # So foo=[1,2], bar=[3,4] --> [[{foo: 1}, {foo: 2}], [{bar: 3, bar: 4}]]
   testgrid = (tuple({k: v} for v in vs) for k, vs in testgrid.items())
-  testgrid = tuple(kwargs_seqs) + tup
+  testgrid = tuple(kwargs_seqs) + tuple(testgrid)
+
+  # Create all possible combinations of parameters as a cartesian product
+  # of parameter values.
+  testcases = [
+      dict(itertools.chain.from_iterable(case.items()
+                                       
