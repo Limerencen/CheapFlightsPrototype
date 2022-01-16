@@ -553,4 +553,8 @@ class TestGeneratorMetaclass(type):
 
   def __new__(cls, class_name, bases, dct):
     # NOTE: _test_params_repr is private to parameterized.TestCase and it's
-    # metaclass; do not use it outside o
+    # metaclass; do not use it outside of those classes.
+    test_params_reprs = dct.setdefault('_test_params_reprs', {})
+    for name, obj in dct.copy().items():
+      if (name.startswith(unittest.TestLoader.testMethodPrefix) and
+          _non_s
