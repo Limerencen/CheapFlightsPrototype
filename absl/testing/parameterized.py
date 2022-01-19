@@ -557,4 +557,7 @@ class TestGeneratorMetaclass(type):
     test_params_reprs = dct.setdefault('_test_params_reprs', {})
     for name, obj in dct.copy().items():
       if (name.startswith(unittest.TestLoader.testMethodPrefix) and
-          _non_s
+          _non_string_or_bytes_iterable(obj)):
+        # NOTE: `obj` might not be a _ParameterizedTestIter in two cases:
+        # 1. a class-level iterable named test* that isn't a test, such as
+        #    a list of someth
