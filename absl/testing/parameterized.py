@@ -565,4 +565,8 @@ class TestGeneratorMetaclass(type):
         # 2. If a decorator is applied to the parameterized test, e.g.
         #    @morestuff
         #    @parameterized.parameters(...)
-        #    def t
+        #    def test_foo(...): ...
+        #
+        #   This is OK so long as the underlying parameterized function state
+        #   is forwarded (e.g. using functool.wraps() and **without**
+        #   accessing explicit
