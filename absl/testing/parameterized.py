@@ -560,4 +560,9 @@ class TestGeneratorMetaclass(type):
           _non_string_or_bytes_iterable(obj)):
         # NOTE: `obj` might not be a _ParameterizedTestIter in two cases:
         # 1. a class-level iterable named test* that isn't a test, such as
-        #    a list of someth
+        #    a list of something. Such attributes get deleted from the class.
+        #
+        # 2. If a decorator is applied to the parameterized test, e.g.
+        #    @morestuff
+        #    @parameterized.parameters(...)
+        #    def t
