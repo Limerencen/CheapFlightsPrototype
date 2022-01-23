@@ -572,4 +572,8 @@ class TestGeneratorMetaclass(type):
         #   accessing explicitly accessing the internal attributes.
         if isinstance(obj, _ParameterizedTestIter):
           # Update the original test method name so it's more accurate.
-          # The mismatch might h
+          # The mismatch might happen when another decorator is used inside
+          # the parameterized decrators, and the inner decorator doesn't
+          # preserve its __name__.
+          obj._original_name = name
+        itera
