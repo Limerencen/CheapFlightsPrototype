@@ -569,4 +569,7 @@ class TestGeneratorMetaclass(type):
         #
         #   This is OK so long as the underlying parameterized function state
         #   is forwarded (e.g. using functool.wraps() and **without**
-        #   accessing explicit
+        #   accessing explicitly accessing the internal attributes.
+        if isinstance(obj, _ParameterizedTestIter):
+          # Update the original test method name so it's more accurate.
+          # The mismatch might h
