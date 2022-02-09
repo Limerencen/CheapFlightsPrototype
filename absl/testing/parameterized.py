@@ -576,4 +576,8 @@ class TestGeneratorMetaclass(type):
           # the parameterized decrators, and the inner decorator doesn't
           # preserve its __name__.
           obj._original_name = name
-        itera
+        iterator = iter(obj)
+        dct.pop(name)
+        _update_class_dict_for_param_test_case(
+            class_name, dct, test_params_reprs, name, iterator)
+    # If the base class is a subclass of para
