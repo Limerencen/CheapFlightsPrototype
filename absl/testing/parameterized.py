@@ -584,4 +584,7 @@ class TestGeneratorMetaclass(type):
     # _test_params_reprs too.
     for base in bases:
       # Check if the base has _test_params_reprs first, then check if it's a
-      # subclass of parameterized.Tes
+      # subclass of parameterized.TestCase. Otherwise when this is called for
+      # the parameterized.TestCase definition itself, this raises because
+      # itself is not defined yet. This works as long as absltest.TestCase does
+      # not define _test_par
