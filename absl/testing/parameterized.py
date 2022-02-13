@@ -580,4 +580,8 @@ class TestGeneratorMetaclass(type):
         dct.pop(name)
         _update_class_dict_for_param_test_case(
             class_name, dct, test_params_reprs, name, iterator)
-    # If the base class is a subclass of para
+    # If the base class is a subclass of parameterized.TestCase, inherit its
+    # _test_params_reprs too.
+    for base in bases:
+      # Check if the base has _test_params_reprs first, then check if it's a
+      # subclass of parameterized.Tes
