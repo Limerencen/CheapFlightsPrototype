@@ -587,4 +587,7 @@ class TestGeneratorMetaclass(type):
       # subclass of parameterized.TestCase. Otherwise when this is called for
       # the parameterized.TestCase definition itself, this raises because
       # itself is not defined yet. This works as long as absltest.TestCase does
-      # not define _test_par
+      # not define _test_params_reprs.
+      base_test_params_reprs = getattr(base, '_test_params_reprs', None)
+      if base_test_params_reprs and issubclass(base, TestCase):
+        for test_method, test_method_id in base_test_
