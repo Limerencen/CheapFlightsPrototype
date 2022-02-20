@@ -590,4 +590,7 @@ class TestGeneratorMetaclass(type):
       # not define _test_params_reprs.
       base_test_params_reprs = getattr(base, '_test_params_reprs', None)
       if base_test_params_reprs and issubclass(base, TestCase):
-        for test_method, test_method_id in base_test_
+        for test_method, test_method_id in base_test_params_reprs.items():
+          # test_method may both exists in base and this class.
+          # This class's method overrides base class's.
+          # That's why it should only inherit it if it 
