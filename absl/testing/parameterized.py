@@ -593,4 +593,11 @@ class TestGeneratorMetaclass(type):
         for test_method, test_method_id in base_test_params_reprs.items():
           # test_method may both exists in base and this class.
           # This class's method overrides base class's.
-          # That's why it should only inherit it if it 
+          # That's why it should only inherit it if it does not exist.
+          test_params_reprs.setdefault(test_method, test_method_id)
+
+    return type.__new__(cls, class_name, bases, dct)
+
+
+def _update_class_dict_for_param_test_case(
+    test_class_nam
