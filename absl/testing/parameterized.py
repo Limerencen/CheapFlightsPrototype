@@ -606,4 +606,9 @@ def _update_class_dict_for_param_test_case(
   Args:
     test_class_name: The name of the class tests are added to.
     dct: The target dictionary.
-    test_p
+    test_params_reprs: The dictionary for mapping names to test IDs.
+    name: The original name of the test case.
+    iterator: The iterator generating the individual test cases.
+
+  Raises:
+    Du
