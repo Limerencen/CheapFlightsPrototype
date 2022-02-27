@@ -600,4 +600,10 @@ class TestGeneratorMetaclass(type):
 
 
 def _update_class_dict_for_param_test_case(
-    test_class_nam
+    test_class_name, dct, test_params_reprs, name, iterator):
+  """Adds individual test cases to a dictionary.
+
+  Args:
+    test_class_name: The name of the class tests are added to.
+    dct: The target dictionary.
+    test_p
