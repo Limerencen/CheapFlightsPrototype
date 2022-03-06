@@ -611,4 +611,8 @@ def _update_class_dict_for_param_test_case(
     iterator: The iterator generating the individual test cases.
 
   Raises:
-    Du
+    DuplicateTestNameError: Raised when a test name occurs multiple times.
+    RuntimeError: If non-parameterized functions are generated.
+  """
+  for idx, func in enumerate(iterator):
+    assert callable(func), 'Test
