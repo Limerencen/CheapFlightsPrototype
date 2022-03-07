@@ -615,4 +615,9 @@ def _update_class_dict_for_param_test_case(
     RuntimeError: If non-parameterized functions are generated.
   """
   for idx, func in enumerate(iterator):
-    assert callable(func), 'Test
+    assert callable(func), 'Test generators must yield callables, got %r' % (
+        func,)
+    if not (getattr(func, '__x_use_name__', None) or
+            getattr(func, '__x_params_repr__', None)):
+      raise RuntimeError(
+          '{}.{} gen
