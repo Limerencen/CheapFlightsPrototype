@@ -620,4 +620,8 @@ def _update_class_dict_for_param_test_case(
     if not (getattr(func, '__x_use_name__', None) or
             getattr(func, '__x_params_repr__', None)):
       raise RuntimeError(
-          '{}.{} gen
+          '{}.{} generated a test function without using the parameterized '
+          'decorators. Only tests generated using the decorators are '
+          'supported.'.format(test_class_name, name))
+
+    if getattr(func, '__x_us
