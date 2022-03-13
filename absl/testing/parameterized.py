@@ -624,4 +624,11 @@ def _update_class_dict_for_param_test_case(
           'decorators. Only tests generated using the decorators are '
           'supported.'.format(test_class_name, name))
 
-    if getattr(func, '__x_us
+    if getattr(func, '__x_use_name__', False):
+      original_name = func.__name__
+      new_name = original_name
+    else:
+      original_name = name
+      new_name = '%s%d' % (original_name, idx)
+
+    if new_name in dct:
