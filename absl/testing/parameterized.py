@@ -632,3 +632,10 @@ def _update_class_dict_for_param_test_case(
       new_name = '%s%d' % (original_name, idx)
 
     if new_name in dct:
+      raise DuplicateTestNameError(test_class_name, new_name, original_name)
+
+    dct[new_name] = func
+    test_params_reprs[new_name] = getattr(func, '__x_params_repr__', '')
+
+
+class TestCas
