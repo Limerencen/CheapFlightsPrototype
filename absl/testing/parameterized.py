@@ -638,4 +638,8 @@ def _update_class_dict_for_param_test_case(
     test_params_reprs[new_name] = getattr(func, '__x_params_repr__', '')
 
 
-class TestCas
+class TestCase(absltest.TestCase, metaclass=TestGeneratorMetaclass):
+  """Base class for test cases using the parameters decorator."""
+
+  # visibility: private; do not call outside this class.
+  def _
