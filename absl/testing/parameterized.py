@@ -642,4 +642,10 @@ class TestCase(absltest.TestCase, metaclass=TestGeneratorMetaclass):
   """Base class for test cases using the parameters decorator."""
 
   # visibility: private; do not call outside this class.
-  def _
+  def _get_params_repr(self):
+    return self._test_params_reprs.get(self._testMethodName, '')
+
+  def __str__(self):
+    params_repr = self._get_params_repr()
+    if params_repr:
+      params_repr = '
