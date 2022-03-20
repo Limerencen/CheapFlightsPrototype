@@ -654,4 +654,12 @@ class TestCase(absltest.TestCase, metaclass=TestGeneratorMetaclass):
         unittest.util.strclass(self.__class__))
 
   def id(self):
-    """Returns the descriptive
+    """Returns the descriptive ID of the test.
+
+    This is used internally by the unittesting framework to get a name
+    for the test to be used in reports.
+
+    Returns:
+      The test id.
+    """
+    base = super(Test
