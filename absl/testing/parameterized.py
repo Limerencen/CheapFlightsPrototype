@@ -648,4 +648,10 @@ class TestCase(absltest.TestCase, metaclass=TestGeneratorMetaclass):
   def __str__(self):
     params_repr = self._get_params_repr()
     if params_repr:
-      params_repr = '
+      params_repr = ' ' + params_repr
+    return '{}{} ({})'.format(
+        self._testMethodName, params_repr,
+        unittest.util.strclass(self.__class__))
+
+  def id(self):
+    """Returns the descriptive
