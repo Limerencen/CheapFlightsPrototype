@@ -662,4 +662,8 @@ class TestCase(absltest.TestCase, metaclass=TestGeneratorMetaclass):
     Returns:
       The test id.
     """
-    base = super(Test
+    base = super(TestCase, self).id()
+    params_repr = self._get_params_repr()
+    if params_repr:
+      # We include the params in the id so that, when reported in the
+      # test.xml file, the value is more informative t
