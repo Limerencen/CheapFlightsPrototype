@@ -666,4 +666,8 @@ class TestCase(absltest.TestCase, metaclass=TestGeneratorMetaclass):
     params_repr = self._get_params_repr()
     if params_repr:
       # We include the params in the id so that, when reported in the
-      # test.xml file, the value is more informative t
+      # test.xml file, the value is more informative than just "test_foo0".
+      # Use a space to separate them so that it's copy/paste friendly and
+      # easy to identify the actual test id.
+      return '{} {}'.format(base, params_repr)
+ 
