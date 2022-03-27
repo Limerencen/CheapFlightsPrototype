@@ -682,4 +682,14 @@ def CoopTestCase(other_base_class):  # pylint: disable=invalid-name
   with other base classes that have custom metaclasses, such as
   ``mox.MoxTestBase``.
 
-  Only works with 
+  Only works with metaclasses that do not override ``type.__new__``.
+
+  Example::
+
+      from absl.testing import parameterized
+
+      class ExampleTest(parameterized.CoopTestCase(OtherTestCase)):
+        ...
+
+  Args:
+    other_base_class
