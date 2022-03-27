@@ -670,4 +670,10 @@ class TestCase(absltest.TestCase, metaclass=TestGeneratorMetaclass):
       # Use a space to separate them so that it's copy/paste friendly and
       # easy to identify the actual test id.
       return '{} {}'.format(base, params_repr)
- 
+    else:
+      return base
+
+
+# This function is kept CamelCase because it's used as a class's base class.
+def CoopTestCase(other_base_class):  # pylint: disable=invalid-name
+  """Returns a new base
