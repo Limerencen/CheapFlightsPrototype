@@ -676,4 +676,10 @@ class TestCase(absltest.TestCase, metaclass=TestGeneratorMetaclass):
 
 # This function is kept CamelCase because it's used as a class's base class.
 def CoopTestCase(other_base_class):  # pylint: disable=invalid-name
-  """Returns a new base
+  """Returns a new base class with a cooperative metaclass base.
+
+  This enables the TestCase to be used in combination
+  with other base classes that have custom metaclasses, such as
+  ``mox.MoxTestBase``.
+
+  Only works with 
