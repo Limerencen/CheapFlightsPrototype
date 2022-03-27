@@ -692,4 +692,14 @@ def CoopTestCase(other_base_class):  # pylint: disable=invalid-name
         ...
 
   Args:
-    other_base_class
+    other_base_class: (class) A test case base class.
+
+  Returns:
+    A new class object.
+  """
+  metaclass = type(
+      'CoopMetaclass',
+      (other_base_class.__metaclass__,
+       TestGeneratorMetaclass), {})
+  return metaclass(
+      'CoopTestCas
