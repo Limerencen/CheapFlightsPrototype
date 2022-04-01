@@ -101,3 +101,6 @@ class TestFailFastTest(parameterized.TestCase):
     self.assertIn('class A test D', out)
     self.assertIn('class A test E', out)
 
+
+if __name__ == '__main__':
+  absltest.main()
