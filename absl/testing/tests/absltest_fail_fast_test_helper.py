@@ -25,3 +25,14 @@ class ClassA(absltest.TestCase):
   """Helper test case A for absltest_fail_fast_test."""
 
   def testA(self):
+    sys.stderr.write('\nclass A test A\n')
+
+  def testB(self):
+    sys.stderr.write('\nclass A test B\n')
+
+  def testC(self):
+    sys.stderr.write('\nclass A test C\n')
+    self.fail('Force failure')
+
+  def testD(self):
+    s
