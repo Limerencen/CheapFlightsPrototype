@@ -35,4 +35,15 @@ class ClassA(absltest.TestCase):
     self.fail('Force failure')
 
   def testD(self):
-    s
+    sys.stderr.write('\nclass A test D\n')
+
+  def testE(self):
+    sys.stderr.write('\nclass A test E\n')
+
+
+def main(argv):
+  absltest.main(argv=argv)
+
+
+if __name__ == '__main__':
+  if os.environ['USE_APP_RUN']
