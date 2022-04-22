@@ -46,4 +46,7 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  if os.environ['USE_APP_RUN']
+  if os.environ['USE_APP_RUN'] == '1':
+    app.run(main)
+  else:
+    absltest.main()
