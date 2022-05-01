@@ -19,4 +19,14 @@ import sys
 
 from absl import app
 from absl.testing import absltest
-from absl.test
+from absl.testing import parameterized
+
+
+class ClassA(absltest.TestCase):
+  """Helper test case A for absltest_filtering_test."""
+
+  def testA(self):
+    sys.stderr.write('\nclass A test A\n')
+
+  def testB(self):
+  
