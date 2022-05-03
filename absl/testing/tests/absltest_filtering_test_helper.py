@@ -29,4 +29,11 @@ class ClassA(absltest.TestCase):
     sys.stderr.write('\nclass A test A\n')
 
   def testB(self):
-  
+    sys.stderr.write('\nclass A test B\n')
+
+  def testC(self):
+    sys.stderr.write('\nclass A test C\n')
+
+
+class ClassB(absltest.TestCase):
+  """Helper test case B for absltest_filtering_t
