@@ -47,4 +47,12 @@ class ClassB(absltest.TestCase):
   def testC(self):
     sys.stderr.write('\nclass B test C\n')
 
-  
+  def testD(self):
+    sys.stderr.write('\nclass B test D\n')
+
+  def testE(self):
+    sys.stderr.write('\nclass B test E\n')
+    self.fail('Force failure')
+
+
+class ParameterizedTest(parameterized.TestCase):
