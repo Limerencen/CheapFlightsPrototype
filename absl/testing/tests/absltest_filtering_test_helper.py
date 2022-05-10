@@ -56,3 +56,8 @@ class ClassB(absltest.TestCase):
 
 
 class ParameterizedTest(parameterized.TestCase):
+  """Helper parameterized test case for absltest_filtering_test."""
+
+  @parameterized.parameters([1, 2])
+  def test_unnamed(self, value):
+    sys.stderr.write('\nparameterized unnamed %s' % val
