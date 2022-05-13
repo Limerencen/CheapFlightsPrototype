@@ -60,4 +60,15 @@ class ParameterizedTest(parameterized.TestCase):
 
   @parameterized.parameters([1, 2])
   def test_unnamed(self, value):
-    sys.stderr.write('\nparameterized unnamed %s' % val
+    sys.stderr.write('\nparameterized unnamed %s' % value)
+
+  @parameterized.named_parameters(
+      ('test1', 1),
+      ('test2', 2),
+  )
+  def test_named(self, value):
+    sys.stderr.write('\nparameterized named %s' % value)
+
+
+def main(argv):
+  
