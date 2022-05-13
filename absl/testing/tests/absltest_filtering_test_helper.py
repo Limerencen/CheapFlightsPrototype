@@ -71,4 +71,11 @@ class ParameterizedTest(parameterized.TestCase):
 
 
 def main(argv):
-  
+  absltest.main(argv=argv)
+
+
+if __name__ == '__main__':
+  if os.environ['USE_APP_RUN'] == '1':
+    app.run(main)
+  else:
+    absltest.main()
