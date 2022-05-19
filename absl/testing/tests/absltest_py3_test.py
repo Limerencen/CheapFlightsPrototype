@@ -16,4 +16,8 @@
 from absl.testing import absltest
 
 
-class GetTestCaseNamesPEP3102Te
+class GetTestCaseNamesPEP3102Test(absltest.TestCase):
+  """This test verifies absltest.TestLoader.GetTestCasesNames PEP3102 support.
+
+    The test is Python3 only, as keyword only arguments are considered
+    syntax error in Python2.
