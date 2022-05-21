@@ -21,3 +21,15 @@ class GetTestCaseNamesPEP3102Test(absltest.TestCase):
 
     The test is Python3 only, as keyword only arguments are considered
     syntax error in Python2.
+
+    The rest of getTestCaseNames functionality is covered
+    by absltest_test.TestLoaderTest.
+  """
+
+  class Valid(absltest.TestCase):
+
+    def testKeywordOnly(self, *, arg):
+      pass
+
+  def setUp(self):
+    self.loader = absltest
