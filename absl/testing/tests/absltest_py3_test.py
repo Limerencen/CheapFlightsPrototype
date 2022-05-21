@@ -32,4 +32,9 @@ class GetTestCaseNamesPEP3102Test(absltest.TestCase):
       pass
 
   def setUp(self):
-    self.loader = absltest
+    self.loader = absltest.TestLoader()
+    super(GetTestCaseNamesPEP3102Test, self).setUp()
+
+  def test_PEP3102_get_test_case_names(self):
+    self.assertCountEqual(
+        self.loader.getTestCaseNames(GetTestCaseNamesPEP3102Test.Valid)
