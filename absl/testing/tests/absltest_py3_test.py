@@ -37,4 +37,8 @@ class GetTestCaseNamesPEP3102Test(absltest.TestCase):
 
   def test_PEP3102_get_test_case_names(self):
     self.assertCountEqual(
-        self.loader.getTestCaseNames(GetTestCaseNamesPEP3102Test.Valid)
+        self.loader.getTestCaseNames(GetTestCaseNamesPEP3102Test.Valid),
+        ["testKeywordOnly"])
+
+if __name__ == "__main__":
+  absltest.main()
