@@ -12,4 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Stub tests, only for use in absltest_randomization_test.py
+"""Stub tests, only for use in absltest_randomization_test.py."""
+
+import os
+import sys
+
+from absl.testing import absltest
+
+
+# This stanza exercises setting $TEST_RANDOMIZE_ORDERING_SEED *after* importing
+# the absltest library.
+if os.environ.get('LATE_SET_TES
