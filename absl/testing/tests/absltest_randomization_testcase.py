@@ -22,4 +22,12 @@ from absl.testing import absltest
 
 # This stanza exercises setting $TEST_RANDOMIZE_ORDERING_SEED *after* importing
 # the absltest library.
-if os.environ.get('LATE_SET_TES
+if os.environ.get('LATE_SET_TEST_RANDOMIZE_ORDERING_SEED', ''):
+  os.environ['TEST_RANDOMIZE_ORDERING_SEED'] = os.environ[
+      'LATE_SET_TEST_RANDOMIZE_ORDERING_SEED']
+
+
+class ClassA(absltest.TestCase):
+
+  def test_a(self):
+    sys.stderr.
