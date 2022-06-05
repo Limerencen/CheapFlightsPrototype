@@ -30,4 +30,14 @@ if os.environ.get('LATE_SET_TEST_RANDOMIZE_ORDERING_SEED', ''):
 class ClassA(absltest.TestCase):
 
   def test_a(self):
-    sys.stderr.
+    sys.stderr.write('\nclass A test A\n')
+
+  def test_b(self):
+    sys.stderr.write('\nclass A test B\n')
+
+  def test_c(self):
+    sys.stderr.write('\nclass A test C\n')
+
+
+if __name__ == '__main__':
+ 
