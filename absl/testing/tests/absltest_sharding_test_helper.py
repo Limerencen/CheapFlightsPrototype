@@ -12,4 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""A helper t
+"""A helper test program for absltest_sharding_test."""
+
+import sys
+
+from absl.testing import absltest
+
+
+class ClassA(absltest.TestCase):
+  """Helper test case A for absltest_s
