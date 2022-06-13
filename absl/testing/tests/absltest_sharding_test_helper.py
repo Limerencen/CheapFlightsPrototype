@@ -20,4 +20,13 @@ from absl.testing import absltest
 
 
 class ClassA(absltest.TestCase):
-  """Helper test case A for absltest_s
+  """Helper test case A for absltest_sharding_test."""
+
+  def testA(self):
+    sys.stderr.write('\nclass A test A\n')
+
+  def testB(self):
+    sys.stderr.write('\nclass A test B\n')
+
+  def testC(self):
+    sys.stderr.write('\nclass A t
