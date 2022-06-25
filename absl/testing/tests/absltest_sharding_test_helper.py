@@ -39,4 +39,13 @@ class ClassB(absltest.TestCase):
     sys.stderr.write('\nclass B test A\n')
 
   def testB(self):
-    sys.stderr.w
+    sys.stderr.write('\nclass B test B\n')
+
+  def testC(self):
+    sys.stderr.write('\nclass B test C\n')
+
+  def testD(self):
+    sys.stderr.write('\nclass B test D\n')
+
+  def testE(self):
+    sys.stderr.write('\nclass B test E\n')
