@@ -49,3 +49,8 @@ class ClassB(absltest.TestCase):
 
   def testE(self):
     sys.stderr.write('\nclass B test E\n')
+    self.fail('Force failure')
+
+
+if __name__ == '__main__':
+  absltest.main()
