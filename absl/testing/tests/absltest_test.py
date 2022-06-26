@@ -710,3 +710,176 @@ Missing entries:
 
     with self.assertRaisesRegex(AssertionError, expected_re):
       self.assertCommandSucceeds(
+          ['echo', 'FAIL'], regexes=['SUCCESS'], msg=msg,
+          env=_env_for_command_tests())
+
+  def test_assert_command_succeeds_with_list_of_string(self):
+    self.assertCommandSucceeds(
+        ['true'], env=_env_for_command_tests())
+
+  def test_assert_command_succeeds_with_list_of_unicode_string(self):
+    self.assertCommandSucceeds(
+        [u'true'], env=_env_for_command_tests())
+
+  def test_assert_command_succeeds_with_unicode_string(self):
+    self.assertCommandSucceeds(
+        u'true', env=_env_for_command_tests())
+
+  def test_inequality(self):
+    # Try ints
+    self.assertGreater(2, 1)
+    self.assertGreaterEqual(2, 1)
+    self.assertGreaterEqual(1, 1)
+    self.assertLess(1, 2)
+    self.assertLessEqual(1, 2)
+    self.assertLessEqual(1, 1)
+    self.assertRaises(AssertionError, self.assertGreater, 1, 2)
+    self.assertRaises(AssertionError, self.assertGreater, 1, 1)
+    self.assertRaises(AssertionError, self.assertGreaterEqual, 1, 2)
+    self.assertRaises(AssertionError, self.assertLess, 2, 1)
+    self.assertRaises(AssertionError, self.assertLess, 1, 1)
+    self.assertRaises(AssertionError, self.assertLessEqual, 2, 1)
+
+    # Try Floats
+    self.assertGreater(1.1, 1.0)
+    self.assertGreaterEqual(1.1, 1.0)
+    self.assertGreaterEqual(1.0, 1.0)
+    self.assertLess(1.0, 1.1)
+    self.assertLessEqual(1.0, 1.1)
+    self.assertLessEqual(1.0, 1.0)
+    self.assertRaises(AssertionError, self.assertGreater, 1.0, 1.1)
+    self.assertRaises(AssertionError, self.assertGreater, 1.0, 1.0)
+    self.assertRaises(AssertionError, self.assertGreaterEqual, 1.0, 1.1)
+    self.assertRaises(AssertionError, self.assertLess, 1.1, 1.0)
+    self.assertRaises(AssertionError, self.assertLess, 1.0, 1.0)
+    self.assertRaises(AssertionError, self.assertLessEqual, 1.1, 1.0)
+
+    # Try Strings
+    self.assertGreater('bug', 'ant')
+    self.assertGreaterEqual('bug', 'ant')
+    self.assertGreaterEqual('ant', 'ant')
+    self.assertLess('ant', 'bug')
+    self.assertLessEqual('ant', 'bug')
+    self.assertLessEqual('ant', 'ant')
+    self.assertRaises(AssertionError, self.assertGreater, 'ant', 'bug')
+    self.assertRaises(AssertionError, self.assertGreater, 'ant', 'ant')
+    self.assertRaises(AssertionError, self.assertGreaterEqual, 'ant', 'bug')
+    self.assertRaises(AssertionError, self.assertLess, 'bug', 'ant')
+    self.assertRaises(AssertionError, self.assertLess, 'ant', 'ant')
+    self.assertRaises(AssertionError, self.assertLessEqual, 'bug', 'ant')
+
+    # Try Unicode
+    self.assertGreater(u'bug', u'ant')
+    self.assertGreaterEqual(u'bug', u'ant')
+    self.assertGreaterEqual(u'ant', u'ant')
+    self.assertLess(u'ant', u'bug')
+    self.assertLessEqual(u'ant', u'bug')
+    self.assertLessEqual(u'ant', u'ant')
+    self.assertRaises(AssertionError, self.assertGreater, u'ant', u'bug')
+    self.assertRaises(AssertionError, self.assertGreater, u'ant', u'ant')
+    self.assertRaises(AssertionError, self.assertGreaterEqual, u'ant', u'bug')
+    self.assertRaises(AssertionError, self.assertLess, u'bug', u'ant')
+    self.assertRaises(AssertionError, self.assertLess, u'ant', u'ant')
+    self.assertRaises(AssertionError, self.assertLessEqual, u'bug', u'ant')
+
+    # Try Mixed String/Unicode
+    self.assertGreater('bug', u'ant')
+    self.assertGreater(u'bug', 'ant')
+    self.assertGreaterEqual('bug', u'ant')
+    self.assertGreaterEqual(u'bug', 'ant')
+    self.assertGreaterEqual('ant', u'ant')
+    self.assertGreaterEqual(u'ant', 'ant')
+    self.assertLess('ant', u'bug')
+    self.assertLess(u'ant', 'bug')
+    self.assertLessEqual('ant', u'bug')
+    self.assertLessEqual(u'ant', 'bug')
+    self.assertLessEqual('ant', u'ant')
+    self.assertLessEqual(u'ant', 'ant')
+    self.assertRaises(AssertionError, self.assertGreater, 'ant', u'bug')
+    self.assertRaises(AssertionError, self.assertGreater, u'ant', 'bug')
+    self.assertRaises(AssertionError, self.assertGreater, 'ant', u'ant')
+    self.assertRaises(AssertionError, self.assertGreater, u'ant', 'ant')
+    self.assertRaises(AssertionError, self.assertGreaterEqual, 'ant', u'bug')
+    self.assertRaises(AssertionError, self.assertGreaterEqual, u'ant', 'bug')
+    self.assertRaises(AssertionError, self.assertLess, 'bug', u'ant')
+    self.assertRaises(AssertionError, self.assertLess, u'bug', 'ant')
+    self.assertRaises(AssertionError, self.assertLess, 'ant', u'ant')
+    self.assertRaises(AssertionError, self.assertLess, u'ant', 'ant')
+    self.assertRaises(AssertionError, self.assertLessEqual, 'bug', u'ant')
+    self.assertRaises(AssertionError, self.assertLessEqual, u'bug', 'ant')
+
+  def test_assert_multi_line_equal(self):
+    sample_text = """\
+http://www.python.org/doc/2.3/lib/module-unittest.html
+test case
+    A test case is the smallest unit of testing. [...]
+"""
+    revised_sample_text = """\
+http://www.python.org/doc/2.4.1/lib/module-unittest.html
+test case
+    A test case is the smallest unit of testing. [...] You may provide your
+    own implementation that does not subclass from TestCase, of course.
+"""
+    sample_text_error = """
+- http://www.python.org/doc/2.3/lib/module-unittest.html
+?                             ^
++ http://www.python.org/doc/2.4.1/lib/module-unittest.html
+?                             ^^^
+  test case
+-     A test case is the smallest unit of testing. [...]
++     A test case is the smallest unit of testing. [...] You may provide your
+?                                                       +++++++++++++++++++++
++     own implementation that does not subclass from TestCase, of course.
+"""
+    self.assertRaisesWithLiteralMatch(AssertionError, sample_text_error,
+                                      self.assertMultiLineEqual,
+                                      sample_text,
+                                      revised_sample_text)
+
+    self.assertRaises(AssertionError, self.assertMultiLineEqual, (1, 2), 'str')
+    self.assertRaises(AssertionError, self.assertMultiLineEqual, 'str', (1, 2))
+
+  def test_assert_multi_line_equal_adds_newlines_if_needed(self):
+    self.assertRaisesWithLiteralMatch(
+        AssertionError,
+        '\n'
+        '  line1\n'
+        '- line2\n'
+        '?     ^\n'
+        '+ line3\n'
+        '?     ^\n',
+        self.assertMultiLineEqual,
+        'line1\n'
+        'line2',
+        'line1\n'
+        'line3')
+
+  def test_assert_multi_line_equal_shows_missing_newlines(self):
+    self.assertRaisesWithLiteralMatch(
+        AssertionError,
+        '\n'
+        '  line1\n'
+        '- line2\n'
+        '?      -\n'
+        '+ line2\n',
+        self.assertMultiLineEqual,
+        'line1\n'
+        'line2\n',
+        'line1\n'
+        'line2')
+
+  def test_assert_multi_line_equal_shows_extra_newlines(self):
+    self.assertRaisesWithLiteralMatch(
+        AssertionError,
+        '\n'
+        '  line1\n'
+        '- line2\n'
+        '+ line2\n'
+        '?      +\n',
+        self.assertMultiLineEqual,
+        'line1\n'
+        'line2',
+        'line1\n'
+        'line2\n')
+
+  def test_assert_multi_line_equal_line_limit_limits(self):
