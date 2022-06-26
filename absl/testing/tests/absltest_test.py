@@ -312,3 +312,190 @@ class TestCaseTest(absltest.TestCase, HelperMixin):
       self.assertMultiLineEqual("{} != {'x': 1}\n"
                                 "Unexpected, but present entries:\n'x': 1\n",
                                 str(e))
+    else:
+      self.fail('Expecting AssertionError')
+
+    try:
+      self.assertDictEqual({}, {'x': 1}, 'a message')
+    except AssertionError as e:
+      self.assertIn('a message', str(e))
+    else:
+      self.fail('Expecting AssertionError')
+
+    expected = {'a': 1, 'b': 2, 'c': 3}
+    seen = {'a': 2, 'c': 3, 'd': 4}
+    try:
+      self.assertDictEqual(expected, seen)
+    except AssertionError as e:
+      self.assertMultiLineEqual("""\
+{'a': 1, 'b': 2, 'c': 3} != {'a': 2, 'c': 3, 'd': 4}
+Unexpected, but present entries:
+'d': 4
+
+repr() of differing entries:
+'a': 1 != 2
+
+Missing entries:
+'b': 2
+""", str(e))
+    else:
+      self.fail('Expecting AssertionError')
+
+    self.assertRaises(AssertionError, self.assertDictEqual, (1, 2), {})
+    self.assertRaises(AssertionError, self.assertDictEqual, {}, (1, 2))
+
+    # Ensure deterministic output of keys in dictionaries whose sort order
+    # doesn't match the lexical ordering of repr -- this is most Python objects,
+    # which are keyed by memory address.
+    class Obj(object):
+
+      def __init__(self, name):
+        self.name = name
+
+      def __repr__(self):
+        return self.name
+
+    try:
+      self.assertDictEqual(
+          {'a': Obj('A'), Obj('b'): Obj('B'), Obj('c'): Obj('C')},
+          {'a': Obj('A'), Obj('d'): Obj('D'), Obj('e'): Obj('E')})
+    except AssertionError as e:
+      # Do as best we can not to be misleading when objects have the same repr
+      # but aren't equal.
+      err_str = str(e)
+      self.assertStartsWith(err_str,
+                            "{'a': A, b: B, c: C} != {'a': A, d: D, e: E}\n")
+      self.assertRegex(
+          err_str, r'(?ms).*^Unexpected, but present entries:\s+'
+          r'^(d: D$\s+^e: E|e: E$\s+^d: D)$')
+      self.assertRegex(
+          err_str, r'(?ms).*^repr\(\) of differing entries:\s+'
+          r'^.a.: A != A$', err_str)
+      self.assertRegex(
+          err_str, r'(?ms).*^Missing entries:\s+'
+          r'^(b: B$\s+^c: C|c: C$\s+^b: B)$')
+    else:
+      self.fail('Expecting AssertionError')
+
+    # Confirm that safe_repr, not repr, is being used.
+    class RaisesOnRepr(object):
+
+      def __repr__(self):
+        return 1/0  # Intentionally broken __repr__ implementation.
+
+    try:
+      self.assertDictEqual(
+          {RaisesOnRepr(): RaisesOnRepr()},
+          {RaisesOnRepr(): RaisesOnRepr()}
+          )
+      self.fail('Expected dicts not to match')
+    except AssertionError as e:
+      # Depending on the testing environment, the object may get a __main__
+      # prefix or a absltest_test prefix, so strip that for comparison.
+      error_msg = re.sub(
+          r'( at 0x[^>]+)|__main__\.|absltest_test\.', '', str(e))
+      self.assertRegex(error_msg, """(?m)\
+{<.*RaisesOnRepr object.*>: <.*RaisesOnRepr object.*>} != \
+{<.*RaisesOnRepr object.*>: <.*RaisesOnRepr object.*>}
+Unexpected, but present entries:
+<.*RaisesOnRepr object.*>: <.*RaisesOnRepr object.*>
+
+Missing entries:
+<.*RaisesOnRepr object.*>: <.*RaisesOnRepr object.*>
+""")
+
+    # Confirm that safe_repr, not repr, is being used.
+    class RaisesOnLt(object):
+
+      def __lt__(self, unused_other):
+        raise TypeError('Object is unordered.')
+
+      def __repr__(self):
+        return '<RaisesOnLt object>'
+
+    try:
+      self.assertDictEqual(
+          {RaisesOnLt(): RaisesOnLt()},
+          {RaisesOnLt(): RaisesOnLt()})
+    except AssertionError as e:
+      self.assertIn('Unexpected, but present entries:\n<RaisesOnLt', str(e))
+      self.assertIn('Missing entries:\n<RaisesOnLt', str(e))
+
+  def test_assert_set_equal(self):
+    set1 = set()
+    set2 = set()
+    self.assertSetEqual(set1, set2)
+
+    self.assertRaises(AssertionError, self.assertSetEqual, None, set2)
+    self.assertRaises(AssertionError, self.assertSetEqual, [], set2)
+    self.assertRaises(AssertionError, self.assertSetEqual, set1, None)
+    self.assertRaises(AssertionError, self.assertSetEqual, set1, [])
+
+    set1 = set(['a'])
+    set2 = set()
+    self.assertRaises(AssertionError, self.assertSetEqual, set1, set2)
+
+    set1 = set(['a'])
+    set2 = set(['a'])
+    self.assertSetEqual(set1, set2)
+
+    set1 = set(['a'])
+    set2 = set(['a', 'b'])
+    self.assertRaises(AssertionError, self.assertSetEqual, set1, set2)
+
+    set1 = set(['a'])
+    set2 = frozenset(['a', 'b'])
+    self.assertRaises(AssertionError, self.assertSetEqual, set1, set2)
+
+    set1 = set(['a', 'b'])
+    set2 = frozenset(['a', 'b'])
+    self.assertSetEqual(set1, set2)
+
+    set1 = set()
+    set2 = 'foo'
+    self.assertRaises(AssertionError, self.assertSetEqual, set1, set2)
+    self.assertRaises(AssertionError, self.assertSetEqual, set2, set1)
+
+    # make sure any string formatting is tuple-safe
+    set1 = set([(0, 1), (2, 3)])
+    set2 = set([(4, 5)])
+    self.assertRaises(AssertionError, self.assertSetEqual, set1, set2)
+
+  def test_assert_dict_contains_subset(self):
+    self.assertDictContainsSubset({}, {})
+
+    self.assertDictContainsSubset({}, {'a': 1})
+
+    self.assertDictContainsSubset({'a': 1}, {'a': 1})
+
+    self.assertDictContainsSubset({'a': 1}, {'a': 1, 'b': 2})
+
+    self.assertDictContainsSubset({'a': 1, 'b': 2}, {'a': 1, 'b': 2})
+
+    self.assertRaises(absltest.TestCase.failureException,
+                      self.assertDictContainsSubset, {'a': 2}, {'a': 1},
+                      '.*Mismatched values:.*')
+
+    self.assertRaises(absltest.TestCase.failureException,
+                      self.assertDictContainsSubset, {'c': 1}, {'a': 1},
+                      '.*Missing:.*')
+
+    self.assertRaises(absltest.TestCase.failureException,
+                      self.assertDictContainsSubset, {'a': 1, 'c': 1}, {'a': 1},
+                      '.*Missing:.*')
+
+    self.assertRaises(absltest.TestCase.failureException,
+                      self.assertDictContainsSubset, {'a': 1, 'c': 1}, {'a': 1},
+                      '.*Missing:.*Mismatched values:.*')
+
+  def test_assert_sequence_almost_equal(self):
+    actual = (1.1, 1.2, 1.4)
+
+    # Test across sequence types.
+    self.assertSequenceAlmostEqual((1.1, 1.2, 1.4), actual)
+    self.assertSequenceAlmostEqual([1.1, 1.2, 1.4], actual)
+
+    # Test sequence size mismatch.
+    with self.assertRaises(AssertionError):
+      self.assertSequenceAlmostEqual([1.1, 1.2], actual)
+    with self.assertRaises(AssertionError):
