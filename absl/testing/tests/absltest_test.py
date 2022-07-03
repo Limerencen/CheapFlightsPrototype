@@ -883,3 +883,185 @@ test case
         'line2\n')
 
   def test_assert_multi_line_equal_line_limit_limits(self):
+    self.assertRaisesWithLiteralMatch(
+        AssertionError,
+        '\n'
+        '  line1\n'
+        '(... and 4 more delta lines omitted for brevity.)\n',
+        self.assertMultiLineEqual,
+        'line1\n'
+        'line2\n',
+        'line1\n'
+        'line3\n',
+        line_limit=1)
+
+  def test_assert_multi_line_equal_line_limit_limits_with_message(self):
+    self.assertRaisesWithLiteralMatch(
+        AssertionError,
+        'Prefix:\n'
+        '  line1\n'
+        '(... and 4 more delta lines omitted for brevity.)\n',
+        self.assertMultiLineEqual,
+        'line1\n'
+        'line2\n',
+        'line1\n'
+        'line3\n',
+        'Prefix',
+        line_limit=1)
+
+  def test_assert_is_none(self):
+    self.assertIsNone(None)
+    self.assertRaises(AssertionError, self.assertIsNone, False)
+    self.assertIsNotNone('Google')
+    self.assertRaises(AssertionError, self.assertIsNotNone, None)
+    self.assertRaises(AssertionError, self.assertIsNone, (1, 2))
+
+  def test_assert_is(self):
+    self.assertIs(object, object)
+    self.assertRaises(AssertionError, self.assertIsNot, object, object)
+    self.assertIsNot(True, False)
+    self.assertRaises(AssertionError, self.assertIs, True, False)
+
+  def test_assert_between(self):
+    self.assertBetween(3.14, 3.1, 3.141)
+    self.assertBetween(4, 4, 1e10000)
+    self.assertBetween(9.5, 9.4, 9.5)
+    self.assertBetween(-1e10, -1e10000, 0)
+    self.assertRaises(AssertionError, self.assertBetween, 9.4, 9.3, 9.3999)
+    self.assertRaises(AssertionError, self.assertBetween, -1e10000, -1e10, 0)
+
+  def test_assert_raises_with_predicate_match_no_raise(self):
+    with self.assertRaisesRegex(AssertionError, '^Exception not raised$'):
+      self.assertRaisesWithPredicateMatch(Exception,
+                                          lambda e: True,
+                                          lambda: 1)  # don't raise
+
+    with self.assertRaisesRegex(AssertionError, '^Exception not raised$'):
+      with self.assertRaisesWithPredicateMatch(Exception, lambda e: True):
+        pass  # don't raise
+
+  def test_assert_raises_with_predicate_match_raises_wrong_exception(self):
+    def _raise_value_error():
+      raise ValueError
+
+    with self.assertRaises(ValueError):
+      self.assertRaisesWithPredicateMatch(IOError,
+                                          lambda e: True,
+                                          _raise_value_error)
+
+    with self.assertRaises(ValueError):
+      with self.assertRaisesWithPredicateMatch(IOError, lambda e: True):
+        raise ValueError
+
+  def test_assert_raises_with_predicate_match_predicate_fails(self):
+    def _raise_value_error():
+      raise ValueError
+    with self.assertRaisesRegex(AssertionError, ' does not match predicate '):
+      self.assertRaisesWithPredicateMatch(ValueError,
+                                          lambda e: False,
+                                          _raise_value_error)
+
+    with self.assertRaisesRegex(AssertionError, ' does not match predicate '):
+      with self.assertRaisesWithPredicateMatch(ValueError, lambda e: False):
+        raise ValueError
+
+  def test_assert_raises_with_predicate_match_predicate_passes(self):
+    def _raise_value_error():
+      raise ValueError
+
+    self.assertRaisesWithPredicateMatch(ValueError,
+                                        lambda e: True,
+                                        _raise_value_error)
+
+    with self.assertRaisesWithPredicateMatch(ValueError, lambda e: True):
+      raise ValueError
+
+  def test_assert_raises_with_predicate_match_exception_captured(self):
+    def _raise_value_error():
+      raise ValueError
+
+    predicate = lambda e: e is not None
+    with self.assertRaisesWithPredicateMatch(ValueError, predicate) as ctx_mgr:
+      _raise_value_error()
+
+    expected = getattr(ctx_mgr, 'exception', None)
+    self.assertIsInstance(expected, ValueError)
+
+  def test_assert_raises_with_literal_match_exception_captured(self):
+    message = 'some value error'
+    def _raise_value_error():
+      raise ValueError(message)
+
+    # predicate = lambda e: e is not None
+    with self.assertRaisesWithLiteralMatch(ValueError, message) as ctx_mgr:
+      _raise_value_error()
+
+    expected = getattr(ctx_mgr, 'exception', None)
+    self.assertIsInstance(expected, ValueError)
+
+  def test_assert_contains_in_order(self):
+    # Valids
+    self.assertContainsInOrder(
+        ['fox', 'dog'], 'The quick brown fox jumped over the lazy dog.')
+    self.assertContainsInOrder(
+        ['quick', 'fox', 'dog'],
+        'The quick brown fox jumped over the lazy dog.')
+    self.assertContainsInOrder(
+        ['The', 'fox', 'dog.'], 'The quick brown fox jumped over the lazy dog.')
+    self.assertContainsInOrder(
+        ['fox'], 'The quick brown fox jumped over the lazy dog.')
+    self.assertContainsInOrder(
+        'fox', 'The quick brown fox jumped over the lazy dog.')
+    self.assertContainsInOrder(
+        ['fox', 'dog'], 'fox dog fox')
+    self.assertContainsInOrder(
+        [], 'The quick brown fox jumped over the lazy dog.')
+    self.assertContainsInOrder(
+        [], '')
+
+    # Invalids
+    msg = 'This is a useful message'
+    whole_msg = ("Did not find 'fox' after 'dog' in 'The quick brown fox"
+                 " jumped over the lazy dog' : This is a useful message")
+    self.assertRaisesWithLiteralMatch(
+        AssertionError, whole_msg, self.assertContainsInOrder,
+        ['dog', 'fox'], 'The quick brown fox jumped over the lazy dog', msg=msg)
+    self.assertRaises(
+        AssertionError, self.assertContainsInOrder,
+        ['The', 'dog', 'fox'], 'The quick brown fox jumped over the lazy dog')
+    self.assertRaises(
+        AssertionError, self.assertContainsInOrder, ['dog'], '')
+
+  def test_assert_contains_subsequence_for_numbers(self):
+    self.assertContainsSubsequence([1, 2, 3], [1])
+    self.assertContainsSubsequence([1, 2, 3], [1, 2])
+    self.assertContainsSubsequence([1, 2, 3], [1, 3])
+
+    with self.assertRaises(AssertionError):
+      self.assertContainsSubsequence([1, 2, 3], [4])
+    msg = 'This is a useful message'
+    whole_msg = ('[3, 1] not a subsequence of [1, 2, 3]. '
+                 'First non-matching element: 1 : This is a useful message')
+    self.assertRaisesWithLiteralMatch(AssertionError, whole_msg,
+                                      self.assertContainsSubsequence,
+                                      [1, 2, 3], [3, 1], msg=msg)
+
+  def test_assert_contains_subsequence_for_strings(self):
+    self.assertContainsSubsequence(['foo', 'bar', 'blorp'], ['foo', 'blorp'])
+    with self.assertRaises(AssertionError):
+      self.assertContainsSubsequence(
+          ['foo', 'bar', 'blorp'], ['blorp', 'foo'])
+
+  def test_assert_contains_subsequence_with_empty_subsequence(self):
+    self.assertContainsSubsequence([1, 2, 3], [])
+    self.assertContainsSubsequence(['foo', 'bar', 'blorp'], [])
+    self.assertContainsSubsequence([], [])
+
+  def test_assert_contains_subsequence_with_empty_container(self):
+    with self.assertRaises(AssertionError):
+      self.assertContainsSubsequence([], [1])
+    with self.assertRaises(AssertionError):
+      self.assertContainsSubsequence([], ['foo'])
+
+  def test_assert_contains_exact_subsequence_for_numbers(self):
+    self.assertContainsExactSubsequence([1, 2, 3], [1])
