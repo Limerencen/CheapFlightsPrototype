@@ -1065,3 +1065,218 @@ test case
 
   def test_assert_contains_exact_subsequence_for_numbers(self):
     self.assertContainsExactSubsequence([1, 2, 3], [1])
+    self.assertContainsExactSubsequence([1, 2, 3], [1, 2])
+    self.assertContainsExactSubsequence([1, 2, 3], [2, 3])
+
+    with self.assertRaises(AssertionError):
+      self.assertContainsExactSubsequence([1, 2, 3], [4])
+    msg = 'This is a useful message'
+    whole_msg = ('[1, 2, 4] not an exact subsequence of [1, 2, 3, 4]. '
+                 'Longest matching prefix: [1, 2] : This is a useful message')
+    self.assertRaisesWithLiteralMatch(AssertionError, whole_msg,
+                                      self.assertContainsExactSubsequence,
+                                      [1, 2, 3, 4], [1, 2, 4], msg=msg)
+
+  def test_assert_contains_exact_subsequence_for_strings(self):
+    self.assertContainsExactSubsequence(
+        ['foo', 'bar', 'blorp'], ['foo', 'bar'])
+    with self.assertRaises(AssertionError):
+      self.assertContainsExactSubsequence(
+          ['foo', 'bar', 'blorp'], ['blorp', 'foo'])
+
+  def test_assert_contains_exact_subsequence_with_empty_subsequence(self):
+    self.assertContainsExactSubsequence([1, 2, 3], [])
+    self.assertContainsExactSubsequence(['foo', 'bar', 'blorp'], [])
+    self.assertContainsExactSubsequence([], [])
+
+  def test_assert_contains_exact_subsequence_with_empty_container(self):
+    with self.assertRaises(AssertionError):
+      self.assertContainsExactSubsequence([], [3])
+    with self.assertRaises(AssertionError):
+      self.assertContainsExactSubsequence([], ['foo', 'bar'])
+    self.assertContainsExactSubsequence([], [])
+
+  def test_assert_totally_ordered(self):
+    # Valid.
+    self.assertTotallyOrdered()
+    self.assertTotallyOrdered([1])
+    self.assertTotallyOrdered([1], [2])
+    self.assertTotallyOrdered([1, 1, 1])
+    self.assertTotallyOrdered([(1, 1)], [(1, 2)], [(2, 1)])
+
+    # From the docstring.
+    class A(object):
+
+      def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+      def __hash__(self):
+        return hash(self.x)
+
+      def __repr__(self):
+        return 'A(%r, %r)' % (self.x, self.y)
+
+      def __eq__(self, other):
+        try:
+          return self.x == other.x
+        except AttributeError:
+          return NotImplemented
+
+      def __ne__(self, other):
+        try:
+          return self.x != other.x
+        except AttributeError:
+          return NotImplemented
+
+      def __lt__(self, other):
+        try:
+          return self.x < other.x
+        except AttributeError:
+          return NotImplemented
+
+      def __le__(self, other):
+        try:
+          return self.x <= other.x
+        except AttributeError:
+          return NotImplemented
+
+      def __gt__(self, other):
+        try:
+          return self.x > other.x
+        except AttributeError:
+          return NotImplemented
+
+      def __ge__(self, other):
+        try:
+          return self.x >= other.x
+        except AttributeError:
+          return NotImplemented
+
+    class B(A):
+      """Like A, but not hashable."""
+      __hash__ = None
+
+    self.assertTotallyOrdered(
+        [A(1, 'a')],
+        [A(2, 'b')],  # 2 is after 1.
+        [
+            A(3, 'c'),
+            B(3, 'd'),
+            B(3, 'e')  # The second argument is irrelevant.
+        ],
+        [A(4, 'z')])
+
+    # Invalid.
+    msg = 'This is a useful message'
+    whole_msg = '2 not less than 1 : This is a useful message'
+    self.assertRaisesWithLiteralMatch(AssertionError, whole_msg,
+                                      self.assertTotallyOrdered, [2], [1],
+                                      msg=msg)
+    self.assertRaises(AssertionError, self.assertTotallyOrdered, [2], [1])
+    self.assertRaises(AssertionError, self.assertTotallyOrdered, [2], [1], [3])
+    self.assertRaises(AssertionError, self.assertTotallyOrdered, [1, 2])
+
+  def test_short_description_without_docstring(self):
+    self.assertEquals(
+        self.shortDescription(),
+        'TestCaseTest.test_short_description_without_docstring')
+
+  def test_short_description_with_one_line_docstring(self):
+    """Tests shortDescription() for a method with a docstring."""
+    self.assertEquals(
+        self.shortDescription(),
+        'TestCaseTest.test_short_description_with_one_line_docstring\n'
+        'Tests shortDescription() for a method with a docstring.')
+
+  def test_short_description_with_multi_line_docstring(self):
+    """Tests shortDescription() for a method with a longer docstring.
+
+    This method ensures that only the first line of a docstring is
+    returned used in the short description, no matter how long the
+    whole thing is.
+    """
+    self.assertEquals(
+        self.shortDescription(),
+        'TestCaseTest.test_short_description_with_multi_line_docstring\n'
+        'Tests shortDescription() for a method with a longer docstring.')
+
+  def test_assert_url_equal_same(self):
+    self.assertUrlEqual('http://a', 'http://a')
+    self.assertUrlEqual('http://a/path/test', 'http://a/path/test')
+    self.assertUrlEqual('#fragment', '#fragment')
+    self.assertUrlEqual('http://a/?q=1', 'http://a/?q=1')
+    self.assertUrlEqual('http://a/?q=1&v=5', 'http://a/?v=5&q=1')
+    self.assertUrlEqual('/logs?v=1&a=2&t=labels&f=path%3A%22foo%22',
+                        '/logs?a=2&f=path%3A%22foo%22&v=1&t=labels')
+    self.assertUrlEqual('http://a/path;p1', 'http://a/path;p1')
+    self.assertUrlEqual('http://a/path;p2;p3;p1', 'http://a/path;p1;p2;p3')
+    self.assertUrlEqual('sip:alice@atlanta.com;maddr=239.255.255.1;ttl=15',
+                        'sip:alice@atlanta.com;ttl=15;maddr=239.255.255.1')
+    self.assertUrlEqual('http://nyan/cat?p=1&b=', 'http://nyan/cat?b=&p=1')
+
+  def test_assert_url_equal_different(self):
+    msg = 'This is a useful message'
+    whole_msg = 'This is a useful message:\n- a\n+ b\n'
+    self.assertRaisesWithLiteralMatch(AssertionError, whole_msg,
+                                      self.assertUrlEqual,
+                                      'http://a', 'http://b', msg=msg)
+    self.assertRaises(AssertionError, self.assertUrlEqual,
+                      'http://a/x', 'http://a:8080/x')
+    self.assertRaises(AssertionError, self.assertUrlEqual,
+                      'http://a/x', 'http://a/y')
+    self.assertRaises(AssertionError, self.assertUrlEqual,
+                      'http://a/?q=2', 'http://a/?q=1')
+    self.assertRaises(AssertionError, self.assertUrlEqual,
+                      'http://a/?q=1&v=5', 'http://a/?v=2&q=1')
+    self.assertRaises(AssertionError, self.assertUrlEqual,
+                      'http://a', 'sip://b')
+    self.assertRaises(AssertionError, self.assertUrlEqual,
+                      'http://a#g', 'sip://a#f')
+    self.assertRaises(AssertionError, self.assertUrlEqual,
+                      'http://a/path;p1;p3;p1', 'http://a/path;p1;p2;p3')
+    self.assertRaises(AssertionError, self.assertUrlEqual,
+                      'http://nyan/cat?p=1&b=', 'http://nyan/cat?p=1')
+
+  def test_same_structure_same(self):
+    self.assertSameStructure(0, 0)
+    self.assertSameStructure(1, 1)
+    self.assertSameStructure('', '')
+    self.assertSameStructure('hello', 'hello', msg='This Should not fail')
+    self.assertSameStructure(set(), set())
+    self.assertSameStructure(set([1, 2]), set([1, 2]))
+    self.assertSameStructure(set(), frozenset())
+    self.assertSameStructure(set([1, 2]), frozenset([1, 2]))
+    self.assertSameStructure([], [])
+    self.assertSameStructure(['a'], ['a'])
+    self.assertSameStructure([], ())
+    self.assertSameStructure(['a'], ('a',))
+    self.assertSameStructure({}, {})
+    self.assertSameStructure({'one': 1}, {'one': 1})
+    self.assertSameStructure(collections.defaultdict(None, {'one': 1}),
+                             {'one': 1})
+    self.assertSameStructure(collections.OrderedDict({'one': 1}),
+                             collections.defaultdict(None, {'one': 1}))
+
+  def test_same_structure_different(self):
+    # Different type
+    with self.assertRaisesRegex(
+        AssertionError,
+        r"a is a <(type|class) 'int'> but b is a <(type|class) 'str'>"):
+      self.assertSameStructure(0, 'hello')
+    with self.assertRaisesRegex(
+        AssertionError,
+        r"a is a <(type|class) 'int'> but b is a <(type|class) 'list'>"):
+      self.assertSameStructure(0, [])
+    with self.assertRaisesRegex(
+        AssertionError,
+        r"a is a <(type|class) 'int'> but b is a <(type|class) 'float'>"):
+      self.assertSameStructure(2, 2.0)
+
+    with self.assertRaisesRegex(
+        AssertionError,
+        r"a is a <(type|class) 'list'> but b is a <(type|class) 'dict'>"):
+      self.assertSameStructure([], {})
+
+    with self.assertRaisesRegex(
+        AssertionError,
