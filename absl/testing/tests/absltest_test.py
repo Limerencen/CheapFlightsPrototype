@@ -1473,3 +1473,214 @@ class GetCommandStderrTestCase(absltest.TestCase):
     stderr = stderr.decode('utf-8')
     self.assertRegex(stderr, 'No such file or directory')
 
+
+@contextlib.contextmanager
+def cm_for_test(obj):
+  try:
+    obj.cm_state = 'yielded'
+    yield 'value'
+  finally:
+    obj.cm_state = 'exited'
+
+
+class EnterContextTest(absltest.TestCase):
+
+  def setUp(self):
+    self.cm_state = 'unset'
+    self.cm_value = 'unset'
+
+    def assert_cm_exited():
+      self.assertEqual(self.cm_state, 'exited')
+
+    # Because cleanup functions are run in reverse order, we have to add
+    # our assert-cleanup before the exit stack registers its own cleanup.
+    # This ensures we see state after the stack cleanup runs.
+    self.addCleanup(assert_cm_exited)
+
+    super(EnterContextTest, self).setUp()
+    self.cm_value = self.enter_context(cm_for_test(self))
+
+  def test_enter_context(self):
+    self.assertEqual(self.cm_value, 'value')
+    self.assertEqual(self.cm_state, 'yielded')
+
+
+@absltest.skipIf(not hasattr(absltest.TestCase, 'addClassCleanup'),
+                 'Python 3.8 required for class-level enter_context')
+class EnterContextClassmethodTest(absltest.TestCase):
+
+  cm_state = 'unset'
+  cm_value = 'unset'
+
+  @classmethod
+  def setUpClass(cls):
+
+    def assert_cm_exited():
+      assert cls.cm_state == 'exited'
+
+    # Because cleanup functions are run in reverse order, we have to add
+    # our assert-cleanup before the exit stack registers its own cleanup.
+    # This ensures we see state after the stack cleanup runs.
+    cls.addClassCleanup(assert_cm_exited)
+
+    super(EnterContextClassmethodTest, cls).setUpClass()
+    cls.cm_value = cls.enter_context(cm_for_test(cls))
+
+  def test_enter_context(self):
+    self.assertEqual(self.cm_value, 'value')
+    self.assertEqual(self.cm_state, 'yielded')
+
+
+class EqualityAssertionTest(absltest.TestCase):
+  """This test verifies that absltest.failIfEqual actually tests __ne__.
+
+  If a user class implements __eq__, unittest.failUnlessEqual will call it
+  via first == second.   However, failIfEqual also calls
+  first == second.   This means that while the caller may believe
+  their __ne__ method is being tested, it is not.
+  """
+
+  class NeverEqual(object):
+    """Objects of this class behave like NaNs."""
+
+    def __eq__(self, unused_other):
+      return False
+
+    def __ne__(self, unused_other):
+      return False
+
+  class AllSame(object):
+    """All objects of this class compare as equal."""
+
+    def __eq__(self, unused_other):
+      return True
+
+    def __ne__(self, unused_other):
+      return False
+
+  class EqualityTestsWithEq(object):
+    """Performs all equality and inequality tests with __eq__."""
+
+    def __init__(self, value):
+      self._value = value
+
+    def __eq__(self, other):
+      return self._value == other._value
+
+    def __ne__(self, other):
+      return not self.__eq__(other)
+
+  class EqualityTestsWithNe(object):
+    """Performs all equality and inequality tests with __ne__."""
+
+    def __init__(self, value):
+      self._value = value
+
+    def __eq__(self, other):
+      return not self.__ne__(other)
+
+    def __ne__(self, other):
+      return self._value != other._value
+
+  class EqualityTestsWithCmp(object):
+
+    def __init__(self, value):
+      self._value = value
+
+    def __cmp__(self, other):
+      return cmp(self._value, other._value)
+
+  class EqualityTestsWithLtEq(object):
+
+    def __init__(self, value):
+      self._value = value
+
+    def __eq__(self, other):
+      return self._value == other._value
+
+    def __lt__(self, other):
+      return self._value < other._value
+
+  def test_all_comparisons_fail(self):
+    i1 = self.NeverEqual()
+    i2 = self.NeverEqual()
+    self.assertFalse(i1 == i2)
+    self.assertFalse(i1 != i2)
+
+    # Compare two distinct objects
+    self.assertFalse(i1 is i2)
+    self.assertRaises(AssertionError, self.assertEqual, i1, i2)
+    self.assertRaises(AssertionError, self.assertEquals, i1, i2)
+    self.assertRaises(AssertionError, self.failUnlessEqual, i1, i2)
+    self.assertRaises(AssertionError, self.assertNotEqual, i1, i2)
+    self.assertRaises(AssertionError, self.assertNotEquals, i1, i2)
+    self.assertRaises(AssertionError, self.failIfEqual, i1, i2)
+    # A NeverEqual object should not compare equal to itself either.
+    i2 = i1
+    self.assertTrue(i1 is i2)
+    self.assertFalse(i1 == i2)
+    self.assertFalse(i1 != i2)
+    self.assertRaises(AssertionError, self.assertEqual, i1, i2)
+    self.assertRaises(AssertionError, self.assertEquals, i1, i2)
+    self.assertRaises(AssertionError, self.failUnlessEqual, i1, i2)
+    self.assertRaises(AssertionError, self.assertNotEqual, i1, i2)
+    self.assertRaises(AssertionError, self.assertNotEquals, i1, i2)
+    self.assertRaises(AssertionError, self.failIfEqual, i1, i2)
+
+  def test_all_comparisons_succeed(self):
+    a = self.AllSame()
+    b = self.AllSame()
+    self.assertFalse(a is b)
+    self.assertTrue(a == b)
+    self.assertFalse(a != b)
+    self.assertEqual(a, b)
+    self.assertEquals(a, b)
+    self.failUnlessEqual(a, b)
+    self.assertRaises(AssertionError, self.assertNotEqual, a, b)
+    self.assertRaises(AssertionError, self.assertNotEquals, a, b)
+    self.assertRaises(AssertionError, self.failIfEqual, a, b)
+
+  def _perform_apple_apple_orange_checks(self, same_a, same_b, different):
+    """Perform consistency checks with two apples and an orange.
+
+    The two apples should always compare as being the same (and inequality
+    checks should fail).  The orange should always compare as being different
+    to each of the apples.
+
+    Args:
+      same_a: the first apple
+      same_b: the second apple
+      different: the orange
+    """
+    self.assertTrue(same_a == same_b)
+    self.assertFalse(same_a != same_b)
+    self.assertEqual(same_a, same_b)
+    self.assertEquals(same_a, same_b)
+    self.failUnlessEqual(same_a, same_b)
+
+    self.assertFalse(same_a == different)
+    self.assertTrue(same_a != different)
+    self.assertNotEqual(same_a, different)
+    self.assertNotEquals(same_a, different)
+    self.failIfEqual(same_a, different)
+
+    self.assertFalse(same_b == different)
+    self.assertTrue(same_b != different)
+    self.assertNotEqual(same_b, different)
+    self.assertNotEquals(same_b, different)
+    self.failIfEqual(same_b, different)
+
+  def test_comparison_with_eq(self):
+    same_a = self.EqualityTestsWithEq(42)
+    same_b = self.EqualityTestsWithEq(42)
+    different = self.EqualityTestsWithEq(1769)
+    self._perform_apple_apple_orange_checks(same_a, same_b, different)
+
+  def test_comparison_with_ne(self):
+    same_a = self.EqualityTestsWithNe(42)
+    same_b = self.EqualityTestsWithNe(42)
+    different = self.EqualityTestsWithNe(1769)
+    self._perform_apple_apple_orange_checks(same_a, same_b, different)
+
+  def test_comparison_with_cmp_or_lt_eq(self):
+    same_a = self.EqualityTestsWithLtEq(42)
