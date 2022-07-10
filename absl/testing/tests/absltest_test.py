@@ -1280,3 +1280,196 @@ test case
 
     with self.assertRaisesRegex(
         AssertionError,
+        r"a is a <(type|class) 'list'> but b is a <(type|class) 'set'>"):
+      self.assertSameStructure([], set())
+
+    with self.assertRaisesRegex(
+        AssertionError,
+        r"a is a <(type|class) 'dict'> but b is a <(type|class) 'set'>"):
+      self.assertSameStructure({}, set())
+
+    # Different scalar values
+    self.assertRaisesWithLiteralMatch(
+        AssertionError, 'a is 0 but b is 1',
+        self.assertSameStructure, 0, 1)
+    self.assertRaisesWithLiteralMatch(
+        AssertionError, "a is 'hello' but b is 'goodbye' : This was expected",
+        self.assertSameStructure, 'hello', 'goodbye', msg='This was expected')
+
+    # Different sets
+    self.assertRaisesWithLiteralMatch(
+        AssertionError,
+        r'AA has 2 but BB does not',
+        self.assertSameStructure,
+        set([1, 2]),
+        set([1]),
+        aname='AA',
+        bname='BB')
+    self.assertRaisesWithLiteralMatch(
+        AssertionError,
+        r'AA lacks 2 but BB has it',
+        self.assertSameStructure,
+        set([1]),
+        set([1, 2]),
+        aname='AA',
+        bname='BB')
+
+    # Different lists
+    self.assertRaisesWithLiteralMatch(
+        AssertionError, "a has [2] with value 'z' but b does not",
+        self.assertSameStructure, ['x', 'y', 'z'], ['x', 'y'])
+    self.assertRaisesWithLiteralMatch(
+        AssertionError, "a lacks [2] but b has it with value 'z'",
+        self.assertSameStructure, ['x', 'y'], ['x', 'y', 'z'])
+    self.assertRaisesWithLiteralMatch(
+        AssertionError, "a[2] is 'z' but b[2] is 'Z'",
+        self.assertSameStructure, ['x', 'y', 'z'], ['x', 'y', 'Z'])
+
+    # Different dicts
+    self.assertRaisesWithLiteralMatch(
+        AssertionError, "a has ['two'] with value 2 but it's missing in b",
+        self.assertSameStructure, {'one': 1, 'two': 2}, {'one': 1})
+    self.assertRaisesWithLiteralMatch(
+        AssertionError, "a lacks ['two'] but b has it with value 2",
+        self.assertSameStructure, {'one': 1}, {'one': 1, 'two': 2})
+    self.assertRaisesWithLiteralMatch(
+        AssertionError, "a['two'] is 2 but b['two'] is 3",
+        self.assertSameStructure, {'one': 1, 'two': 2}, {'one': 1, 'two': 3})
+
+    # String and byte types should not be considered equivalent to other
+    # sequences
+    self.assertRaisesRegex(
+        AssertionError,
+        r"a is a <(type|class) 'list'> but b is a <(type|class) 'str'>",
+        self.assertSameStructure, [], '')
+    self.assertRaisesRegex(
+        AssertionError,
+        r"a is a <(type|class) 'str'> but b is a <(type|class) 'tuple'>",
+        self.assertSameStructure, '', ())
+    self.assertRaisesRegex(
+        AssertionError,
+        r"a is a <(type|class) 'list'> but b is a <(type|class) 'str'>",
+        self.assertSameStructure, ['a', 'b', 'c'], 'abc')
+    self.assertRaisesRegex(
+        AssertionError,
+        r"a is a <(type|class) 'str'> but b is a <(type|class) 'tuple'>",
+        self.assertSameStructure, 'abc', ('a', 'b', 'c'))
+
+    # Deep key generation
+    self.assertRaisesWithLiteralMatch(
+        AssertionError,
+        "a[0][0]['x']['y']['z'][0] is 1 but b[0][0]['x']['y']['z'][0] is 2",
+        self.assertSameStructure,
+        [[{'x': {'y': {'z': [1]}}}]], [[{'x': {'y': {'z': [2]}}}]])
+
+    # Multiple problems
+    self.assertRaisesWithLiteralMatch(
+        AssertionError,
+        'a[0] is 1 but b[0] is 3; a[1] is 2 but b[1] is 4',
+        self.assertSameStructure, [1, 2], [3, 4])
+    with self.assertRaisesRegex(
+        AssertionError,
+        re.compile(r"^a\[0] is 'a' but b\[0] is 'A'; .*"
+                   r"a\[18] is 's' but b\[18] is 'S'; \.\.\.$")):
+      self.assertSameStructure(
+          list(string.ascii_lowercase), list(string.ascii_uppercase))
+
+    # Verify same behavior with self.maxDiff = None
+    self.maxDiff = None
+    self.assertRaisesWithLiteralMatch(
+        AssertionError,
+        'a[0] is 1 but b[0] is 3; a[1] is 2 but b[1] is 4',
+        self.assertSameStructure, [1, 2], [3, 4])
+
+  def test_same_structure_mapping_unchanged(self):
+    default_a = collections.defaultdict(lambda: 'BAD MODIFICATION', {})
+    dict_b = {'one': 'z'}
+    self.assertRaisesWithLiteralMatch(
+        AssertionError,
+        r"a lacks ['one'] but b has it with value 'z'",
+        self.assertSameStructure, default_a, dict_b)
+    self.assertEmpty(default_a)
+
+    dict_a = {'one': 'z'}
+    default_b = collections.defaultdict(lambda: 'BAD MODIFICATION', {})
+    self.assertRaisesWithLiteralMatch(
+        AssertionError,
+        r"a has ['one'] with value 'z' but it's missing in b",
+        self.assertSameStructure, dict_a, default_b)
+    self.assertEmpty(default_b)
+
+  def test_assert_json_equal_same(self):
+    self.assertJsonEqual('{"success": true}', '{"success": true}')
+    self.assertJsonEqual('{"success": true}', '{"success":true}')
+    self.assertJsonEqual('true', 'true')
+    self.assertJsonEqual('null', 'null')
+    self.assertJsonEqual('false', 'false')
+    self.assertJsonEqual('34', '34')
+    self.assertJsonEqual('[1, 2, 3]', '[1,2,3]', msg='please PASS')
+    self.assertJsonEqual('{"sequence": [1, 2, 3], "float": 23.42}',
+                         '{"float": 23.42, "sequence": [1,2,3]}')
+    self.assertJsonEqual('{"nest": {"spam": "eggs"}, "float": 23.42}',
+                         '{"float": 23.42, "nest": {"spam":"eggs"}}')
+
+  def test_assert_json_equal_different(self):
+    with self.assertRaises(AssertionError):
+      self.assertJsonEqual('{"success": true}', '{"success": false}')
+    with self.assertRaises(AssertionError):
+      self.assertJsonEqual('{"success": false}', '{"Success": false}')
+    with self.assertRaises(AssertionError):
+      self.assertJsonEqual('false', 'true')
+    with self.assertRaises(AssertionError) as error_context:
+      self.assertJsonEqual('null', '0', msg='I demand FAILURE')
+    self.assertIn('I demand FAILURE', error_context.exception.args[0])
+    self.assertIn('None', error_context.exception.args[0])
+    with self.assertRaises(AssertionError):
+      self.assertJsonEqual('[1, 0, 3]', '[1,2,3]')
+    with self.assertRaises(AssertionError):
+      self.assertJsonEqual('{"sequence": [1, 2, 3], "float": 23.42}',
+                           '{"float": 23.42, "sequence": [1,0,3]}')
+    with self.assertRaises(AssertionError):
+      self.assertJsonEqual('{"nest": {"spam": "eggs"}, "float": 23.42}',
+                           '{"float": 23.42, "nest": {"Spam":"beans"}}')
+
+  def test_assert_json_equal_bad_json(self):
+    with self.assertRaises(ValueError) as error_context:
+      self.assertJsonEqual("alhg'2;#", '{"a": true}')
+    self.assertIn('first', error_context.exception.args[0])
+    self.assertIn('alhg', error_context.exception.args[0])
+
+    with self.assertRaises(ValueError) as error_context:
+      self.assertJsonEqual('{"a": true}', "alhg'2;#")
+    self.assertIn('second', error_context.exception.args[0])
+    self.assertIn('alhg', error_context.exception.args[0])
+
+    with self.assertRaises(ValueError) as error_context:
+      self.assertJsonEqual('', '')
+
+
+class GetCommandStderrTestCase(absltest.TestCase):
+
+  def setUp(self):
+    super(GetCommandStderrTestCase, self).setUp()
+    self.original_environ = os.environ.copy()
+
+  def tearDown(self):
+    super(GetCommandStderrTestCase, self).tearDown()
+    os.environ = self.original_environ
+
+  def test_return_status(self):
+    tmpdir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
+    returncode = (
+        absltest.get_command_stderr(
+            ['cat', os.path.join(tmpdir, 'file.txt')],
+            env=_env_for_command_tests())[0])
+    self.assertEqual(1, returncode)
+
+  def test_stderr(self):
+    tmpdir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
+    stderr = (
+        absltest.get_command_stderr(
+            ['cat', os.path.join(tmpdir, 'file.txt')],
+            env=_env_for_command_tests())[1])
+    stderr = stderr.decode('utf-8')
+    self.assertRegex(stderr, 'No such file or directory')
+
