@@ -1890,3 +1890,202 @@ class TestAssertLen(absltest.TestCase):
     ]
     for container in containers:
       regexp = r'.* has length of %d, expected 100\.$' % len(container)
+      with self.assertRaisesRegex(AssertionError, regexp):
+        self.assertLen(container, 100)
+
+  def test_user_message_added_to_default(self):
+    msg = 'This is a useful message'
+    whole_msg = (
+        r'\[1\] has length of 1, expected 100. : This is a useful message')
+    with self.assertRaisesRegex(AssertionError, whole_msg):
+      self.assertLen([1], 100, msg)
+
+
+class TestLoaderTest(absltest.TestCase):
+  """Tests that the TestLoader bans methods named TestFoo."""
+
+  # pylint: disable=invalid-name
+  class Valid(absltest.TestCase):
+    """Test case containing a variety of valid names."""
+
+    test_property = 1
+    TestProperty = 2
+
+    @staticmethod
+    def TestStaticMethod():
+      pass
+
+    @staticmethod
+    def TestStaticMethodWithArg(foo):
+      pass
+
+    @classmethod
+    def TestClassMethod(cls):
+      pass
+
+    def Test(self):
+      pass
+
+    def TestingHelper(self):
+      pass
+
+    def testMethod(self):
+      pass
+
+    def TestHelperWithParams(self, a, b):
+      pass
+
+    def TestHelperWithVarargs(self, *args, **kwargs):
+      pass
+
+    def TestHelperWithDefaults(self, a=5):
+      pass
+
+  class Invalid(absltest.TestCase):
+    """Test case containing a suspicious method."""
+
+    def testMethod(self):
+      pass
+
+    def TestSuspiciousMethod(self):
+      pass
+  # pylint: enable=invalid-name
+
+  def setUp(self):
+    self.loader = absltest.TestLoader()
+
+  def test_valid(self):
+    suite = self.loader.loadTestsFromTestCase(TestLoaderTest.Valid)
+    self.assertEquals(1, suite.countTestCases())
+
+  def testInvalid(self):
+    with self.assertRaisesRegex(TypeError, 'TestSuspiciousMethod'):
+      self.loader.loadTestsFromTestCase(TestLoaderTest.Invalid)
+
+
+class InitNotNecessaryForAssertsTest(absltest.TestCase):
+  """TestCase assertions should work even if __init__ wasn't correctly called.
+
+  This is a workaround, see comment in
+  absltest.TestCase._getAssertEqualityFunc. We know that not calling
+  __init__ of a superclass is a bad thing, but people keep doing them,
+  and this (even if a little bit dirty) saves them from shooting
+  themselves in the foot.
+  """
+
+  def test_subclass(self):
+
+    class Subclass(absltest.TestCase):
+
+      def __init__(self):  # pylint: disable=super-init-not-called
+        pass
+
+    Subclass().assertEquals({}, {})
+
+  def test_multiple_inheritance(self):
+
+    class Foo(object):
+
+      def __init__(self, *args, **kwargs):
+        pass
+
+    class Subclass(Foo, absltest.TestCase):
+      pass
+
+    Subclass().assertEquals({}, {})
+
+
+class GetCommandStringTest(parameterized.TestCase):
+
+  @parameterized.parameters(
+      ([], '', ''),
+      ([''], "''", ''),
+      (['command', 'arg-0'], "'command' 'arg-0'", 'command arg-0'),
+      ([u'command', u'arg-0'], "'command' 'arg-0'", u'command arg-0'),
+      (["foo'bar"], "'foo'\"'\"'bar'", "foo'bar"),
+      (['foo"bar'], "'foo\"bar'", 'foo"bar'),
+      ('command arg-0', 'command arg-0', 'command arg-0'),
+      (u'command arg-0', 'command arg-0', 'command arg-0'))
+  def test_get_command_string(
+      self, command, expected_non_windows, expected_windows):
+    expected = expected_windows if os.name == 'nt' else expected_non_windows
+    self.assertEqual(expected, absltest.get_command_string(command))
+
+
+class TempFileTest(absltest.TestCase, HelperMixin):
+
+  def assert_dir_exists(self, temp_dir):
+    path = temp_dir.full_path
+    self.assertTrue(os.path.exists(path), 'Dir {} does not exist'.format(path))
+    self.assertTrue(os.path.isdir(path),
+                    'Path {} exists, but is not a directory'.format(path))
+
+  def assert_file_exists(self, temp_file, expected_content=b''):
+    path = temp_file.full_path
+    self.assertTrue(os.path.exists(path), 'File {} does not exist'.format(path))
+    self.assertTrue(os.path.isfile(path),
+                    'Path {} exists, but is not a file'.format(path))
+
+    mode = 'rb' if isinstance(expected_content, bytes) else 'rt'
+    with io.open(path, mode) as fp:
+      actual = fp.read()
+    self.assertEqual(expected_content, actual)
+
+  def run_tempfile_helper(self, cleanup, expected_paths):
+    tmpdir = self.create_tempdir('helper-test-temp-dir')
+    env = {
+        'ABSLTEST_TEST_HELPER_TEMPFILE_CLEANUP': cleanup,
+        'TEST_TMPDIR': tmpdir.full_path,
+        }
+    stdout, stderr = self.run_helper(0, ['TempFileHelperTest'], env,
+                                     expect_success=False)
+    output = ('\n=== Helper output ===\n'
+              '----- stdout -----\n{}\n'
+              '----- end stdout -----\n'
+              '----- stderr -----\n{}\n'
+              '----- end stderr -----\n'
+              '===== end helper output =====').format(stdout, stderr)
+    self.assertIn('test_failure', stderr, output)
+
+    # Adjust paths to match on Windows
+    expected_paths = {path.replace('/', os.sep) for path in expected_paths}
+
+    actual = {
+        os.path.relpath(f, tmpdir.full_path)
+        for f in _listdir_recursive(tmpdir.full_path)
+        if f != tmpdir.full_path
+    }
+    self.assertEqual(expected_paths, actual, output)
+
+  def test_create_file_pre_existing_readonly(self):
+    first = self.create_tempfile('foo', content='first')
+    os.chmod(first.full_path, 0o444)
+    second = self.create_tempfile('foo', content='second')
+    self.assertEqual('second', first.read_text())
+    self.assertEqual('second', second.read_text())
+
+  def test_create_file_fails_cleanup(self):
+    path = self.create_tempfile().full_path
+    # Removing the write bit from the file makes it undeletable on Windows.
+    os.chmod(path, 0)
+    # Removing the write bit from the whole directory makes all contained files
+    # undeletable on unix. We also need it to be exec so that os.path.isfile
+    # returns true, and we reach the buggy branch.
+    os.chmod(os.path.dirname(path), stat.S_IEXEC)
+    # The test should pass, even though that file cannot be deleted in teardown.
+
+  def test_temp_file_path_like(self):
+    tempdir = self.create_tempdir('foo')
+    self.assertIsInstance(tempdir, os.PathLike)
+
+    tempfile_ = tempdir.create_file('bar')
+    self.assertIsInstance(tempfile_, os.PathLike)
+
+    self.assertEqual(tempfile_.read_text(), pathlib.Path(tempfile_).read_text())
+
+  def test_unnamed(self):
+    td = self.create_tempdir()
+    self.assert_dir_exists(td)
+
+    tdf = td.create_file()
+    self.assert_file_exists(tdf)
