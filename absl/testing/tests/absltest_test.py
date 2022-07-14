@@ -1684,3 +1684,209 @@ class EqualityAssertionTest(absltest.TestCase):
 
   def test_comparison_with_cmp_or_lt_eq(self):
     same_a = self.EqualityTestsWithLtEq(42)
+    same_b = self.EqualityTestsWithLtEq(42)
+    different = self.EqualityTestsWithLtEq(1769)
+    self._perform_apple_apple_orange_checks(same_a, same_b, different)
+
+
+class AssertSequenceStartsWithTest(absltest.TestCase):
+
+  def setUp(self):
+    self.a = [5, 'foo', {'c': 'd'}, None]
+
+  def test_empty_sequence_starts_with_empty_prefix(self):
+    self.assertSequenceStartsWith([], ())
+
+  def test_sequence_prefix_is_an_empty_list(self):
+    self.assertSequenceStartsWith([[]], ([], 'foo'))
+
+  def test_raise_if_empty_prefix_with_non_empty_whole(self):
+    with self.assertRaisesRegex(
+        AssertionError, 'Prefix length is 0 but whole length is %d: %s' % (len(
+            self.a), r"\[5, 'foo', \{'c': 'd'\}, None\]")):
+      self.assertSequenceStartsWith([], self.a)
+
+  def test_single_element_prefix(self):
+    self.assertSequenceStartsWith([5], self.a)
+
+  def test_two_element_prefix(self):
+    self.assertSequenceStartsWith((5, 'foo'), self.a)
+
+  def test_prefix_is_full_sequence(self):
+    self.assertSequenceStartsWith([5, 'foo', {'c': 'd'}, None], self.a)
+
+  def test_string_prefix(self):
+    self.assertSequenceStartsWith('abc', 'abc123')
+
+  def test_convert_non_sequence_prefix_to_sequence_and_try_again(self):
+    self.assertSequenceStartsWith(5, self.a)
+
+  def test_whole_not_asequence(self):
+    msg = (r'For whole: len\(5\) is not supported, it appears to be type: '
+           '<(type|class) \'int\'>')
+    with self.assertRaisesRegex(AssertionError, msg):
+      self.assertSequenceStartsWith(self.a, 5)
+
+  def test_raise_if_sequence_does_not_start_with_prefix(self):
+    msg = (r"prefix: \['foo', \{'c': 'd'\}\] not found at start of whole: "
+           r"\[5, 'foo', \{'c': 'd'\}, None\].")
+    with self.assertRaisesRegex(AssertionError, msg):
+      self.assertSequenceStartsWith(['foo', {'c': 'd'}], self.a)
+
+  def test_raise_if_types_ar_not_supported(self):
+    with self.assertRaisesRegex(TypeError, 'unhashable type'):
+      self.assertSequenceStartsWith({'a': 1, 2: 'b'},
+                                    {'a': 1, 2: 'b', 'c': '3'})
+
+
+class TestAssertEmpty(absltest.TestCase):
+  longMessage = True
+
+  def test_raises_if_not_asized_object(self):
+    msg = "Expected a Sized object, got: 'int'"
+    with self.assertRaisesRegex(AssertionError, msg):
+      self.assertEmpty(1)
+
+  def test_calls_len_not_bool(self):
+
+    class BadList(list):
+
+      def __bool__(self):
+        return False
+
+      __nonzero__ = __bool__
+
+    bad_list = BadList()
+    self.assertEmpty(bad_list)
+    self.assertFalse(bad_list)
+
+  def test_passes_when_empty(self):
+    empty_containers = [
+        list(),
+        tuple(),
+        dict(),
+        set(),
+        frozenset(),
+        b'',
+        u'',
+        bytearray(),
+    ]
+    for container in empty_containers:
+      self.assertEmpty(container)
+
+  def test_raises_with_not_empty_containers(self):
+    not_empty_containers = [
+        [1],
+        (1,),
+        {'foo': 'bar'},
+        {1},
+        frozenset([1]),
+        b'a',
+        u'a',
+        bytearray(b'a'),
+    ]
+    regexp = r'.* has length of 1\.$'
+    for container in not_empty_containers:
+      with self.assertRaisesRegex(AssertionError, regexp):
+        self.assertEmpty(container)
+
+  def test_user_message_added_to_default(self):
+    msg = 'This is a useful message'
+    whole_msg = re.escape('[1] has length of 1. : This is a useful message')
+    with self.assertRaisesRegex(AssertionError, whole_msg):
+      self.assertEmpty([1], msg=msg)
+
+
+class TestAssertNotEmpty(absltest.TestCase):
+  longMessage = True
+
+  def test_raises_if_not_asized_object(self):
+    msg = "Expected a Sized object, got: 'int'"
+    with self.assertRaisesRegex(AssertionError, msg):
+      self.assertNotEmpty(1)
+
+  def test_calls_len_not_bool(self):
+
+    class BadList(list):
+
+      def __bool__(self):
+        return False
+
+      __nonzero__ = __bool__
+
+    bad_list = BadList([1])
+    self.assertNotEmpty(bad_list)
+    self.assertFalse(bad_list)
+
+  def test_passes_when_not_empty(self):
+    not_empty_containers = [
+        [1],
+        (1,),
+        {'foo': 'bar'},
+        {1},
+        frozenset([1]),
+        b'a',
+        u'a',
+        bytearray(b'a'),
+    ]
+    for container in not_empty_containers:
+      self.assertNotEmpty(container)
+
+  def test_raises_with_empty_containers(self):
+    empty_containers = [
+        list(),
+        tuple(),
+        dict(),
+        set(),
+        frozenset(),
+        b'',
+        u'',
+        bytearray(),
+    ]
+    regexp = r'.* has length of 0\.$'
+    for container in empty_containers:
+      with self.assertRaisesRegex(AssertionError, regexp):
+        self.assertNotEmpty(container)
+
+  def test_user_message_added_to_default(self):
+    msg = 'This is a useful message'
+    whole_msg = re.escape('[] has length of 0. : This is a useful message')
+    with self.assertRaisesRegex(AssertionError, whole_msg):
+      self.assertNotEmpty([], msg=msg)
+
+
+class TestAssertLen(absltest.TestCase):
+  longMessage = True
+
+  def test_raises_if_not_asized_object(self):
+    msg = "Expected a Sized object, got: 'int'"
+    with self.assertRaisesRegex(AssertionError, msg):
+      self.assertLen(1, 1)
+
+  def test_passes_when_expected_len(self):
+    containers = [
+        [[1], 1],
+        [(1, 2), 2],
+        [{'a': 1, 'b': 2, 'c': 3}, 3],
+        [{1, 2, 3, 4}, 4],
+        [frozenset([1]), 1],
+        [b'abc', 3],
+        [u'def', 3],
+        [bytearray(b'ghij'), 4],
+    ]
+    for container, expected_len in containers:
+      self.assertLen(container, expected_len)
+
+  def test_raises_when_unexpected_len(self):
+    containers = [
+        [1],
+        (1, 2),
+        {'a': 1, 'b': 2, 'c': 3},
+        {1, 2, 3, 4},
+        frozenset([1]),
+        b'abc',
+        u'def',
+        bytearray(b'ghij'),
+    ]
+    for container in containers:
+      regexp = r'.* has length of %d, expected 100\.$' % len(container)
