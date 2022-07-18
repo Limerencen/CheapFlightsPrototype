@@ -2089,3 +2089,224 @@ class TempFileTest(absltest.TestCase, HelperMixin):
 
     tdf = td.create_file()
     self.assert_file_exists(tdf)
+
+    tdd = td.mkdir()
+    self.assert_dir_exists(tdd)
+
+    tf = self.create_tempfile()
+    self.assert_file_exists(tf)
+
+  def test_named(self):
+    td = self.create_tempdir('d')
+    self.assert_dir_exists(td)
+
+    tdf = td.create_file('df')
+    self.assert_file_exists(tdf)
+
+    tdd = td.mkdir('dd')
+    self.assert_dir_exists(tdd)
+
+    tf = self.create_tempfile('f')
+    self.assert_file_exists(tf)
+
+  def test_nested_paths(self):
+    td = self.create_tempdir('d1/d2')
+    self.assert_dir_exists(td)
+
+    tdf = td.create_file('df1/df2')
+    self.assert_file_exists(tdf)
+
+    tdd = td.mkdir('dd1/dd2')
+    self.assert_dir_exists(tdd)
+
+    tf = self.create_tempfile('f1/f2')
+    self.assert_file_exists(tf)
+
+  def test_tempdir_create_file(self):
+    td = self.create_tempdir()
+    td.create_file(content='text')
+
+  def test_tempfile_text(self):
+    tf = self.create_tempfile(content='text')
+    self.assert_file_exists(tf, 'text')
+    self.assertEqual('text', tf.read_text())
+
+    with tf.open_text() as fp:
+      self.assertEqual('text', fp.read())
+
+    with tf.open_text('w') as fp:
+      fp.write(u'text-from-open-write')
+    self.assertEqual('text-from-open-write', tf.read_text())
+
+    tf.write_text('text-from-write-text')
+    self.assertEqual('text-from-write-text', tf.read_text())
+
+  def test_tempfile_bytes(self):
+    tf = self.create_tempfile(content=b'\x00\x01\x02')
+    self.assert_file_exists(tf, b'\x00\x01\x02')
+    self.assertEqual(b'\x00\x01\x02', tf.read_bytes())
+
+    with tf.open_bytes() as fp:
+      self.assertEqual(b'\x00\x01\x02', fp.read())
+
+    with tf.open_bytes('wb') as fp:
+      fp.write(b'\x03')
+    self.assertEqual(b'\x03', tf.read_bytes())
+
+    tf.write_bytes(b'\x04')
+    self.assertEqual(b'\x04', tf.read_bytes())
+
+  def test_tempdir_same_name(self):
+    """Make sure the same directory name can be used."""
+    td1 = self.create_tempdir('foo')
+    td2 = self.create_tempdir('foo')
+    self.assert_dir_exists(td1)
+    self.assert_dir_exists(td2)
+
+  def test_tempfile_cleanup_success(self):
+    expected = {
+        'TempFileHelperTest',
+        'TempFileHelperTest/test_failure',
+        'TempFileHelperTest/test_failure/failure',
+        'TempFileHelperTest/test_success',
+        'TempFileHelperTest/test_subtest_failure',
+        'TempFileHelperTest/test_subtest_failure/parent',
+        'TempFileHelperTest/test_subtest_failure/successful_child',
+        'TempFileHelperTest/test_subtest_failure/failed_child',
+        'TempFileHelperTest/test_subtest_success',
+    }
+    self.run_tempfile_helper('SUCCESS', expected)
+
+  def test_tempfile_cleanup_always(self):
+    expected = {
+        'TempFileHelperTest',
+        'TempFileHelperTest/test_failure',
+        'TempFileHelperTest/test_success',
+        'TempFileHelperTest/test_subtest_failure',
+        'TempFileHelperTest/test_subtest_success',
+    }
+    self.run_tempfile_helper('ALWAYS', expected)
+
+  def test_tempfile_cleanup_off(self):
+    expected = {
+        'TempFileHelperTest',
+        'TempFileHelperTest/test_failure',
+        'TempFileHelperTest/test_failure/failure',
+        'TempFileHelperTest/test_success',
+        'TempFileHelperTest/test_success/success',
+        'TempFileHelperTest/test_subtest_failure',
+        'TempFileHelperTest/test_subtest_failure/parent',
+        'TempFileHelperTest/test_subtest_failure/successful_child',
+        'TempFileHelperTest/test_subtest_failure/failed_child',
+        'TempFileHelperTest/test_subtest_success',
+        'TempFileHelperTest/test_subtest_success/parent',
+        'TempFileHelperTest/test_subtest_success/child0',
+        'TempFileHelperTest/test_subtest_success/child1',
+    }
+    self.run_tempfile_helper('OFF', expected)
+
+
+class SkipClassTest(absltest.TestCase):
+
+  def test_incorrect_decorator_call(self):
+    with self.assertRaises(TypeError):
+
+      @absltest.skipThisClass
+      class Test(absltest.TestCase):  # pylint: disable=unused-variable
+        pass
+
+  def test_incorrect_decorator_subclass(self):
+    with self.assertRaises(TypeError):
+
+      @absltest.skipThisClass('reason')
+      def test_method():  # pylint: disable=unused-variable
+        pass
+
+  def test_correct_decorator_class(self):
+
+    @absltest.skipThisClass('reason')
+    class Test(absltest.TestCase):
+      pass
+
+    with self.assertRaises(absltest.SkipTest):
+      Test.setUpClass()
+
+  def test_correct_decorator_subclass(self):
+
+    @absltest.skipThisClass('reason')
+    class Test(absltest.TestCase):
+      pass
+
+    class Subclass(Test):
+      pass
+
+    with self.subTest('Base class should be skipped'):
+      with self.assertRaises(absltest.SkipTest):
+        Test.setUpClass()
+
+    with self.subTest('Subclass should not be skipped'):
+      Subclass.setUpClass()  # should not raise.
+
+  def test_setup(self):
+
+    @absltest.skipThisClass('reason')
+    class Test(absltest.TestCase):
+
+      @classmethod
+      def setUpClass(cls):
+        super(Test, cls).setUpClass()
+        cls.foo = 1
+
+    class Subclass(Test):
+      pass
+
+    Subclass.setUpClass()
+    self.assertEqual(Subclass.foo, 1)
+
+  def test_setup_chain(self):
+
+    @absltest.skipThisClass('reason')
+    class BaseTest(absltest.TestCase):
+
+      @classmethod
+      def setUpClass(cls):
+        super(BaseTest, cls).setUpClass()
+        cls.foo = 1
+
+    @absltest.skipThisClass('reason')
+    class SecondBaseTest(BaseTest):
+
+      @classmethod
+      def setUpClass(cls):
+        super(SecondBaseTest, cls).setUpClass()
+        cls.bar = 2
+
+    class Subclass(SecondBaseTest):
+      pass
+
+    Subclass.setUpClass()
+    self.assertEqual(Subclass.foo, 1)
+    self.assertEqual(Subclass.bar, 2)
+
+  def test_setup_args(self):
+
+    @absltest.skipThisClass('reason')
+    class Test(absltest.TestCase):
+
+      @classmethod
+      def setUpClass(cls, foo, bar=None):
+        super(Test, cls).setUpClass()
+        cls.foo = foo
+        cls.bar = bar
+
+    class Subclass(Test):
+
+      @classmethod
+      def setUpClass(cls):
+        super(Subclass, cls).setUpClass('foo', bar='baz')
+
+    Subclass.setUpClass()
+    self.assertEqual(Subclass.foo, 'foo')
+    self.assertEqual(Subclass.bar, 'baz')
+
+  def test_setup_multiple_inheritance(self):
