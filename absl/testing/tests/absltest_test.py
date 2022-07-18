@@ -2310,3 +2310,113 @@ class SkipClassTest(absltest.TestCase):
     self.assertEqual(Subclass.bar, 'baz')
 
   def test_setup_multiple_inheritance(self):
+
+    # Test that skipping this class doesn't break the MRO chain and stop
+    # RequiredBase.setUpClass from running.
+    @absltest.skipThisClass('reason')
+    class Left(absltest.TestCase):
+      pass
+
+    class RequiredBase(absltest.TestCase):
+
+      @classmethod
+      def setUpClass(cls):
+        super(RequiredBase, cls).setUpClass()
+        cls.foo = 'foo'
+
+    class Right(RequiredBase):
+
+      @classmethod
+      def setUpClass(cls):
+        super(Right, cls).setUpClass()
+
+    # Test will fail unless Left.setUpClass() follows mro properly
+    # Right.setUpClass()
+    class Subclass(Left, Right):
+
+      @classmethod
+      def setUpClass(cls):
+        super(Subclass, cls).setUpClass()
+
+    class Test(Subclass):
+      pass
+
+    Test.setUpClass()
+    self.assertEqual(Test.foo, 'foo')
+
+  def test_skip_class(self):
+
+    @absltest.skipThisClass('reason')
+    class BaseTest(absltest.TestCase):
+
+      def test_foo(self):
+        _ = 1 / 0
+
+    class Test(BaseTest):
+
+      def test_foo(self):
+        self.assertEqual(1, 1)
+
+    with self.subTest('base class'):
+      ts = unittest.makeSuite(BaseTest)
+      self.assertEqual(1, ts.countTestCases())
+
+      res = unittest.TestResult()
+      ts.run(res)
+      self.assertTrue(res.wasSuccessful())
+      self.assertLen(res.skipped, 1)
+      self.assertEqual(0, res.testsRun)
+      self.assertEmpty(res.failures)
+      self.assertEmpty(res.errors)
+
+    with self.subTest('real test'):
+      ts = unittest.makeSuite(Test)
+      self.assertEqual(1, ts.countTestCases())
+
+      res = unittest.TestResult()
+      ts.run(res)
+      self.assertTrue(res.wasSuccessful())
+      self.assertEqual(1, res.testsRun)
+      self.assertEmpty(res.skipped)
+      self.assertEmpty(res.failures)
+      self.assertEmpty(res.errors)
+
+  def test_skip_class_unittest(self):
+
+    @absltest.skipThisClass('reason')
+    class Test(unittest.TestCase):  # note: unittest not absltest
+
+      def test_foo(self):
+        _ = 1 / 0
+
+    ts = unittest.makeSuite(Test)
+    self.assertEqual(1, ts.countTestCases())
+
+    res = unittest.TestResult()
+    ts.run(res)
+    self.assertTrue(res.wasSuccessful())
+    self.assertLen(res.skipped, 1)
+    self.assertEqual(0, res.testsRun)
+    self.assertEmpty(res.failures)
+    self.assertEmpty(res.errors)
+
+
+def _listdir_recursive(path):
+  for dirname, _, filenames in os.walk(path):
+    yield dirname
+    for filename in filenames:
+      yield os.path.join(dirname, filename)
+
+
+def _env_for_command_tests():
+  if os.name == 'nt' and 'PATH' in os.environ:
+    # get_command_stderr and assertCommandXXX don't inherit environment
+    # variables by default. This makes sure msys commands can be found on
+    # Windows.
+    return {'PATH': os.environ['PATH']}
+  else:
+    return None
+
+
+if __name__ == '__main__':
+  absltest.main()
