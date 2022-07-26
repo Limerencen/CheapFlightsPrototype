@@ -19,4 +19,10 @@ import tempfile
 import unittest
 
 from absl import app
-from absl import 
+from absl import flags
+from absl.testing import absltest
+
+FLAGS = flags.FLAGS
+
+_TEST_ID = flags.DEFINE_integer('test_id', 0, 'Which test to run.')
+_NAME = flags.DEFINE_multi_string('name', [], 'List of names 
