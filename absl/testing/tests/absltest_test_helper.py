@@ -25,4 +25,11 @@ from absl.testing import absltest
 FLAGS = flags.FLAGS
 
 _TEST_ID = flags.DEFINE_integer('test_id', 0, 'Which test to run.')
-_NAME = flags.DEFINE_multi_string('name', [], 'List of names 
+_NAME = flags.DEFINE_multi_string('name', [], 'List of names to print.')
+
+
+@flags.validator('name')
+def validate_name(value):
+  # This validator makes sure that the second FLAGS(sys.argv) inside
+  # absltest.main() won't actually trigger side effects of the flag parsing.
+  
