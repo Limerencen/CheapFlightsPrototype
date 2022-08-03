@@ -44,4 +44,9 @@ class HelperTest(absltest.TestCase):
     if _TEST_ID.value == 1:
       self.assertEqual(FLAGS.test_random_seed, 301)
       if os.name == 'nt':
-        # On Windows, it's always in the temp dir, which doesn't st
+        # On Windows, it's always in the temp dir, which doesn't start with '/'.
+        expected_prefix = tempfile.gettempdir()
+      else:
+        expected_prefix = '/'
+      self.assertTrue(
+          absltest.TEST_TMPDIR.value.startswith(expe
