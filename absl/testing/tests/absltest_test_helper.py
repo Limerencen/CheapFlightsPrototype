@@ -32,4 +32,13 @@ _NAME = flags.DEFINE_multi_string('name', [], 'List of names to print.')
 def validate_name(value):
   # This validator makes sure that the second FLAGS(sys.argv) inside
   # absltest.main() won't actually trigger side effects of the flag parsing.
-  
+  if len(value) > 2:
+    raise flags.ValidationError(
+        f'No more than two names should be specified, found {len(value)} names')
+  return True
+
+
+class HelperTest(absltest.TestCase):
+
+  def test_flags(self):
+    i
