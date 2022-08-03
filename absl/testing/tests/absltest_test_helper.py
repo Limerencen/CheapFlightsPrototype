@@ -41,4 +41,7 @@ def validate_name(value):
 class HelperTest(absltest.TestCase):
 
   def test_flags(self):
-    i
+    if _TEST_ID.value == 1:
+      self.assertEqual(FLAGS.test_random_seed, 301)
+      if os.name == 'nt':
+        # On Windows, it's always in the temp dir, which doesn't st
