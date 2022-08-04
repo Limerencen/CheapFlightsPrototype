@@ -49,4 +49,7 @@ class HelperTest(absltest.TestCase):
       else:
         expected_prefix = '/'
       self.assertTrue(
-          absltest.TEST_TMPDIR.value.startswith(expe
+          absltest.TEST_TMPDIR.value.startswith(expected_prefix),
+          '--test_tmpdir={} does not start with {}'.format(
+              absltest.TEST_TMPDIR.value, expected_prefix))
+      self.assertTrue(os.access(absltest.TEST_TMP
