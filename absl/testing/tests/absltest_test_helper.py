@@ -52,4 +52,9 @@ class HelperTest(absltest.TestCase):
           absltest.TEST_TMPDIR.value.startswith(expected_prefix),
           '--test_tmpdir={} does not start with {}'.format(
               absltest.TEST_TMPDIR.value, expected_prefix))
-      self.assertTrue(os.access(absltest.TEST_TMP
+      self.assertTrue(os.access(absltest.TEST_TMPDIR.value, os.W_OK))
+    elif _TEST_ID.value == 2:
+      self.assertEqual(FLAGS.test_random_seed, 321)
+      self.assertEqual(
+          absltest.TEST_SRCDIR.value,
+          os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_SRCDIR']
