@@ -68,4 +68,9 @@ class HelperTest(absltest.TestCase):
           os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_SRCDIR'])
       self.assertEqual(
           absltest.TEST_TMPDIR.value,
-         
+          os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_TMPDIR'])
+    elif _TEST_ID.value == 4:
+      self.assertEqual(FLAGS.test_random_seed, 221)
+      self.assertEqual(
+          absltest.TEST_SRCDIR.value,
+          os.environ['ABSLTEST_TEST_HELPE
