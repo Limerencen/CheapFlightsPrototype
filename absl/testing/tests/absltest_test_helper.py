@@ -92,4 +92,10 @@ class HelperTest(absltest.TestCase):
     if _TEST_ID.value == 6:
       self.assertEqual(
           FLAGS.xml_output_file,
-   
+          os.environ['ABSLTEST_TEST_HELPER_EXPECTED_XML_OUTPUT_FILE'])
+    else:
+      raise unittest.SkipTest(
+          'Not asked to run: --test_id={}'.format(_TEST_ID.value))
+
+  def test_name_flag(self):
+    if _TEST_ID.v
