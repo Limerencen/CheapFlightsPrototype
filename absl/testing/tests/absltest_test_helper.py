@@ -84,4 +84,12 @@ class HelperTest(absltest.TestCase):
   @unittest.expectedFailure
   def test_expected_failure(self):
     if _TEST_ID.value == 5:
-      self.assertEqual(1, 1)  # Expected failure, got 
+      self.assertEqual(1, 1)  # Expected failure, got success.
+    else:
+      self.assertEqual(1, 2)  # The expected failure.
+
+  def test_xml_env_vars(self):
+    if _TEST_ID.value == 6:
+      self.assertEqual(
+          FLAGS.xml_output_file,
+   
