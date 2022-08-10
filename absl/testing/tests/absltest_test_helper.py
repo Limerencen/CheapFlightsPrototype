@@ -79,4 +79,9 @@ class HelperTest(absltest.TestCase):
           os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_TMPDIR'])
     else:
       raise unittest.SkipTest(
-          
+          'Not asked to run: --test_id={}'.format(_TEST_ID.value))
+
+  @unittest.expectedFailure
+  def test_expected_failure(self):
+    if _TEST_ID.value == 5:
+      self.assertEqual(1, 1)  # Expected failure, got 
