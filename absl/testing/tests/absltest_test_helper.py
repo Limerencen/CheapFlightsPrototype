@@ -98,4 +98,11 @@ class HelperTest(absltest.TestCase):
           'Not asked to run: --test_id={}'.format(_TEST_ID.value))
 
   def test_name_flag(self):
-    if _TEST_ID.v
+    if _TEST_ID.value == 7:
+      print('Names in test_name_flag() are:', ' '.join(_NAME.value))
+    else:
+      raise unittest.SkipTest(
+          'Not asked to run: --test_id={}'.format(_TEST_ID.value))
+
+
+class TempFileHelperTest(absltest.T
