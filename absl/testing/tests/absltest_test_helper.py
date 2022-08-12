@@ -105,4 +105,11 @@ class HelperTest(absltest.TestCase):
           'Not asked to run: --test_id={}'.format(_TEST_ID.value))
 
 
-class TempFileHelperTest(absltest.T
+class TempFileHelperTest(absltest.TestCase):
+  """Helper test case for tempfile cleanup tests."""
+
+  tempfile_cleanup = absltest.TempFileCleanup[os.environ.get(
+      'ABSLTEST_TEST_HELPER_TEMPFILE_CLEANUP', 'SUCCESS')]
+
+  def test_failure(self):
+    self.cr
