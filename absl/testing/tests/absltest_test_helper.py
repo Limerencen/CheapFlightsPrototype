@@ -120,4 +120,8 @@ class TempFileHelperTest(absltest.TestCase):
 
   def test_subtest_failure(self):
     self.create_tempfile('parent')
-    with
+    with self.subTest('success'):
+      self.create_tempfile('successful_child')
+    with self.subTest('failure'):
+      self.create_tempfile('failed_child')
+      self.fail('expecte
