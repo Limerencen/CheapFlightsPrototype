@@ -112,4 +112,12 @@ class TempFileHelperTest(absltest.TestCase):
       'ABSLTEST_TEST_HELPER_TEMPFILE_CLEANUP', 'SUCCESS')]
 
   def test_failure(self):
-    self.cr
+    self.create_tempfile('failure')
+    self.fail('expected failure')
+
+  def test_success(self):
+    self.create_tempfile('success')
+
+  def test_subtest_failure(self):
+    self.create_tempfile('parent')
+    with
