@@ -134,4 +134,13 @@ class TempFileHelperTest(absltest.TestCase):
 
 
 def main(argv):
-  del argv  # 
+  del argv  # Unused.
+  print('Names in main() are:', ' '.join(_NAME.value))
+  absltest.main()
+
+
+if __name__ == '__main__':
+  if os.environ.get('ABSLTEST_TEST_HELPER_USE_APP_RUN'):
+    app.run(main)
+  else:
+    absltest.m
