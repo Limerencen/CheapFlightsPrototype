@@ -124,4 +124,14 @@ class TempFileHelperTest(absltest.TestCase):
       self.create_tempfile('successful_child')
     with self.subTest('failure'):
       self.create_tempfile('failed_child')
-      self.fail('expecte
+      self.fail('expected failure')
+
+  def test_subtest_success(self):
+    self.create_tempfile('parent')
+    for i in range(2):
+      with self.subTest(f'success{i}'):
+        self.create_tempfile(f'child{i}')
+
+
+def main(argv):
+  del argv  # 
