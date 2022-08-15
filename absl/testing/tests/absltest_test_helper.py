@@ -143,4 +143,4 @@ if __name__ == '__main__':
   if os.environ.get('ABSLTEST_TEST_HELPER_USE_APP_RUN'):
     app.run(main)
   else:
-    absltest.m
+    absltest.main()
