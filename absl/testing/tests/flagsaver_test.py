@@ -21,4 +21,8 @@ from absl.testing import parameterized
 flags.DEFINE_string('flagsaver_test_flag0', 'unchanged0', 'flag to test with')
 flags.DEFINE_string('flagsaver_test_flag1', 'unchanged1', 'flag to test with')
 
-flags.DEFINE_string('flagsaver_test_validated_flag', None, 'flag to test with
+flags.DEFINE_string('flagsaver_test_validated_flag', None, 'flag to test with')
+flags.register_validator('flagsaver_test_validated_flag', lambda x: not x)
+
+flags.DEFINE_string('flagsaver_test_validated_flag1', None, 'flag to test with')
+flags.DEFINE_string('flagsaver_test_validated_flag2', None,
