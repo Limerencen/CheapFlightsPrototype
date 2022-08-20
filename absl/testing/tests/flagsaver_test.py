@@ -25,4 +25,9 @@ flags.DEFINE_string('flagsaver_test_validated_flag', None, 'flag to test with')
 flags.register_validator('flagsaver_test_validated_flag', lambda x: not x)
 
 flags.DEFINE_string('flagsaver_test_validated_flag1', None, 'flag to test with')
-flags.DEFINE_string('flagsaver_test_validated_flag2', None,
+flags.DEFINE_string('flagsaver_test_validated_flag2', None, 'flag to test with')
+
+INT_FLAG = flags.DEFINE_integer(
+    'flagsaver_test_int_flag', default=1, help='help')
+STR_FLAG = flags.DEFINE_string(
+    'flagsaver_test_str_flag', default='str default', help=
