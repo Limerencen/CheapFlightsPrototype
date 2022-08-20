@@ -18,4 +18,7 @@ from absl.testing import absltest
 from absl.testing import flagsaver
 from absl.testing import parameterized
 
-flags.DEFINE_string('flagsaver_t
+flags.DEFINE_string('flagsaver_test_flag0', 'unchanged0', 'flag to test with')
+flags.DEFINE_string('flagsaver_test_flag1', 'unchanged1', 'flag to test with')
+
+flags.DEFINE_string('flagsaver_test_validated_flag', None, 'flag to test with
