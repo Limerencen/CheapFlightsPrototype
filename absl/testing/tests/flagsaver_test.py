@@ -30,4 +30,11 @@ flags.DEFINE_string('flagsaver_test_validated_flag2', None, 'flag to test with')
 INT_FLAG = flags.DEFINE_integer(
     'flagsaver_test_int_flag', default=1, help='help')
 STR_FLAG = flags.DEFINE_string(
-    'flagsaver_test_str_flag', default='str default', help=
+    'flagsaver_test_str_flag', default='str default', help='help')
+
+MULTI_INT_FLAG = flags.DEFINE_multi_integer('flagsaver_test_multi_int_flag',
+                                            None, 'flag to test with')
+
+
+@flags.multi_flags_validator(
+    ('flagsaver_
