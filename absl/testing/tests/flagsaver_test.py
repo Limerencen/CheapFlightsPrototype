@@ -52,4 +52,11 @@ def check_no_upper_case(value):
 
 
 class _TestError(Exception):
-  """Exception class for use in these tes
+  """Exception class for use in these tests."""
+
+
+class CommonUsageTest(absltest.TestCase):
+  """These test cases cover the most common usages of flagsaver."""
+
+  def test_as_parsed_context_manager(self):
+    # Precondition check, we expect all the
