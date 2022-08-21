@@ -59,4 +59,8 @@ class CommonUsageTest(absltest.TestCase):
   """These test cases cover the most common usages of flagsaver."""
 
   def test_as_parsed_context_manager(self):
-    # Precondition check, we expect all the
+    # Precondition check, we expect all the flags to start as their default.
+    self.assertEqual('str default', STR_FLAG.value)
+    self.assertFalse(STR_FLAG.present)
+    self.assertEqual(1, INT_FLAG.value)
+    self.assertEq
