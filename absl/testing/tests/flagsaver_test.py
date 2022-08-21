@@ -37,4 +37,10 @@ MULTI_INT_FLAG = flags.DEFINE_multi_integer('flagsaver_test_multi_int_flag',
 
 
 @flags.multi_flags_validator(
-    ('flagsaver_
+    ('flagsaver_test_validated_flag1', 'flagsaver_test_validated_flag2'))
+def validate_test_flags(flag_dict):
+  return (flag_dict['flagsaver_test_validated_flag1'] ==
+          flag_dict['flagsaver_test_validated_flag2'])
+
+
+FLAG
