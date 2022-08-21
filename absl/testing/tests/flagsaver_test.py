@@ -43,4 +43,13 @@ def validate_test_flags(flag_dict):
           flag_dict['flagsaver_test_validated_flag2'])
 
 
-FLAG
+FLAGS = flags.FLAGS
+
+
+@flags.validator('flagsaver_test_flag0')
+def check_no_upper_case(value):
+  return value == value.lower()
+
+
+class _TestError(Exception):
+  """Exception class for use in these tes
