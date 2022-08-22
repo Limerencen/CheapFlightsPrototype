@@ -63,4 +63,7 @@ class CommonUsageTest(absltest.TestCase):
     self.assertEqual('str default', STR_FLAG.value)
     self.assertFalse(STR_FLAG.present)
     self.assertEqual(1, INT_FLAG.value)
-    self.assertEq
+    self.assertEqual('unchanged0', FLAGS.flagsaver_test_flag0)
+    self.assertEqual('unchanged1', FLAGS.flagsaver_test_flag1)
+
+    # Flagsaver will also save the state of flags that have been mo
