@@ -66,4 +66,8 @@ class CommonUsageTest(absltest.TestCase):
     self.assertEqual('unchanged0', FLAGS.flagsaver_test_flag0)
     self.assertEqual('unchanged1', FLAGS.flagsaver_test_flag1)
 
-    # Flagsaver will also save the state of flags that have been mo
+    # Flagsaver will also save the state of flags that have been modified.
+    FLAGS.flagsaver_test_flag1 = 'outside flagsaver'
+
+    # Save all existing flag state, and set some flags as if they were parsed on
+    # the command line. Because of this, the new values must be provided as str,
