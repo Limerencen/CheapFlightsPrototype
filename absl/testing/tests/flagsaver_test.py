@@ -79,4 +79,7 @@ class CommonUsageTest(absltest.TestCase):
     ):
       # All the flags have their overridden values.
       self.assertEqual('new string value', STR_FLAG.value)
- 
+      self.assertTrue(STR_FLAG.present)
+      self.assertEqual(123, INT_FLAG.value)
+      self.assertEqual('new value', FLAGS.flagsaver_test_flag0)
+      # Even if we change other flags, they will reset on co
