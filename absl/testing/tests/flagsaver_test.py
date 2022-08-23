@@ -82,4 +82,9 @@ class CommonUsageTest(absltest.TestCase):
       self.assertTrue(STR_FLAG.present)
       self.assertEqual(123, INT_FLAG.value)
       self.assertEqual('new value', FLAGS.flagsaver_test_flag0)
-      # Even if we change other flags, they will reset on co
+      # Even if we change other flags, they will reset on context exit.
+      FLAGS.flagsaver_test_flag1 = 'new value 1'
+
+    # The flags have all reset to their pre-flagsaver values.
+    self.assertEqual('str default', STR_FLAG.value)
+    self.ass
