@@ -74,4 +74,9 @@ class CommonUsageTest(absltest.TestCase):
     # even if the flag type is something other than string.
     with flagsaver.as_parsed(
         (STR_FLAG, 'new string value'),  # Override using flagholder object.
-        (INT_FLAG, '123'),  # Override an int
+        (INT_FLAG, '123'),  # Override an int flag (NOTE: must specify as str).
+        flagsaver_test_flag0='new value',  # Override using flag name.
+    ):
+      # All the flags have their overridden values.
+      self.assertEqual('new string value', STR_FLAG.value)
+ 
