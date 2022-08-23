@@ -71,3 +71,7 @@ class CommonUsageTest(absltest.TestCase):
 
     # Save all existing flag state, and set some flags as if they were parsed on
     # the command line. Because of this, the new values must be provided as str,
+    # even if the flag type is something other than string.
+    with flagsaver.as_parsed(
+        (STR_FLAG, 'new string value'),  # Override using flagholder object.
+        (INT_FLAG, '123'),  # Override an int
