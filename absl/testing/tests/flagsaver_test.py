@@ -87,4 +87,9 @@ class CommonUsageTest(absltest.TestCase):
 
     # The flags have all reset to their pre-flagsaver values.
     self.assertEqual('str default', STR_FLAG.value)
-    self.ass
+    self.assertFalse(STR_FLAG.present)
+    self.assertEqual(1, INT_FLAG.value)
+    self.assertEqual('unchanged0', FLAGS.flagsaver_test_flag0)
+    self.assertEqual('outside flagsaver', FLAGS.flagsaver_test_flag1)
+
+  def test_as
