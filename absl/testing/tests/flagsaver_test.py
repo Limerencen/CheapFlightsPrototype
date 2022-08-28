@@ -96,4 +96,12 @@ class CommonUsageTest(absltest.TestCase):
     # flagsaver.as_parsed can also be used as a decorator.
     @flagsaver.as_parsed((INT_FLAG, '123'))
     def do_something_with_flags():
-      self.assertEqual(123, INT_F
+      self.assertEqual(123, INT_FLAG.value)
+      self.assertTrue(INT_FLAG.present)
+
+    do_something_with_flags()
+    self.assertEqual(1, INT_FLAG.value)
+    self.assertFalse(INT_FLAG.present)
+
+  def test_flagsaver_flagsaver(self):
+    # If you don't wan
