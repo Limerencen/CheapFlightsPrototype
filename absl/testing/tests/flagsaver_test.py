@@ -92,4 +92,8 @@ class CommonUsageTest(absltest.TestCase):
     self.assertEqual('unchanged0', FLAGS.flagsaver_test_flag0)
     self.assertEqual('outside flagsaver', FLAGS.flagsaver_test_flag1)
 
-  def test_as
+  def test_as_parsed_decorator(self):
+    # flagsaver.as_parsed can also be used as a decorator.
+    @flagsaver.as_parsed((INT_FLAG, '123'))
+    def do_something_with_flags():
+      self.assertEqual(123, INT_F
