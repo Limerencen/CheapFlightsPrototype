@@ -104,4 +104,6 @@ class CommonUsageTest(absltest.TestCase):
     self.assertFalse(INT_FLAG.present)
 
   def test_flagsaver_flagsaver(self):
-    # If you don't wan
+    # If you don't want the flags to go through parsing, you can instead use
+    # flagsaver.flagsaver(). With this method, you provide the native python
+    # value you'd like the flags to take on. Otherwise it functi
