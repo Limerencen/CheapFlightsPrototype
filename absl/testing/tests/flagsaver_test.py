@@ -106,4 +106,9 @@ class CommonUsageTest(absltest.TestCase):
   def test_flagsaver_flagsaver(self):
     # If you don't want the flags to go through parsing, you can instead use
     # flagsaver.flagsaver(). With this method, you provide the native python
-    # value you'd like the flags to take on. Otherwise it functi
+    # value you'd like the flags to take on. Otherwise it functions similar to
+    # flagsaver.as_parsed().
+    @flagsaver.flagsaver((INT_FLAG, 345))
+    def do_something_with_flags():
+      self.assertEqual(345, INT_FLAG.value)
+      # Note that because this flag was never parse
