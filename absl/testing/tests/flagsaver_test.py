@@ -115,4 +115,8 @@ class CommonUsageTest(absltest.TestCase):
       # .present unless you manually set that attribute.
       self.assertFalse(INT_FLAG.present)
       # If you do chose to modify things about the flag (such as .present) those
-      # chan
+      # changes will still be cleaned up when flagsaver.flagsaver() exits.
+      INT_FLAG.present = True
+
+    self.assertEqual(1, INT_FLAG.value)
+    # flagsaver.flagsaver() restored INT_FLAG.present to the sta
