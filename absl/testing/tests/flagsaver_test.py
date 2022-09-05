@@ -119,4 +119,10 @@ class CommonUsageTest(absltest.TestCase):
       INT_FLAG.present = True
 
     self.assertEqual(1, INT_FLAG.value)
-    # flagsaver.flagsaver() restored INT_FLAG.present to the sta
+    # flagsaver.flagsaver() restored INT_FLAG.present to the state it was in
+    # before entering the context.
+    self.assertFalse(INT_FLAG.present)
+
+
+class SaveFlagValuesTest(absltest.TestCase):
+  """Test flagsaver.save_flag_values() and flagsaver.restore_flag_values(
