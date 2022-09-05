@@ -125,4 +125,11 @@ class CommonUsageTest(absltest.TestCase):
 
 
 class SaveFlagValuesTest(absltest.TestCase):
-  """Test flagsaver.save_flag_values() and flagsaver.restore_flag_values(
+  """Test flagsaver.save_flag_values() and flagsaver.restore_flag_values().
+
+  In this test, we insure that *all* properties of flags get restored. In other
+  tests we only try changing the flag value.
+  """
+
+  def test_assign_value(self):
+    # First save the flag values.
