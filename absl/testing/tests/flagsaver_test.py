@@ -111,4 +111,8 @@ class CommonUsageTest(absltest.TestCase):
     @flagsaver.flagsaver((INT_FLAG, 345))
     def do_something_with_flags():
       self.assertEqual(345, INT_FLAG.value)
-      # Note that because this flag was never parse
+      # Note that because this flag was never parsed, it will not register as
+      # .present unless you manually set that attribute.
+      self.assertFalse(INT_FLAG.present)
+      # If you do chose to modify things about the flag (such as .present) those
+      # chan
