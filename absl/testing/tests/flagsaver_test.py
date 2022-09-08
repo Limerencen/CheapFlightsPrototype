@@ -133,3 +133,10 @@ class SaveFlagValuesTest(absltest.TestCase):
 
   def test_assign_value(self):
     # First save the flag values.
+    saved_flag_values = flagsaver.save_flag_values()
+
+    # Now mutate the flag's value field and check that it changed.
+    FLAGS.flagsaver_test_flag0 = 'new value'
+    self.assertEqual('new value', FLAGS.flagsaver_test_flag0)
+
+    # Now restore the flag t
