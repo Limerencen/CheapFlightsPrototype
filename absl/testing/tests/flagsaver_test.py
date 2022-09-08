@@ -139,4 +139,10 @@ class SaveFlagValuesTest(absltest.TestCase):
     FLAGS.flagsaver_test_flag0 = 'new value'
     self.assertEqual('new value', FLAGS.flagsaver_test_flag0)
 
-    # Now restore the flag t
+    # Now restore the flag to its original value.
+    flagsaver.restore_flag_values(saved_flag_values)
+    self.assertEqual('unchanged0', FLAGS.flagsaver_test_flag0)
+
+  def test_set_default(self):
+    # First save the flag.
+    saved_fla
