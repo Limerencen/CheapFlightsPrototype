@@ -149,4 +149,10 @@ class SaveFlagValuesTest(absltest.TestCase):
 
     # Now mutate the flag's default field and check that it changed.
     FLAGS.set_default('flagsaver_test_flag0', 'new_default')
-    self.assertEqual('new_default', FLAGS['flagsaver_
+    self.assertEqual('new_default', FLAGS['flagsaver_test_flag0'].default)
+
+    # Now restore the flag's default field.
+    flagsaver.restore_flag_values(saved_flag_values)
+    self.assertEqual('unchanged0', FLAGS['flagsaver_test_flag0'].default)
+
+  def 
