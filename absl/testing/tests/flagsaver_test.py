@@ -160,4 +160,7 @@ class SaveFlagValuesTest(absltest.TestCase):
     saved_flag_values = flagsaver.save_flag_values()
 
     # Sanity check (would fail if called with --flagsaver_test_flag0).
-    self.assertEqua
+    self.assertEqual(0, FLAGS['flagsaver_test_flag0'].present)
+    # Now populate the flag and check that it changed.
+    FLAGS['flagsaver_test_flag0'].parse('new value')
+    self.assertEqual('new value', FLAGS['flagsaver_test_fl
