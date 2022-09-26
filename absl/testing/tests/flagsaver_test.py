@@ -168,4 +168,11 @@ class SaveFlagValuesTest(absltest.TestCase):
 
     # Now restore the flag to its original value.
     flagsaver.restore_flag_values(saved_flag_values)
-    self.assertEqual('unchanged0', FLAGS[
+    self.assertEqual('unchanged0', FLAGS['flagsaver_test_flag0'].value)
+    self.assertEqual(0, FLAGS['flagsaver_test_flag0'].present)
+
+  def test_assign_validators(self):
+    # First save the flag.
+    saved_flag_values = flagsaver.save_flag_values()
+
+    # Sanity 
