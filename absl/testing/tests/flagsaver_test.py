@@ -175,4 +175,8 @@ class SaveFlagValuesTest(absltest.TestCase):
     # First save the flag.
     saved_flag_values = flagsaver.save_flag_values()
 
-    # Sanity 
+    # Sanity check that a validator already exists.
+    self.assertLen(FLAGS['flagsaver_test_flag0'].validators, 1)
+    original_validators = list(FLAGS['flagsaver_test_flag0'].validators)
+
+    def
