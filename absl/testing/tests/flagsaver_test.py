@@ -179,4 +179,9 @@ class SaveFlagValuesTest(absltest.TestCase):
     self.assertLen(FLAGS['flagsaver_test_flag0'].validators, 1)
     original_validators = list(FLAGS['flagsaver_test_flag0'].validators)
 
-    def
+    def no_space(value):
+      return ' ' not in value
+
+    # Add a new validator.
+    flags.register_validator('flagsaver_test_flag0', no_space)
+    self.assertLen(FLAGS['flagsaver_test_flag0']
