@@ -184,4 +184,13 @@ class SaveFlagValuesTest(absltest.TestCase):
 
     # Add a new validator.
     flags.register_validator('flagsaver_test_flag0', no_space)
-    self.assertLen(FLAGS['flagsaver_test_flag0']
+    self.assertLen(FLAGS['flagsaver_test_flag0'].validators, 2)
+
+    # Now restore the flag to its original value.
+    flagsaver.restore_flag_values(saved_flag_values)
+    self.assertEqual(
+        original_validators, FLAGS['flagsaver_test_flag0'].validators
+    )
+
+
+@paramet
