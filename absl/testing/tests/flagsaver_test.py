@@ -200,4 +200,10 @@ class SaveFlagValuesTest(absltest.TestCase):
     ),
     dict(
         testcase_name='flagsaver.as_parsed',
-        flagsaver_method=
+        flagsaver_method=flagsaver.as_parsed,
+    ),
+)
+class NoOverridesTest(parameterized.TestCase):
+  """Test flagsaver.flagsaver and flagsaver.as_parsed without overrides."""
+
+  def test_context_manager_with_call(self, flagsaver_m
