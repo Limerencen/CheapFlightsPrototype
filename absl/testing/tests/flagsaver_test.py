@@ -206,4 +206,9 @@ class SaveFlagValuesTest(absltest.TestCase):
 class NoOverridesTest(parameterized.TestCase):
   """Test flagsaver.flagsaver and flagsaver.as_parsed without overrides."""
 
-  def test_context_manager_with_call(self, flagsaver_m
+  def test_context_manager_with_call(self, flagsaver_method):
+    with flagsaver_method():
+      FLAGS.flagsaver_test_flag0 = 'new value'
+    self.assertEqual('unchanged0', FLAGS.flagsaver_test_flag0)
+
+  def test_context_manager_with_exception(self, flagsaver_metho
