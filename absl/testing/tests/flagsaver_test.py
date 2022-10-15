@@ -211,4 +211,10 @@ class NoOverridesTest(parameterized.TestCase):
       FLAGS.flagsaver_test_flag0 = 'new value'
     self.assertEqual('unchanged0', FLAGS.flagsaver_test_flag0)
 
-  def test_context_manager_with_exception(self, flagsaver_metho
+  def test_context_manager_with_exception(self, flagsaver_method):
+    with self.assertRaises(_TestError):
+      with flagsaver_method():
+        FLAGS.flagsaver_test_flag0 = 'new value'
+        # Simulate a failed test.
+        raise _TestError('something happened')
+    
