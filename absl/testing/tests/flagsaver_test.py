@@ -217,4 +217,9 @@ class NoOverridesTest(parameterized.TestCase):
         FLAGS.flagsaver_test_flag0 = 'new value'
         # Simulate a failed test.
         raise _TestError('something happened')
-    
+    self.assertEqual('unchanged0', FLAGS.flagsaver_test_flag0)
+
+  def test_decorator_without_call(self, flagsaver_method):
+    @flagsaver_method
+    def mutate_flags():
+      FLAGS.flagsaver_test_flag0 = '
