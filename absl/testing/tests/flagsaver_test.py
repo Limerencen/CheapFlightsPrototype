@@ -229,4 +229,11 @@ class NoOverridesTest(parameterized.TestCase):
 
   def test_decorator_with_call(self, flagsaver_method):
     @flagsaver_method()
-    def muta
+    def mutate_flags():
+      FLAGS.flagsaver_test_flag0 = 'new value'
+
+    mutate_flags()
+    self.assertEqual('unchanged0', FLAGS.flagsaver_test_flag0)
+
+  def test_decorator_with_exception(self, flagsaver_method):
+    @fla
