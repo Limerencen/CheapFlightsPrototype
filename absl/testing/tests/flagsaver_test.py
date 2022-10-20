@@ -236,4 +236,10 @@ class NoOverridesTest(parameterized.TestCase):
     self.assertEqual('unchanged0', FLAGS.flagsaver_test_flag0)
 
   def test_decorator_with_exception(self, flagsaver_method):
-    @fla
+    @flagsaver_method()
+    def raise_exception():
+      FLAGS.flagsaver_test_flag0 = 'new value'
+      # Simulate a failed test.
+      raise _TestError('something happened')
+
+    self.assertEqual('unchanged0', FLAGS.flagsaver_test_f
