@@ -242,4 +242,11 @@ class NoOverridesTest(parameterized.TestCase):
       # Simulate a failed test.
       raise _TestError('something happened')
 
-    self.assertEqual('unchanged0', FLAGS.flagsaver_test_f
+    self.assertEqual('unchanged0', FLAGS.flagsaver_test_flag0)
+    self.assertRaises(_TestError, raise_exception)
+    self.assertEqual('unchanged0', FLAGS.flagsaver_test_flag0)
+
+
+@parameterized.named_parameters(
+    dict(
+        testcase_name='flagsaver.fl
