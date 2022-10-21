@@ -249,4 +249,12 @@ class NoOverridesTest(parameterized.TestCase):
 
 @parameterized.named_parameters(
     dict(
-        testcase_name='flagsaver.fl
+        testcase_name='flagsaver.flagsaver',
+        flagsaver_method=flagsaver.flagsaver,
+    ),
+    dict(
+        testcase_name='flagsaver.as_parsed',
+        flagsaver_method=flagsaver.as_parsed,
+    ),
+)
+class TestStringFlagOverrides(para
