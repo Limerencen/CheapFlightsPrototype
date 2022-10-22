@@ -257,4 +257,8 @@ class NoOverridesTest(parameterized.TestCase):
         flagsaver_method=flagsaver.as_parsed,
     ),
 )
-class TestStringFlagOverrides(para
+class TestStringFlagOverrides(parameterized.TestCase):
+  """Test flagsaver.flagsaver and flagsaver.as_parsed with string overrides.
+
+  Note that these tests can be parameterized because both .flagsaver and
+  .as_parsed expect a str input when o
