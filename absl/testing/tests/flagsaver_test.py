@@ -265,4 +265,10 @@ class TestStringFlagOverrides(parameterized.TestCase):
   flags these two flagsaver methods have separate tests elsewhere in this file.
 
   Each test is one class of overrides, executed twice. Once as a context
-  manager, and once as a 
+  manager, and once as a decorator on a mutate_flags() method.
+  """
+
+  def test_keyword_overrides(self, flagsaver_method):
+    # Context manager:
+    with flagsaver_method(flagsaver_test_flag0='new value'):
+      
