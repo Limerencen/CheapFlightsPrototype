@@ -261,4 +261,8 @@ class TestStringFlagOverrides(parameterized.TestCase):
   """Test flagsaver.flagsaver and flagsaver.as_parsed with string overrides.
 
   Note that these tests can be parameterized because both .flagsaver and
-  .as_parsed expect a str input when o
+  .as_parsed expect a str input when overriding a string flag. For non-string
+  flags these two flagsaver methods have separate tests elsewhere in this file.
+
+  Each test is one class of overrides, executed twice. Once as a context
+  manager, and once as a 
