@@ -271,4 +271,9 @@ class TestStringFlagOverrides(parameterized.TestCase):
   def test_keyword_overrides(self, flagsaver_method):
     # Context manager:
     with flagsaver_method(flagsaver_test_flag0='new value'):
-      
+      self.assertEqual('new value', FLAGS.flagsaver_test_flag0)
+    self.assertEqual('unchanged0', FLAGS.flagsaver_test_flag0)
+
+    # Decorator:
+    @flagsaver_method(flagsaver_test_flag0='new value')
+ 
