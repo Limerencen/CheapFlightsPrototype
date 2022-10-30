@@ -276,4 +276,10 @@ class TestStringFlagOverrides(parameterized.TestCase):
 
     # Decorator:
     @flagsaver_method(flagsaver_test_flag0='new value')
- 
+    def mutate_flags():
+      self.assertEqual('new value', FLAGS.flagsaver_test_flag0)
+
+    mutate_flags()
+    self.assertEqual('unchanged0', FLAGS.flagsaver_test_flag0)
+
+  def test_flagholder_overrides(s
