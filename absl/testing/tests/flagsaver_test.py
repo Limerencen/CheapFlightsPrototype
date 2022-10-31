@@ -287,4 +287,11 @@ class TestStringFlagOverrides(parameterized.TestCase):
       self.assertEqual('new value', STR_FLAG.value)
     self.assertEqual('str default', STR_FLAG.value)
 
-    @flagsaver
+    @flagsaver_method((STR_FLAG, 'new value'))
+    def mutate_flags():
+      self.assertEqual('new value', STR_FLAG.value)
+
+    mutate_flags()
+    self.assertEqual('str default', STR_FLAG.value)
+
+  def test_keyword_and_flagholder_overrides(se
