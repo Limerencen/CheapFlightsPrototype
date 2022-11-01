@@ -294,4 +294,9 @@ class TestStringFlagOverrides(parameterized.TestCase):
     mutate_flags()
     self.assertEqual('str default', STR_FLAG.value)
 
-  def test_keyword_and_flagholder_overrides(se
+  def test_keyword_and_flagholder_overrides(self, flagsaver_method):
+    with flagsaver_method(
+        (STR_FLAG, 'another value'), flagsaver_test_flag0='new value'
+    ):
+      self.assertEqual('another value', STR_FLAG.value)
+      
