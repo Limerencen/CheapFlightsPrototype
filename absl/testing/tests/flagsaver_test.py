@@ -322,4 +322,9 @@ class TestStringFlagOverrides(parameterized.TestCase):
         flagsaver_test_validated_flag2='new_value',
     ):
       self.assertEqual('new_value', FLAGS.flagsaver_test_validated_flag1)
-      self.assertEqual('new_value', F
+      self.assertEqual('new_value', FLAGS.flagsaver_test_validated_flag2)
+    self.assertIsNone(FLAGS.flagsaver_test_validated_flag1)
+    self.assertIsNone(FLAGS.flagsaver_test_validated_flag2)
+
+    @flagsaver_method(
+        f
