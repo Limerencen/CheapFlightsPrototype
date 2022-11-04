@@ -314,4 +314,8 @@ class TestStringFlagOverrides(parameterized.TestCase):
     self.assertEqual('str default', STR_FLAG.value)
     self.assertEqual('unchanged0', FLAGS.flagsaver_test_flag0)
 
-  def test_cross_validated_overrides_set_together(self, flag
+  def test_cross_validated_overrides_set_together(self, flagsaver_method):
+    # When the flags are set in the same flagsaver call their validators will
+    # be triggered only once the setting is done.
+    with flagsaver_method(
+        flagsaver_test_validated_fla
