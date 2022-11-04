@@ -318,4 +318,8 @@ class TestStringFlagOverrides(parameterized.TestCase):
     # When the flags are set in the same flagsaver call their validators will
     # be triggered only once the setting is done.
     with flagsaver_method(
-        flagsaver_test_validated_fla
+        flagsaver_test_validated_flag1='new_value',
+        flagsaver_test_validated_flag2='new_value',
+    ):
+      self.assertEqual('new_value', FLAGS.flagsaver_test_validated_flag1)
+      self.assertEqual('new_value', F
