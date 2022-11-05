@@ -332,4 +332,8 @@ class TestStringFlagOverrides(parameterized.TestCase):
     )
     def mutate_flags():
       self.assertEqual('new_value', FLAGS.flagsaver_test_validated_flag1)
-      se
+      self.assertEqual('new_value', FLAGS.flagsaver_test_validated_flag2)
+
+    mutate_flags()
+    self.assertIsNone(FLAGS.flagsaver_test_validated_flag1)
+    self.assertIsNone(FLAGS.flagsaver_test_valid
