@@ -341,4 +341,8 @@ class TestStringFlagOverrides(parameterized.TestCase):
   def test_cross_validated_overrides_set_badly(self, flagsaver_method):
     # Different values should violate the validator.
     with self.assertRaisesRegex(
- 
+        flags.IllegalFlagValueError, 'Flag validation failed'
+    ):
+      with flagsaver_method(
+          flagsaver_test_validated_flag1='new_value',
+          flagsaver_test_validated_flag2='oth
