@@ -336,4 +336,9 @@ class TestStringFlagOverrides(parameterized.TestCase):
 
     mutate_flags()
     self.assertIsNone(FLAGS.flagsaver_test_validated_flag1)
-    self.assertIsNone(FLAGS.flagsaver_test_valid
+    self.assertIsNone(FLAGS.flagsaver_test_validated_flag2)
+
+  def test_cross_validated_overrides_set_badly(self, flagsaver_method):
+    # Different values should violate the validator.
+    with self.assertRaisesRegex(
+ 
