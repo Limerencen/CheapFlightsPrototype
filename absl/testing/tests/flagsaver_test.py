@@ -345,4 +345,11 @@ class TestStringFlagOverrides(parameterized.TestCase):
     ):
       with flagsaver_method(
           flagsaver_test_validated_flag1='new_value',
-          flagsaver_test_validated_flag2='oth
+          flagsaver_test_validated_flag2='other_value',
+      ):
+        pass
+    self.assertIsNone(FLAGS.flagsaver_test_validated_flag1)
+    self.assertIsNone(FLAGS.flagsaver_test_validated_flag2)
+
+    @flagsaver_method(
+        flagsaver_test_validated_fla
