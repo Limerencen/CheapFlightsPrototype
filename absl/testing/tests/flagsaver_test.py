@@ -359,4 +359,9 @@ class TestStringFlagOverrides(parameterized.TestCase):
       pass
 
     self.assertRaisesRegex(
-        flags.IllegalFlagValueError, 'Flag 
+        flags.IllegalFlagValueError, 'Flag validation failed', mutate_flags
+    )
+    self.assertIsNone(FLAGS.flagsaver_test_validated_flag1)
+    self.assertIsNone(FLAGS.flagsaver_test_validated_flag2)
+
+  def test_cross_validated_overrides_se
