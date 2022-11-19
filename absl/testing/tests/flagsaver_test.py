@@ -367,4 +367,9 @@ class TestStringFlagOverrides(parameterized.TestCase):
   def test_cross_validated_overrides_set_separately(self, flagsaver_method):
     # Setting just one flag will trip the validator as well.
     with self.assertRaisesRegex(
-        flags.IllegalFlagValueError, 'Flag validation
+        flags.IllegalFlagValueError, 'Flag validation failed'
+    ):
+      with flagsaver_method(flagsaver_test_validated_flag1='new_value'):
+        pass
+    self.assertIsNone(FLAGS.flagsaver_test_validated_flag1)
+    self.assertIsNone(FLAGS.flagsaver_test
