@@ -388,4 +388,11 @@ class TestStringFlagOverrides(parameterized.TestCase):
     with self.assertRaises(flags.IllegalFlagValueError):
       with flagsaver_method(
           flagsaver_test_flag0='new value',
-          flagsaver_test_validated_flag='new 
+          flagsaver_test_validated_flag='new value',
+      ):
+        pass
+    self.assertEqual('unchanged0', FLAGS.flagsaver_test_flag0)
+    self.assertIsNone(FLAGS.flagsaver_test_validated_flag)
+
+    @flagsaver_method(
+        flagsaver_test_fl
