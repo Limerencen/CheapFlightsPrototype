@@ -384,4 +384,8 @@ class TestStringFlagOverrides(parameterized.TestCase):
     self.assertIsNone(FLAGS.flagsaver_test_validated_flag1)
     self.assertIsNone(FLAGS.flagsaver_test_validated_flag2)
 
-  def test_validation_exception(self, flagsaver_
+  def test_validation_exception(self, flagsaver_method):
+    with self.assertRaises(flags.IllegalFlagValueError):
+      with flagsaver_method(
+          flagsaver_test_flag0='new value',
+          flagsaver_test_validated_flag='new 
