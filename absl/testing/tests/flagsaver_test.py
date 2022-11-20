@@ -395,4 +395,11 @@ class TestStringFlagOverrides(parameterized.TestCase):
     self.assertIsNone(FLAGS.flagsaver_test_validated_flag)
 
     @flagsaver_method(
-        flagsaver_test_fl
+        flagsaver_test_flag0='new value',
+        flagsaver_test_validated_flag='new value',
+    )
+    def mutate_flags():
+      pass
+
+    self.assertRaises(flags.IllegalFlagValueError, mutate_flags)
+    self.assertEqual('unchanged0'
