@@ -402,4 +402,8 @@ class TestStringFlagOverrides(parameterized.TestCase):
       pass
 
     self.assertRaises(flags.IllegalFlagValueError, mutate_flags)
-    self.assertEqual('unchanged0'
+    self.assertEqual('unchanged0', FLAGS.flagsaver_test_flag0)
+    self.assertIsNone(FLAGS.flagsaver_test_validated_flag)
+
+  def test_unknown_flag_raises_exception(self, flagsaver_method):
+    self.assertNotIn('this_flag_does_not_exist', FL
