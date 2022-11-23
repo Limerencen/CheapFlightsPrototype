@@ -411,4 +411,10 @@ class TestStringFlagOverrides(parameterized.TestCase):
     # Flagsaver raises an error when trying to override a non-existent flag.
     with self.assertRaises(flags.UnrecognizedFlagError):
       with flagsaver_method(
-          flagsaver_test_flag0='new value
+          flagsaver_test_flag0='new value', this_flag_does_not_exist='new value'
+      ):
+        pass
+    self.assertEqual('unchanged0', FLAGS.flagsaver_test_flag0)
+
+    @flagsaver_method(
+        flagsaver_test_flag0='new value', this_
