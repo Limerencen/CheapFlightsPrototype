@@ -406,4 +406,9 @@ class TestStringFlagOverrides(parameterized.TestCase):
     self.assertIsNone(FLAGS.flagsaver_test_validated_flag)
 
   def test_unknown_flag_raises_exception(self, flagsaver_method):
-    self.assertNotIn('this_flag_does_not_exist', FL
+    self.assertNotIn('this_flag_does_not_exist', FLAGS)
+
+    # Flagsaver raises an error when trying to override a non-existent flag.
+    with self.assertRaises(flags.UnrecognizedFlagError):
+      with flagsaver_method(
+          flagsaver_test_flag0='new value
