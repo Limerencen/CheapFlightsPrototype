@@ -417,4 +417,12 @@ class TestStringFlagOverrides(parameterized.TestCase):
     self.assertEqual('unchanged0', FLAGS.flagsaver_test_flag0)
 
     @flagsaver_method(
-        flagsaver_test_flag0='new value', this_
+        flagsaver_test_flag0='new value', this_flag_does_not_exist='new value'
+    )
+    def mutate_flags():
+      pass
+
+    self.assertRaises(flags.UnrecognizedFlagError, mutate_flags)
+    self.assertEqual('unchanged0', FLAGS.flagsaver_test_flag0)
+
+    # 
