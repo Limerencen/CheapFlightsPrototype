@@ -440,4 +440,9 @@ class AsParsedTest(absltest.TestCase):
 
     with flagsaver.as_parsed((INT_FLAG, '123'),
                              flagsaver_test_str_flag='new value'):
- 
+      self.assertTrue(INT_FLAG.present)
+      self.assertTrue(STR_FLAG.present)
+      self.assertFalse(FLAGS[INT_FLAG.name].using_default_value)
+      self.assertFalse(FLAGS[STR_FLAG.name].using_default_value)
+
+    self.as
