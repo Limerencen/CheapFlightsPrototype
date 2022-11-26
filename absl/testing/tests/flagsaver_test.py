@@ -425,4 +425,10 @@ class TestStringFlagOverrides(parameterized.TestCase):
     self.assertRaises(flags.UnrecognizedFlagError, mutate_flags)
     self.assertEqual('unchanged0', FLAGS.flagsaver_test_flag0)
 
-    # 
+    # Make sure flagsaver didn't create the flag at any point.
+    self.assertNotIn('this_flag_does_not_exist', FLAGS)
+
+
+class AsParsedTest(absltest.TestCase):
+
+  def test_parse_context_manager_sets_present_and_usin
