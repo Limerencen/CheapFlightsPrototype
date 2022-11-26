@@ -431,4 +431,8 @@ class TestStringFlagOverrides(parameterized.TestCase):
 
 class AsParsedTest(absltest.TestCase):
 
-  def test_parse_context_manager_sets_present_and_usin
+  def test_parse_context_manager_sets_present_and_using_default(self):
+    self.assertFalse(INT_FLAG.present)
+    self.assertFalse(STR_FLAG.present)
+    # Note that .using_default_value isn't available on the FlagHolder directly.
+    self.assertTrue(FLAGS[INT_F
