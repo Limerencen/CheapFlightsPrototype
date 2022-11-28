@@ -453,4 +453,8 @@ class AsParsedTest(absltest.TestCase):
   def test_parse_decorator_sets_present_and_using_default(self):
     self.assertFalse(INT_FLAG.present)
     self.assertFalse(STR_FLAG.present)
-    # Note that .using_default_value isn't available on the FlagHolder direct
+    # Note that .using_default_value isn't available on the FlagHolder directly.
+    self.assertTrue(FLAGS[INT_FLAG.name].using_default_value)
+    self.assertTrue(FLAGS[STR_FLAG.name].using_default_value)
+
+    @flagsaver.as_parsed((INT_FLAG, '123'), flagsaver_test_str_flag='new va
