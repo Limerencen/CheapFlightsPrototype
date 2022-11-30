@@ -457,4 +457,9 @@ class AsParsedTest(absltest.TestCase):
     self.assertTrue(FLAGS[INT_FLAG.name].using_default_value)
     self.assertTrue(FLAGS[STR_FLAG.name].using_default_value)
 
-    @flagsaver.as_parsed((INT_FLAG, '123'), flagsaver_test_str_flag='new va
+    @flagsaver.as_parsed((INT_FLAG, '123'), flagsaver_test_str_flag='new value')
+    def some_func():
+      self.assertTrue(INT_FLAG.present)
+      self.assertTrue(STR_FLAG.present)
+      self.assertFalse(FLAGS[INT_FLAG.name].using_default_value)
+      self.assertFa
