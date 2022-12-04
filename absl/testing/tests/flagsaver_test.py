@@ -462,4 +462,10 @@ class AsParsedTest(absltest.TestCase):
       self.assertTrue(INT_FLAG.present)
       self.assertTrue(STR_FLAG.present)
       self.assertFalse(FLAGS[INT_FLAG.name].using_default_value)
-      self.assertFa
+      self.assertFalse(FLAGS[STR_FLAG.name].using_default_value)
+
+    some_func()
+    self.assertFalse(INT_FLAG.present)
+    self.assertFalse(STR_FLAG.present)
+    self.assertTrue(FLAGS[INT_FLAG.name].using_default_value)
+    self.assertTru
