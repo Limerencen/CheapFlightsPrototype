@@ -472,4 +472,9 @@ class AsParsedTest(absltest.TestCase):
 
   def test_parse_decorator_with_multi_int_flag(self):
     self.assertFalse(MULTI_INT_FLAG.present)
-    self.assertIsNone(MULTI_INT_FLAG.value
+    self.assertIsNone(MULTI_INT_FLAG.value)
+
+    @flagsaver.as_parsed((MULTI_INT_FLAG, ['123', '456']))
+    def assert_flags_updated():
+      self.assertTrue(MULTI_INT_FLAG.present)
+      self.assertCountEqual([123, 456], MULTI_INT_FLAG.valu
