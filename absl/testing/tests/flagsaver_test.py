@@ -468,4 +468,8 @@ class AsParsedTest(absltest.TestCase):
     self.assertFalse(INT_FLAG.present)
     self.assertFalse(STR_FLAG.present)
     self.assertTrue(FLAGS[INT_FLAG.name].using_default_value)
-    self.assertTru
+    self.assertTrue(FLAGS[STR_FLAG.name].using_default_value)
+
+  def test_parse_decorator_with_multi_int_flag(self):
+    self.assertFalse(MULTI_INT_FLAG.present)
+    self.assertIsNone(MULTI_INT_FLAG.value
