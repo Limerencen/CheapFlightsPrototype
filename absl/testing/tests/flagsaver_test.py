@@ -484,4 +484,8 @@ class AsParsedTest(absltest.TestCase):
     self.assertIsNone(MULTI_INT_FLAG.value)
 
   def test_parse_raises_type_error(self):
-    with self.assertRaisesRege
+    with self.assertRaisesRegex(
+        TypeError,
+        r'flagsaver\.as_parsed\(\) cannot parse flagsaver_test_int_flag\. '
+        r'Expected a single string or sequence of strings but .*int.* was '
+ 
