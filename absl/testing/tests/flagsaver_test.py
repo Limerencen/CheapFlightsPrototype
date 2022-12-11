@@ -494,4 +494,12 @@ class AsParsedTest(absltest.TestCase):
 
 
 class SetUpTearDownTest(absltest.TestCase):
-  """Example using a single 
+  """Example using a single flagsaver in setUp."""
+
+  def setUp(self):
+    super().setUp()
+    self.saved_flag_values = flagsaver.save_flag_values()
+
+  def tearDown(self):
+    super().tearDown()
+    flagsaver.restore_flag_values(se
