@@ -488,4 +488,10 @@ class AsParsedTest(absltest.TestCase):
         TypeError,
         r'flagsaver\.as_parsed\(\) cannot parse flagsaver_test_int_flag\. '
         r'Expected a single string or sequence of strings but .*int.* was '
- 
+        r'provided\.'):
+      manager = flagsaver.as_parsed(flagsaver_test_int_flag=123)
+      del manager
+
+
+class SetUpTearDownTest(absltest.TestCase):
+  """Example using a single 
