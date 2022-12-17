@@ -512,4 +512,11 @@ class SetUpTearDownTest(absltest.TestCase):
 
   def test_mutate2(self):
     # Even though other test cases change the flag, it should be
-    # restored to 'unchanged0' if the flag
+    # restored to 'unchanged0' if the flagsaver is working.
+    self.assertEqual('unchanged0', FLAGS.flagsaver_test_flag0)
+    FLAGS.flagsaver_test_flag0 = 'changed0'
+
+
+@parameterized.named_parameters(
+    dict(
+        testcase_name='flagsaver.flagsaver',
