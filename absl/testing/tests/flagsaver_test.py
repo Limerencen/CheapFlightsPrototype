@@ -533,4 +533,12 @@ class BadUsageTest(parameterized.TestCase):
   def test_flag_saver_on_class(self, flagsaver_method):
     with self.assertRaises(TypeError):
 
-      # WRONG. 
+      # WRONG. Don't do this.
+      # Consider the correct usage example in FlagSaverSetUpTearDownUsageTest.
+      @flagsaver_method
+      class FooTest(absltest.TestCase):
+
+        def test_tautology(self):
+          pass
+
+    
