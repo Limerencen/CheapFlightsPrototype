@@ -527,4 +527,10 @@ class SetUpTearDownTest(absltest.TestCase):
         flagsaver_method=flagsaver.as_parsed,
     ),
 )
-class BadUsageTest(parame
+class BadUsageTest(parameterized.TestCase):
+  """Tests that improper usage (such as decorating a class) raise errors."""
+
+  def test_flag_saver_on_class(self, flagsaver_method):
+    with self.assertRaises(TypeError):
+
+      # WRONG. 
