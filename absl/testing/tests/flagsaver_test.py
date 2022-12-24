@@ -547,4 +547,13 @@ class BadUsageTest(parameterized.TestCase):
     with self.assertRaises(TypeError):
 
       # WRONG. Don't do this.
-      # Consider the correct usage example in FlagSaverSetUpTe
+      # Consider the correct usage example in FlagSaverSetUpTearDownUsageTest.
+      @flagsaver_method()
+      class FooTest(absltest.TestCase):
+
+        def test_tautology(self):
+          pass
+
+      del FooTest
+
+  def test_flag_saver_with_overrides_on_clas
