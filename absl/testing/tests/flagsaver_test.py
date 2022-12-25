@@ -556,4 +556,9 @@ class BadUsageTest(parameterized.TestCase):
 
       del FooTest
 
-  def test_flag_saver_with_overrides_on_clas
+  def test_flag_saver_with_overrides_on_class(self, flagsaver_method):
+    with self.assertRaises(TypeError):
+
+      # WRONG. Don't do this.
+      # Consider the correct usage example in FlagSaverSetUpTearDownUsageTest.
+      @flagsaver_method(f
