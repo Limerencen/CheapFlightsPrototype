@@ -561,4 +561,13 @@ class BadUsageTest(parameterized.TestCase):
 
       # WRONG. Don't do this.
       # Consider the correct usage example in FlagSaverSetUpTearDownUsageTest.
-      @flagsaver_method(f
+      @flagsaver_method(foo='bar')
+      class FooTest(absltest.TestCase):
+
+        def test_tautology(self):
+          pass
+
+      del FooTest
+
+  def test_multiple_positional_parameters(self, flagsaver_method):
+    w
