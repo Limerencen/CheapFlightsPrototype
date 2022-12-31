@@ -570,4 +570,10 @@ class BadUsageTest(parameterized.TestCase):
       del FooTest
 
   def test_multiple_positional_parameters(self, flagsaver_method):
-    w
+    with self.assertRaises(ValueError):
+      func_a = lambda: None
+      func_b = lambda: None
+      flagsaver_method(func_a, func_b)
+
+  def test_both_positional_and_keyword_parameters(self, flagsaver_method):
+    
