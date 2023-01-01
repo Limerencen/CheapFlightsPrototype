@@ -576,4 +576,8 @@ class BadUsageTest(parameterized.TestCase):
       flagsaver_method(func_a, func_b)
 
   def test_both_positional_and_keyword_parameters(self, flagsaver_method):
-    
+    with self.assertRaises(ValueError):
+      func_a = lambda: None
+      flagsaver_method(func_a, flagsaver_test_flag0='new value')
+
+  def test_duplicate_holder_parameters(self, flagsaver_
