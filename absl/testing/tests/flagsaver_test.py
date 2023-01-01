@@ -586,3 +586,9 @@ class BadUsageTest(parameterized.TestCase):
 
   def test_duplicate_holder_and_kw_parameter(self, flagsaver_method):
     with self.assertRaises(ValueError):
+      flagsaver_method((INT_FLAG, 45), **{INT_FLAG.name: 45})
+
+  def test_both_positional_and_holder_parameters(self, flagsaver_method):
+    with self.assertRaises(ValueError):
+      func_a = lambda: None
+      flagsaver_metho
