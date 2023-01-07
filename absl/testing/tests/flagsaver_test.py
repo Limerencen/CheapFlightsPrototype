@@ -591,4 +591,10 @@ class BadUsageTest(parameterized.TestCase):
   def test_both_positional_and_holder_parameters(self, flagsaver_method):
     with self.assertRaises(ValueError):
       func_a = lambda: None
-      flagsaver_metho
+      flagsaver_method(func_a, (INT_FLAG, 45))
+
+  def test_holder_parameters_wrong_shape(self, flagsaver_method):
+    with self.assertRaises(ValueError):
+      flagsaver_method(INT_FLAG)
+
+  def test_holder_pa
