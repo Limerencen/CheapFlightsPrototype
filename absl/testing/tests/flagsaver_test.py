@@ -605,4 +605,9 @@ class BadUsageTest(parameterized.TestCase):
   def test_holder_parameters_tuple_wrong_type(self, flagsaver_method):
     with self.assertRaises(ValueError):
       # Even if it is a bool flag, it should be a tuple
-      flagsaver_method(
+      flagsaver_method((4, INT_FLAG))
+
+  def test_both_wrong_positional_parameters(self, flagsaver_method):
+    with self.assertRaises(ValueError):
+      func_a = lambda: None
+      flagsaver_method(func_a, STR_FLAG, 
