@@ -610,4 +610,9 @@ class BadUsageTest(parameterized.TestCase):
   def test_both_wrong_positional_parameters(self, flagsaver_method):
     with self.assertRaises(ValueError):
       func_a = lambda: None
-      flagsaver_method(func_a, STR_FLAG, 
+      flagsaver_method(func_a, STR_FLAG, '45')
+
+  def test_context_manager_no_call(self, flagsaver_method):
+    # The exact exception that's raised appears to be system specific.
+    with self.assertRaises((AttributeError, TypeError)):
+      # Wro
