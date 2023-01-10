@@ -615,4 +615,7 @@ class BadUsageTest(parameterized.TestCase):
   def test_context_manager_no_call(self, flagsaver_method):
     # The exact exception that's raised appears to be system specific.
     with self.assertRaises((AttributeError, TypeError)):
-      # Wro
+      # Wrong. You must call the flagsaver method before using it as a CM.
+      with flagsaver_method:
+        # We don't expect to get here. A type error should happen when
+        # attempting to enter the context m
