@@ -734,3 +734,207 @@ class ParameterizedTestsTest(absltest.TestCase):
       self.assertEqual('{}({})'.format(test_name, param_repr), short_desc[1])
 
   def test_load_tuple_named_test(self):
+    loader = unittest.TestLoader()
+    ts = list(loader.loadTestsFromName('NamedTests.test_something_interesting',
+                                       module=self))
+    self.assertLen(ts, 1)
+    self.assertEndsWith(ts[0].id(), '.test_something_interesting')
+
+  def test_load_dict_named_test(self):
+    loader = unittest.TestLoader()
+    ts = list(
+        loader.loadTestsFromName(
+            'NamedTests.test_dict_something_interesting', module=self))
+    self.assertLen(ts, 1)
+    self.assertEndsWith(ts[0].id(), '.test_dict_something_interesting')
+
+  def test_load_mixed_named_test(self):
+    loader = unittest.TestLoader()
+    ts = list(
+        loader.loadTestsFromName(
+            'NamedTests.test_mixed_something_interesting', module=self))
+    self.assertLen(ts, 1)
+    self.assertEndsWith(ts[0].id(), '.test_mixed_something_interesting')
+
+  def test_duplicate_named_test_fails(self):
+    with self.assertRaises(parameterized.DuplicateTestNameError):
+
+      class _(parameterized.TestCase):
+
+        @parameterized.named_parameters(
+            ('Interesting', 0),
+            ('Interesting', 1),
+        )
+        def test_something(self, unused_obj):
+          pass
+
+  def test_duplicate_dict_named_test_fails(self):
+    with self.assertRaises(parameterized.DuplicateTestNameError):
+
+      class _(parameterized.TestCase):
+
+        @parameterized.named_parameters(
+            {'testcase_name': 'Interesting', 'unused_obj': 0},
+            {'testcase_name': 'Interesting', 'unused_obj': 1},
+        )
+        def test_dict_something(self, unused_obj):
+          pass
+
+  def test_duplicate_mixed_named_test_fails(self):
+    with self.assertRaises(parameterized.DuplicateTestNameError):
+
+      class _(parameterized.TestCase):
+
+        @parameterized.named_parameters(
+            {'testcase_name': 'Interesting', 'unused_obj': 0},
+            ('Interesting', 1),
+        )
+        def test_mixed_something(self, unused_obj):
+          pass
+
+  def test_named_test_with_no_name_fails(self):
+    with self.assertRaises(RuntimeError):
+
+      class _(parameterized.TestCase):
+
+        @parameterized.named_parameters(
+            (0,),
+        )
+        def test_something(self, unused_obj):
+          pass
+
+  def test_named_test_dict_with_no_name_fails(self):
+    with self.assertRaises(RuntimeError):
+
+      class _(parameterized.TestCase):
+
+        @parameterized.named_parameters(
+            {'unused_obj': 0},
+        )
+        def test_something(self, unused_obj):
+          pass
+
+  def test_parameterized_test_iter_has_testcases_property(self):
+    @parameterized.parameters(1, 2, 3, 4, 5, 6)
+    def test_something(unused_self, unused_obj):  # pylint: disable=invalid-name
+      pass
+
+    expected_testcases = [1, 2, 3, 4, 5, 6]
+    self.assertTrue(hasattr(test_something, 'testcases'))
+    self.assertCountEqual(expected_testcases, test_something.testcases)
+
+  def test_chained_decorator(self):
+    ts = unittest.makeSuite(self.ChainedTests)
+    self.assertEqual(1, ts.countTestCases())
+    test = next(t for t in ts)
+    self.assertTrue(hasattr(test, 'test_chained_flavor_strawberry_cone_waffle'))
+    res = unittest.TestResult()
+
+    ts.run(res)
+    self.assertEqual(1, res.testsRun)
+    self.assertTrue(res.wasSuccessful())
+
+  def test_singleton_list_extraction(self):
+    ts = unittest.makeSuite(self.SingletonListExtraction)
+    res = unittest.TestResult()
+    ts.run(res)
+    self.assertEqual(10, res.testsRun)
+    self.assertTrue(res.wasSuccessful())
+
+  def test_singleton_argument_extraction(self):
+    ts = unittest.makeSuite(self.SingletonArgumentExtraction)
+    res = unittest.TestResult()
+    ts.run(res)
+    self.assertEqual(9, res.testsRun)
+    self.assertTrue(res.wasSuccessful())
+
+  def test_singleton_dict_argument(self):
+    ts = unittest.makeSuite(self.SingletonDictArgument)
+    res = unittest.TestResult()
+    ts.run(res)
+    self.assertEqual(1, res.testsRun)
+    self.assertTrue(res.wasSuccessful())
+
+  def test_decorated_bare_class(self):
+    ts = unittest.makeSuite(self.DecoratedBareClass)
+    res = unittest.TestResult()
+    ts.run(res)
+    self.assertEqual(2, res.testsRun)
+    self.assertTrue(res.wasSuccessful(), msg=str(res.failures))
+
+  def test_decorated_class(self):
+    ts = unittest.makeSuite(self.DecoratedClass)
+    res = unittest.TestResult()
+    ts.run(res)
+    self.assertEqual(4, res.testsRun)
+    self.assertLen(res.failures, 2)
+
+  def test_generator_decorated_class(self):
+    ts = unittest.makeSuite(self.GeneratorDecoratedClass)
+    res = unittest.TestResult()
+    ts.run(res)
+    self.assertEqual(32, res.testsRun)
+    self.assertLen(res.failures, 16)
+
+  def test_no_duplicate_decorations(self):
+    with self.assertRaises(AssertionError):
+
+      @parameterized.parameters(1, 2, 3, 4)
+      class _(parameterized.TestCase):
+
+        @parameterized.parameters(5, 6, 7, 8)
+        def test_something(self, unused_obj):
+          pass
+
+  def test_double_class_decorations_not_supported(self):
+
+    @parameterized.parameters('foo', 'bar')
+    class SuperclassWithClassDecorator(parameterized.TestCase):
+
+      def test_name(self, name):
+        del name
+
+    with self.assertRaises(AssertionError):
+
+      @parameterized.parameters('foo', 'bar')
+      class SubclassWithClassDecorator(SuperclassWithClassDecorator):
+        pass
+
+      del SubclassWithClassDecorator
+
+  def test_other_decorator_ordering_unnamed(self):
+    ts = unittest.makeSuite(self.OtherDecoratorUnnamed)
+    res = unittest.TestResult()
+    ts.run(res)
+    # Two for when the parameterized tests call the skip wrapper.
+    # One for when the skip wrapper is called first and doesn't iterate.
+    self.assertEqual(3, res.testsRun)
+    self.assertFalse(res.wasSuccessful())
+    self.assertEmpty(res.failures)
+    # One error from test_other_then_parameterized.
+    self.assertLen(res.errors, 1)
+
+  def test_other_decorator_ordering_named(self):
+    ts = unittest.makeSuite(self.OtherDecoratorNamed)
+    # Verify it generates the test method names from the original test method.
+    for test in ts:  # There is only one test.
+      ts_attributes = dir(test)
+      self.assertIn('test_parameterized_then_other_a', ts_attributes)
+      self.assertIn('test_parameterized_then_other_b', ts_attributes)
+
+    res = unittest.TestResult()
+    ts.run(res)
+    # Two for when the parameterized tests call the skip wrapper.
+    # One for when the skip wrapper is called first and doesn't iterate.
+    self.assertEqual(3, res.testsRun)
+    self.assertFalse(res.wasSuccessful())
+    self.assertEmpty(res.failures)
+    # One error from test_other_then_parameterized.
+    self.assertLen(res.errors, 1)
+
+  def test_other_decorator_ordering_named_with_dict(self):
+    ts = unittest.makeSuite(self.OtherDecoratorNamedWithDict)
+    # Verify it generates the test method names from the original test method.
+    for test in ts:  # There is only one test.
+      ts_attributes = dir(test)
+      self.assertIn('test_parameterized_then_other_a', ts_attributes)
