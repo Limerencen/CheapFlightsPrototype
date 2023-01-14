@@ -618,4 +618,9 @@ class BadUsageTest(parameterized.TestCase):
       # Wrong. You must call the flagsaver method before using it as a CM.
       with flagsaver_method:
         # We don't expect to get here. A type error should happen when
-        # attempting to enter the context m
+        # attempting to enter the context manager.
+        pass
+
+
+if __name__ == '__main__':
+  absltest.main()
