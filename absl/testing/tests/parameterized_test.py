@@ -128,3 +128,211 @@ class ParameterizedTestsTest(absltest.TestCase):
 
     def some_generator(self):
       yield
+      yield
+      yield
+
+    # Generator function, but not a generator instance.
+    def testGenerator(self):
+      yield
+      yield
+      yield
+
+    def test_generator(self):
+      yield
+      yield
+      yield
+
+    def testNormal(self):
+      self.assertEqual(3, 1 + 2)
+
+    def test_normal(self):
+      self.assertEqual(3, 1 + 2)
+
+  class ArgumentsWithAddresses(parameterized.TestCase):
+
+    @parameterized.parameters(
+        (object(),),
+        (MyOwnClass(),),
+    )
+    def test_something(self, case):
+      pass
+
+  class CamelCaseNamedTests(parameterized.TestCase):
+
+    @parameterized.named_parameters(
+        ('Interesting', 0),
+    )
+    def testSingle(self, case):
+      pass
+
+    @parameterized.named_parameters(
+        {'testcase_name': 'Interesting', 'case': 0},
+    )
+    def testDictSingle(self, case):
+      pass
+
+    @parameterized.named_parameters(
+        ('Interesting', 0),
+        ('Boring', 1),
+    )
+    def testSomething(self, case):
+      pass
+
+    @parameterized.named_parameters(
+        {'testcase_name': 'Interesting', 'case': 0},
+        {'testcase_name': 'Boring', 'case': 1},
+    )
+    def testDictSomething(self, case):
+      pass
+
+    @parameterized.named_parameters(
+        {'testcase_name': 'Interesting', 'case': 0},
+        ('Boring', 1),
+    )
+    def testMixedSomething(self, case):
+      pass
+
+    def testWithoutParameters(self):
+      pass
+
+  class NamedTests(parameterized.TestCase):
+    """Example tests using PEP-8 style names instead of camel-case."""
+
+    @parameterized.named_parameters(
+        ('interesting', 0),
+    )
+    def test_single(self, case):
+      pass
+
+    @parameterized.named_parameters(
+        {'testcase_name': 'interesting', 'case': 0},
+    )
+    def test_dict_single(self, case):
+      pass
+
+    @parameterized.named_parameters(
+        ('interesting', 0),
+        ('boring', 1),
+    )
+    def test_something(self, case):
+      pass
+
+    @parameterized.named_parameters(
+        {'testcase_name': 'interesting', 'case': 0},
+        {'testcase_name': 'boring', 'case': 1},
+    )
+    def test_dict_something(self, case):
+      pass
+
+    @parameterized.named_parameters(
+        {'testcase_name': 'interesting', 'case': 0},
+        ('boring', 1),
+    )
+    def test_mixed_something(self, case):
+      pass
+
+    def test_without_parameters(self):
+      pass
+
+  class ChainedTests(parameterized.TestCase):
+
+    @dict_decorator('cone', 'waffle')
+    @dict_decorator('flavor', 'strawberry')
+    def test_chained(self, dictionary):
+      self.assertDictEqual(dictionary, {'cone': 'waffle',
+                                        'flavor': 'strawberry'})
+
+  class SingletonListExtraction(parameterized.TestCase):
+
+    @parameterized.parameters(
+        (i, i * 2) for i in range(10))
+    def test_something(self, unused_1, unused_2):
+      pass
+
+  class SingletonArgumentExtraction(parameterized.TestCase):
+
+    @parameterized.parameters(1, 2, 3, 4, 5, 6)
+    def test_numbers(self, unused_1):
+      pass
+
+    @parameterized.parameters('foo', 'bar', 'baz')
+    def test_strings(self, unused_1):
+      pass
+
+  class SingletonDictArgument(parameterized.TestCase):
+
+    @parameterized.parameters({'op1': 1, 'op2': 2})
+    def test_something(self, op1, op2):
+      del op1, op2
+
+  @parameterized.parameters(
+      (1, 2, 3),
+      (4, 5, 9))
+  class DecoratedClass(parameterized.TestCase):
+
+    def test_add(self, arg1, arg2, arg3):
+      self.assertEqual(arg1 + arg2, arg3)
+
+    def test_subtract_fail(self, arg1, arg2, arg3):
+      self.assertEqual(arg3 + arg2, arg1)
+
+  @parameterized.parameters(
+      (a, b, a+b) for a in range(1, 5) for b in range(1, 5))
+  class GeneratorDecoratedClass(parameterized.TestCase):
+
+    def test_add(self, arg1, arg2, arg3):
+      self.assertEqual(arg1 + arg2, arg3)
+
+    def test_subtract_fail(self, arg1, arg2, arg3):
+      self.assertEqual(arg3 + arg2, arg1)
+
+  @parameterized.parameters(
+      (1, 2, 3),
+      (4, 5, 9),
+  )
+  class DecoratedBareClass(absltest.TestCase):
+
+    def test_add(self, arg1, arg2, arg3):
+      self.assertEqual(arg1 + arg2, arg3)
+
+  class OtherDecoratorUnnamed(parameterized.TestCase):
+
+    @dummy_decorator
+    @parameterized.parameters((1), (2))
+    def test_other_then_parameterized(self, arg1):
+      pass
+
+    @parameterized.parameters((1), (2))
+    @dummy_decorator
+    def test_parameterized_then_other(self, arg1):
+      pass
+
+  class OtherDecoratorNamed(parameterized.TestCase):
+
+    @dummy_decorator
+    @parameterized.named_parameters(('a', 1), ('b', 2))
+    def test_other_then_parameterized(self, arg1):
+      pass
+
+    @parameterized.named_parameters(('a', 1), ('b', 2))
+    @dummy_decorator
+    def test_parameterized_then_other(self, arg1):
+      pass
+
+  class OtherDecoratorNamedWithDict(parameterized.TestCase):
+
+    @dummy_decorator
+    @parameterized.named_parameters(
+        {'testcase_name': 'a', 'arg1': 1},
+        {'testcase_name': 'b', 'arg1': 2})
+    def test_other_then_parameterized(self, arg1):
+      pass
+
+    @parameterized.named_parameters(
+        {'testcase_name': 'a', 'arg1': 1},
+        {'testcase_name': 'b', 'arg1': 2})
+    @dummy_decorator
+    def test_parameterized_then_other(self, arg1):
+      pass
+
+  class UniqueDescriptiveNamesTest(parameterized.TestCase):
