@@ -87,3 +87,8 @@ class FailableTest(absltest.TestCase):
       raise Exception('test Errored!')
 
     if FLAGS.test_fail:
+      self.fail('test Failed!')
+
+
+if __name__ == '__main__':
+  absltest.main()
