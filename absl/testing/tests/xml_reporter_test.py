@@ -204,3 +204,216 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result.addSubTest(test, subtest, None)
     result.stopTestRun()
     result.printErrors()
+
+    run_time = end_time - start_time
+    expected_re = OUTPUT_STRING % {
+        'suite_name': 'MockTest',
+        'tests': 1,
+        'failures': 0,
+        'errors': 0,
+        'run_time': run_time,
+        'start_time': re.escape(self._iso_timestamp(start_time),),
+        'test_name': r'passing_test&#x20;\[msg\]',
+        'classname': '__main__.MockTest',
+        'status': 'run',
+        'result': 'completed',
+        'attributes': '',
+        'message': ''
+    }
+    self._assert_match(expected_re, self.xml_stream.getvalue())
+
+  def test_with_passing_subtest_with_dots_in_parameter_name(self):
+    start_time = 0
+    end_time = 2
+    result = self._make_result((start_time, start_time, end_time, end_time))
+
+    test = MockTest('__main__.MockTest.passing_test')
+    subtest = unittest.case._SubTest(test, 'msg', {'case': 'a.b.c'})
+    result.startTestRun()
+    result.startTest(test)
+    result.addSubTest(test, subtest, None)
+    result.stopTestRun()
+    result.printErrors()
+
+    run_time = end_time - start_time
+    expected_re = OUTPUT_STRING % {
+        'suite_name':
+            'MockTest',
+        'tests':
+            1,
+        'failures':
+            0,
+        'errors':
+            0,
+        'run_time':
+            run_time,
+        'start_time':
+            re.escape(self._iso_timestamp(start_time),),
+        'test_name':
+            r'passing_test&#x20;\[msg\]&#x20;\(case=&apos;a.b.c&apos;\)',
+        'classname':
+            '__main__.MockTest',
+        'status':
+            'run',
+        'result':
+            'completed',
+        'attributes':
+            '',
+        'message':
+            ''
+    }
+    self._assert_match(expected_re, self.xml_stream.getvalue())
+
+  def get_sample_error(self):
+    try:
+      int('a')
+    except ValueError:
+      error_values = sys.exc_info()
+      return error_values
+
+  def get_sample_failure(self):
+    try:
+      self.fail('e')
+    except AssertionError:
+      error_values = sys.exc_info()
+      return error_values
+
+  def get_newline_message_sample_failure(self):
+    try:
+      raise AssertionError('new\nline')
+    except AssertionError:
+      error_values = sys.exc_info()
+      return error_values
+
+  def get_unicode_sample_failure(self):
+    try:
+      raise AssertionError(u'\xe9')
+    except AssertionError:
+      error_values = sys.exc_info()
+      return error_values
+
+  def get_terminal_escape_sample_failure(self):
+    try:
+      raise AssertionError('\x1b')
+    except AssertionError:
+      error_values = sys.exc_info()
+      return error_values
+
+  def test_with_failing_test(self):
+    start_time = 10
+    end_time = 20
+    result = self._make_result((start_time, start_time, end_time, end_time))
+
+    test = MockTest('__main__.MockTest.failing_test')
+    result.startTestRun()
+    result.startTest(test)
+    result.addFailure(test, self.get_sample_failure())
+    result.stopTest(test)
+    result.stopTestRun()
+    result.printErrors()
+
+    run_time = end_time - start_time
+    expected_re = OUTPUT_STRING % {
+        'suite_name': 'MockTest',
+        'tests': 1,
+        'failures': 1,
+        'errors': 0,
+        'run_time': run_time,
+        'start_time': re.escape(self._iso_timestamp(start_time),),
+        'test_name': 'failing_test',
+        'classname': '__main__.MockTest',
+        'status': 'run',
+        'result': 'completed',
+        'attributes': '',
+        'message': FAILURE_MESSAGE
+    }
+    self._assert_match(expected_re, self.xml_stream.getvalue())
+
+  def test_with_failing_subtest(self):
+    start_time = 10
+    end_time = 20
+    result = self._make_result((start_time, start_time, end_time, end_time))
+
+    test = MockTest('__main__.MockTest.failing_test')
+    subtest = unittest.case._SubTest(test, 'msg', None)
+    result.startTestRun()
+    result.startTest(test)
+    result.addSubTest(test, subtest, self.get_sample_failure())
+    result.stopTestRun()
+    result.printErrors()
+
+    run_time = end_time - start_time
+    expected_re = OUTPUT_STRING % {
+        'suite_name': 'MockTest',
+        'tests': 1,
+        'failures': 1,
+        'errors': 0,
+        'run_time': run_time,
+        'start_time': re.escape(self._iso_timestamp(start_time),),
+        'test_name': r'failing_test&#x20;\[msg\]',
+        'classname': '__main__.MockTest',
+        'status': 'run',
+        'result': 'completed',
+        'attributes': '',
+        'message': FAILURE_MESSAGE
+    }
+    self._assert_match(expected_re, self.xml_stream.getvalue())
+
+  def test_with_error_test(self):
+    start_time = 100
+    end_time = 200
+    result = self._make_result((start_time, start_time, end_time, end_time))
+
+    test = MockTest('__main__.MockTest.failing_test')
+    result.startTestRun()
+    result.startTest(test)
+    result.addError(test, self.get_sample_error())
+    result.stopTest(test)
+    result.stopTestRun()
+    result.printErrors()
+    xml = self.xml_stream.getvalue()
+
+    self._assert_valid_xml(xml)
+
+    run_time = end_time - start_time
+    expected_re = OUTPUT_STRING % {
+        'suite_name': 'MockTest',
+        'tests': 1,
+        'failures': 0,
+        'errors': 1,
+        'run_time': run_time,
+        'start_time': re.escape(self._iso_timestamp(start_time),),
+        'test_name': 'failing_test',
+        'classname': '__main__.MockTest',
+        'status': 'run',
+        'result': 'completed',
+        'attributes': '',
+        'message': ERROR_MESSAGE
+    }
+    self._assert_match(expected_re, xml)
+
+  def test_with_error_subtest(self):
+    start_time = 10
+    end_time = 20
+    result = self._make_result((start_time, start_time, end_time, end_time))
+
+    test = MockTest('__main__.MockTest.error_test')
+    subtest = unittest.case._SubTest(test, 'msg', None)
+    result.startTestRun()
+    result.startTest(test)
+    result.addSubTest(test, subtest, self.get_sample_error())
+    result.stopTestRun()
+    result.printErrors()
+
+    run_time = end_time - start_time
+    expected_re = OUTPUT_STRING % {
+        'suite_name': 'MockTest',
+        'tests': 1,
+        'failures': 0,
+        'errors': 1,
+        'run_time': run_time,
+        'start_time': re.escape(self._iso_timestamp(start_time),),
+        'test_name': r'error_test&#x20;\[msg\]',
+        'classname': '__main__.MockTest',
+        'status': 'run',
+        'result': 'completed',
