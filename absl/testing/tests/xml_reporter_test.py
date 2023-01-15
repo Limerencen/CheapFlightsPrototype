@@ -417,3 +417,182 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'classname': '__main__.MockTest',
         'status': 'run',
         'result': 'completed',
+        'attributes': '',
+        'message': ERROR_MESSAGE
+    }
+    self._assert_match(expected_re, self.xml_stream.getvalue())
+
+  def test_with_fail_and_error_test(self):
+    """Tests a failure and subsequent error within a single result."""
+    start_time = 123
+    end_time = 456
+    result = self._make_result((start_time, start_time, end_time, end_time))
+
+    test = MockTest('__main__.MockTest.failing_test')
+    result.startTestRun()
+    result.startTest(test)
+    result.addFailure(test, self.get_sample_failure())
+    # This could happen in tearDown
+    result.addError(test, self.get_sample_error())
+    result.stopTest(test)
+    result.stopTestRun()
+    result.printErrors()
+    xml = self.xml_stream.getvalue()
+
+    self._assert_valid_xml(xml)
+
+    run_time = end_time - start_time
+    expected_re = OUTPUT_STRING % {
+        'suite_name': 'MockTest',
+        'tests': 1,
+        'failures': 1,  # Only the failure is tallied (because it was first).
+        'errors': 0,
+        'run_time': run_time,
+        'start_time': re.escape(self._iso_timestamp(start_time),),
+        'test_name': 'failing_test',
+        'classname': '__main__.MockTest',
+        'status': 'run',
+        'result': 'completed',
+        'attributes': '',
+        # Messages from failure and error should be concatenated in order.
+        'message': FAILURE_MESSAGE + ERROR_MESSAGE
+    }
+    self._assert_match(expected_re, xml)
+
+  def test_with_error_and_fail_test(self):
+    """Tests an error and subsequent failure within a single result."""
+    start_time = 123
+    end_time = 456
+    result = self._make_result((start_time, start_time, end_time, end_time))
+
+    test = MockTest('__main__.MockTest.failing_test')
+    result.startTestRun()
+    result.startTest(test)
+    result.addError(test, self.get_sample_error())
+    result.addFailure(test, self.get_sample_failure())
+    result.stopTest(test)
+    result.stopTestRun()
+    result.printErrors()
+    xml = self.xml_stream.getvalue()
+
+    self._assert_valid_xml(xml)
+
+    run_time = end_time - start_time
+    expected_re = OUTPUT_STRING % {
+        'suite_name': 'MockTest',
+        'tests': 1,
+        'failures': 0,
+        'errors': 1,  # Only the error is tallied (because it was first).
+        'run_time': run_time,
+        'start_time': re.escape(self._iso_timestamp(start_time),),
+        'test_name': 'failing_test',
+        'classname': '__main__.MockTest',
+        'status': 'run',
+        'result': 'completed',
+        'attributes': '',
+        # Messages from error and failure should be concatenated in order.
+        'message': ERROR_MESSAGE + FAILURE_MESSAGE
+    }
+    self._assert_match(expected_re, xml)
+
+  def test_with_newline_error_test(self):
+    start_time = 100
+    end_time = 200
+    result = self._make_result((start_time, start_time, end_time, end_time))
+
+    test = MockTest('__main__.MockTest.failing_test')
+    result.startTestRun()
+    result.startTest(test)
+    result.addError(test, self.get_newline_message_sample_failure())
+    result.stopTest(test)
+    result.stopTestRun()
+    result.printErrors()
+    xml = self.xml_stream.getvalue()
+
+    self._assert_valid_xml(xml)
+
+    run_time = end_time - start_time
+    expected_re = OUTPUT_STRING % {
+        'suite_name': 'MockTest',
+        'tests': 1,
+        'failures': 0,
+        'errors': 1,
+        'run_time': run_time,
+        'start_time': re.escape(self._iso_timestamp(start_time),),
+        'test_name': 'failing_test',
+        'classname': '__main__.MockTest',
+        'status': 'run',
+        'result': 'completed',
+        'attributes': '',
+        'message': NEWLINE_ERROR_MESSAGE
+    } + '\n'
+    self._assert_match(expected_re, xml)
+
+  def test_with_unicode_error_test(self):
+    start_time = 100
+    end_time = 200
+    result = self._make_result((start_time, start_time, end_time, end_time))
+
+    test = MockTest('__main__.MockTest.failing_test')
+    result.startTestRun()
+    result.startTest(test)
+    result.addError(test, self.get_unicode_sample_failure())
+    result.stopTest(test)
+    result.stopTestRun()
+    result.printErrors()
+    xml = self.xml_stream.getvalue()
+
+    self._assert_valid_xml(xml)
+
+    run_time = end_time - start_time
+    expected_re = OUTPUT_STRING % {
+        'suite_name': 'MockTest',
+        'tests': 1,
+        'failures': 0,
+        'errors': 1,
+        'run_time': run_time,
+        'start_time': re.escape(self._iso_timestamp(start_time),),
+        'test_name': 'failing_test',
+        'classname': '__main__.MockTest',
+        'status': 'run',
+        'result': 'completed',
+        'attributes': '',
+        'message': UNICODE_ERROR_MESSAGE
+    }
+    self._assert_match(expected_re, xml)
+
+  def test_with_terminal_escape_error(self):
+    start_time = 100
+    end_time = 200
+    result = self._make_result((start_time, start_time, end_time, end_time))
+
+    test = MockTest('__main__.MockTest.failing_test')
+    result.startTestRun()
+    result.startTest(test)
+    result.addError(test, self.get_terminal_escape_sample_failure())
+    result.stopTest(test)
+    result.stopTestRun()
+    result.printErrors()
+
+    self._assert_valid_xml(self.xml_stream.getvalue())
+
+  def test_with_expected_failure_test(self):
+    start_time = 100
+    end_time = 200
+    result = self._make_result((start_time, start_time, end_time, end_time))
+    error_values = ''
+
+    try:
+      raise RuntimeError('Test expectedFailure')
+    except RuntimeError:
+      error_values = sys.exc_info()
+
+    test = MockTest('__main__.MockTest.expected_failing_test')
+    result.startTestRun()
+    result.startTest(test)
+    result.addExpectedFailure(test, error_values)
+    result.stopTest(test)
+    result.stopTestRun()
+    result.printErrors()
+
+    run_time = end_time - start_time
