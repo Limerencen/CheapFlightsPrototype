@@ -938,3 +938,141 @@ class ParameterizedTestsTest(absltest.TestCase):
     for test in ts:  # There is only one test.
       ts_attributes = dir(test)
       self.assertIn('test_parameterized_then_other_a', ts_attributes)
+      self.assertIn('test_parameterized_then_other_b', ts_attributes)
+
+    res = unittest.TestResult()
+    ts.run(res)
+    # Two for when the parameterized tests call the skip wrapper.
+    # One for when the skip wrapper is called first and doesn't iterate.
+    self.assertEqual(3, res.testsRun)
+    self.assertFalse(res.wasSuccessful())
+    self.assertEmpty(res.failures)
+    # One error from test_other_then_parameterized.
+    self.assertLen(res.errors, 1)
+
+  def test_no_test_error_empty_parameters(self):
+    with self.assertRaises(parameterized.NoTestsError):
+
+      @parameterized.parameters()
+      def test_something():
+        pass
+
+      del test_something
+
+  def test_no_test_error_empty_generator(self):
+    with self.assertRaises(parameterized.NoTestsError):
+
+      @parameterized.parameters((i for i in []))
+      def test_something():
+        pass
+
+      del test_something
+
+  def test_unique_descriptive_names(self):
+
+    class RecordSuccessTestsResult(unittest.TestResult):
+
+      def __init__(self, *args, **kwargs):
+        super(RecordSuccessTestsResult, self).__init__(*args, **kwargs)
+        self.successful_tests = []
+
+      def addSuccess(self, test):
+        self.successful_tests.append(test)
+
+    ts = unittest.makeSuite(self.UniqueDescriptiveNamesTest)
+    res = RecordSuccessTestsResult()
+    ts.run(res)
+    self.assertTrue(res.wasSuccessful())
+    self.assertEqual(2, res.testsRun)
+    test_ids = [test.id() for test in res.successful_tests]
+    full_class_name = unittest.util.strclass(self.UniqueDescriptiveNamesTest)
+    expected_test_ids = [
+        full_class_name + '.test_normal0 (13)',
+        full_class_name + '.test_normal1 (13)',
+    ]
+    self.assertTrue(test_ids)
+    self.assertCountEqual(expected_test_ids, test_ids)
+
+  def test_multi_generators(self):
+    ts = unittest.makeSuite(self.MultiGeneratorsTestCase)
+    res = unittest.TestResult()
+    ts.run(res)
+    self.assertEqual(2, res.testsRun)
+    self.assertTrue(res.wasSuccessful(), msg=str(res.failures))
+
+  def test_named_parameters_reusable(self):
+    ts = unittest.makeSuite(self.NamedParametersReusableTestCase)
+    res = unittest.TestResult()
+    ts.run(res)
+    self.assertEqual(8, res.testsRun)
+    self.assertTrue(res.wasSuccessful(), msg=str(res.failures))
+
+  def test_subclass_inherits_superclass_test_params_reprs(self):
+    self.assertEqual(
+        {'test_name0': "('foo')", 'test_name1': "('bar')"},
+        self.SuperclassTestCase._test_params_reprs)
+    self.assertEqual(
+        {'test_name0': "('foo')", 'test_name1': "('bar')"},
+        self.SubclassTestCase._test_params_reprs)
+
+
+def _decorate_with_side_effects(func, self):
+  self.sideeffect = True
+  func(self)
+
+
+class CoopMetaclassCreationTest(absltest.TestCase):
+
+  class TestBase(absltest.TestCase):
+
+    # This test simulates a metaclass that sets some attribute ('sideeffect')
+    # on each member of the class that starts with 'test'. The test code then
+    # checks that this attribute exists when the custom metaclass and
+    # TestGeneratorMetaclass are combined with cooperative inheritance.
+
+    # The attribute has to be set in the __init__ method of the metaclass,
+    # since the TestGeneratorMetaclass already overrides __new__. Only one
+    # base metaclass can override __new__, but all can provide custom __init__
+    # methods.
+
+    class __metaclass__(type):  # pylint: disable=g-bad-name
+
+      def __init__(cls, name, bases, dct):
+        type.__init__(cls, name, bases, dct)
+        for member_name, obj in dct.items():
+          if member_name.startswith('test'):
+            setattr(cls, member_name,
+                    lambda self, f=obj: _decorate_with_side_effects(f, self))
+
+  class MyParams(parameterized.CoopTestCase(TestBase)):
+
+    @parameterized.parameters(
+        (1, 2, 3),
+        (4, 5, 9))
+    def test_addition(self, op1, op2, result):
+      self.assertEqual(result, op1 + op2)
+
+  class MySuite(unittest.TestSuite):
+    # Under Python 3.4 the TestCases in the suite's list of tests to run are
+    # destroyed and replaced with None after successful execution by default.
+    # This disables that behavior.
+    _cleanup = False
+
+  def test_successful_execution(self):
+    ts = unittest.makeSuite(self.MyParams)
+
+    res = unittest.TestResult()
+    ts.run(res)
+    self.assertEqual(2, res.testsRun)
+    self.assertTrue(res.wasSuccessful())
+
+  def test_metaclass_side_effects(self):
+    ts = unittest.makeSuite(self.MyParams, suiteClass=self.MySuite)
+
+    res = unittest.TestResult()
+    ts.run(res)
+    self.assertTrue(list(ts)[0].sideeffect)
+
+
+if __name__ == '__main__':
+  absltest.main()
