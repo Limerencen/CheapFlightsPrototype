@@ -596,3 +596,194 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result.printErrors()
 
     run_time = end_time - start_time
+    expected_re = OUTPUT_STRING % {
+        'suite_name': 'MockTest',
+        'tests': 1,
+        'failures': 0,
+        'errors': 0,
+        'run_time': run_time,
+        'start_time': re.escape(self._iso_timestamp(start_time),),
+        'test_name': 'expected_failing_test',
+        'classname': '__main__.MockTest',
+        'status': 'run',
+        'result': 'completed',
+        'attributes': '',
+        'message': ''
+    }
+    self._assert_match(re.compile(expected_re, re.DOTALL),
+                       self.xml_stream.getvalue())
+
+  def test_with_unexpected_success_error_test(self):
+    start_time = 100
+    end_time = 200
+    result = self._make_result((start_time, start_time, end_time, end_time))
+
+    test = MockTest('__main__.MockTest.unexpectedly_passing_test')
+    result.startTestRun()
+    result.startTest(test)
+    result.addUnexpectedSuccess(test)
+    result.stopTest(test)
+    result.stopTestRun()
+    result.printErrors()
+
+    run_time = end_time - start_time
+    expected_re = OUTPUT_STRING % {
+        'suite_name': 'MockTest',
+        'tests': 1,
+        'failures': 0,
+        'errors': 1,
+        'run_time': run_time,
+        'start_time': re.escape(self._iso_timestamp(start_time),),
+        'test_name': 'unexpectedly_passing_test',
+        'classname': '__main__.MockTest',
+        'status': 'run',
+        'result': 'completed',
+        'attributes': '',
+        'message': UNEXPECTED_SUCCESS_MESSAGE
+    }
+    self._assert_match(expected_re, self.xml_stream.getvalue())
+
+  def test_with_skipped_test(self):
+    start_time = 100
+    end_time = 100
+    result = self._make_result((start_time, start_time, end_time, end_time))
+
+    test = MockTest('__main__.MockTest.skipped_test_with_reason')
+    result.startTestRun()
+    result.startTest(test)
+    result.addSkip(test, 'b"r')
+    result.stopTest(test)
+    result.stopTestRun()
+    result.printErrors()
+
+    run_time = end_time - start_time
+    expected_re = OUTPUT_STRING % {
+        'suite_name': 'MockTest',
+        'tests': 1,
+        'failures': 0,
+        'errors': 0,
+        'run_time': run_time,
+        'start_time': re.escape(self._iso_timestamp(start_time),),
+        'test_name': 'skipped_test_with_reason',
+        'classname': '__main__.MockTest',
+        'status': 'notrun',
+        'result': 'suppressed',
+        'message': ''
+    }
+    self._assert_match(expected_re, self.xml_stream.getvalue())
+
+  def test_suite_time(self):
+    start_time1 = 100
+    end_time1 = 200
+    start_time2 = 400
+    end_time2 = 700
+    name = '__main__.MockTest.failing_test'
+    result = self._make_result((start_time1, start_time1, end_time1,
+                                start_time2, end_time2, end_time2))
+
+    test = MockTest('%s1' % name)
+    result.startTestRun()
+    result.startTest(test)
+    result.addSuccess(test)
+    result.stopTest(test)
+
+    test = MockTest('%s2' % name)
+    result.startTest(test)
+    result.addSuccess(test)
+    result.stopTest(test)
+    result.stopTestRun()
+    result.printErrors()
+
+    run_time = max(end_time1, end_time2) - min(start_time1, start_time2)
+    timestamp = self._iso_timestamp(start_time1)
+    expected_prefix = """<?xml version="1.0"?>
+<testsuites name="" tests="2" failures="0" errors="0" time="%.3f" timestamp="%s">
+<testsuite name="MockTest" tests="2" failures="0" errors="0" time="%.3f" timestamp="%s">
+""" % (run_time, timestamp, run_time, timestamp)
+    xml_output = self.xml_stream.getvalue()
+    self.assertTrue(
+        xml_output.startswith(expected_prefix),
+        '%s not found in %s' % (expected_prefix, xml_output))
+
+  def test_with_no_suite_name(self):
+    start_time = 1000
+    end_time = 1200
+    result = self._make_result((start_time, start_time, end_time, end_time))
+
+    test = MockTest('__main__.MockTest.bad_name')
+    result.startTestRun()
+    result.startTest(test)
+    result.addSuccess(test)
+    result.stopTest(test)
+    result.stopTestRun()
+    result.printErrors()
+
+    run_time = end_time - start_time
+    expected_re = OUTPUT_STRING % {
+        'suite_name': 'MockTest',
+        'tests': 1,
+        'failures': 0,
+        'errors': 0,
+        'run_time': run_time,
+        'start_time': re.escape(self._iso_timestamp(start_time),),
+        'test_name': 'bad_name',
+        'classname': '__main__.MockTest',
+        'status': 'run',
+        'result': 'completed',
+        'attributes': '',
+        'message': ''
+    }
+    self._assert_match(expected_re, self.xml_stream.getvalue())
+
+  def test_unnamed_parameterized_testcase(self):
+    """Test unnamed parameterized test cases.
+
+    Unnamed parameterized test cases might have non-alphanumeric characters in
+    their test method names. This test ensures xml_reporter handles them
+    correctly.
+    """
+
+    class ParameterizedTest(parameterized.TestCase):
+
+      @parameterized.parameters(('a (b.c)',))
+      def test_prefix(self, case):
+        self.assertTrue(case.startswith('a'))
+
+    start_time = 1000
+    end_time = 1200
+    result = self._make_result((start_time, start_time, end_time, end_time))
+    test = ParameterizedTest(methodName='test_prefix0')
+    result.startTestRun()
+    result.startTest(test)
+    result.addSuccess(test)
+    result.stopTest(test)
+    result.stopTestRun()
+    result.printErrors()
+
+    run_time = end_time - start_time
+    classname = xml_reporter._escape_xml_attr(
+        unittest.util.strclass(test.__class__))
+    expected_re = OUTPUT_STRING % {
+        'suite_name': 'ParameterizedTest',
+        'tests': 1,
+        'failures': 0,
+        'errors': 0,
+        'run_time': run_time,
+        'start_time': re.escape(self._iso_timestamp(start_time),),
+        'test_name': re.escape('test_prefix0&#x20;(&apos;a&#x20;(b.c)&apos;)'),
+        'classname': classname,
+        'status': 'run',
+        'result': 'completed',
+        'attributes': '',
+        'message': ''
+    }
+    self._assert_match(expected_re, self.xml_stream.getvalue())
+
+  def teststop_test_without_pending_test(self):
+    end_time = 1200
+    result = self._make_result((end_time,))
+
+    test = MockTest('__main__.MockTest.bad_name')
+    result.stopTest(test)
+    result.stopTestRun()
+    # Just verify that this doesn't crash
