@@ -787,3 +787,191 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result.stopTest(test)
     result.stopTestRun()
     # Just verify that this doesn't crash
+
+  def test_text_and_xmltest_runner(self):
+    runner = xml_reporter.TextAndXMLTestRunner(self.xml_stream, self.stream,
+                                               'foo', 1)
+    result1 = runner._makeResult()
+    result2 = xml_reporter._TextAndXMLTestResult(None, None, None, 0, None)
+    self.failUnless(type(result1) is type(result2))
+
+  def test_timing_with_time_stub(self):
+    """Make sure that timing is correct even if time.time is stubbed out."""
+    try:
+      saved_time = time.time
+      time.time = lambda: -1
+      reporter = xml_reporter._TextAndXMLTestResult(self.xml_stream,
+                                                    self.stream,
+                                                    'foo', 0)
+      test = MockTest('bar')
+      reporter.startTest(test)
+      self.failIf(reporter.start_time == -1)
+    finally:
+      time.time = saved_time
+
+  def test_concurrent_add_and_delete_pending_test_case_result(self):
+    """Make sure adding/deleting pending test case results are thread safe."""
+    result = xml_reporter._TextAndXMLTestResult(None, self.stream, None, 0,
+                                                None)
+    def add_and_delete_pending_test_case_result(test_name):
+      test = MockTest(test_name)
+      result.addSuccess(test)
+      result.delete_pending_test_case_result(test)
+
+    for i in range(50):
+      add_and_delete_pending_test_case_result('add_and_delete_test%s' % i)
+    self.assertEqual(result.pending_test_case_results, {})
+
+  def test_concurrent_test_runs(self):
+    """Make sure concurrent test runs do not race each other."""
+    num_passing_tests = 20
+    num_failing_tests = 20
+    num_error_tests = 20
+    total_num_tests = num_passing_tests + num_failing_tests + num_error_tests
+
+    times = [0] + [i for i in range(2 * total_num_tests)
+                  ] + [2 * total_num_tests - 1]
+    result = self._make_result(times)
+    threads = []
+    names = []
+    result.startTestRun()
+    for i in range(num_passing_tests):
+      name = 'passing_concurrent_test_%s' % i
+      names.append(name)
+      test_name = '__main__.MockTest.%s' % name
+      # xml_reporter uses id(test) as the test identifier.
+      # In a real testing scenario, all the test instances are created before
+      # running them. So all ids will be unique.
+      # We must do the same here: create test instance beforehand.
+      test = MockTest(test_name)
+      threads.append(threading.Thread(
+          target=self._simulate_passing_test, args=(test, result)))
+    for i in range(num_failing_tests):
+      name = 'failing_concurrent_test_%s' % i
+      names.append(name)
+      test_name = '__main__.MockTest.%s' % name
+      test = MockTest(test_name)
+      threads.append(threading.Thread(
+          target=self._simulate_failing_test, args=(test, result)))
+    for i in range(num_error_tests):
+      name = 'error_concurrent_test_%s' % i
+      names.append(name)
+      test_name = '__main__.MockTest.%s' % name
+      test = MockTest(test_name)
+      threads.append(threading.Thread(
+          target=self._simulate_error_test, args=(test, result)))
+    for t in threads:
+      t.start()
+    for t in threads:
+      t.join()
+
+    result.stopTestRun()
+    result.printErrors()
+    tests_not_in_xml = []
+    for tn in names:
+      if tn not in self.xml_stream.getvalue():
+        tests_not_in_xml.append(tn)
+    msg = ('Expected xml_stream to contain all test %s results, but %s tests '
+           'are missing. List of missing tests: %s' % (
+               total_num_tests, len(tests_not_in_xml), tests_not_in_xml))
+    self.assertEqual([], tests_not_in_xml, msg)
+
+  def test_add_failure_during_stop_test(self):
+    """Tests an addFailure() call from within a stopTest() call stack."""
+    result = self._make_result((0, 2))
+    test = MockTest('__main__.MockTest.failing_test')
+    result.startTestRun()
+    result.startTest(test)
+
+    # Replace parent stopTest method from unittest.TextTestResult with
+    # a version that calls self.addFailure().
+    with mock.patch.object(
+        unittest.TextTestResult,
+        'stopTest',
+        side_effect=lambda t: result.addFailure(t, self.get_sample_failure())):
+      # Run stopTest in a separate thread since we are looking to verify that
+      # it does not deadlock, and would otherwise prevent the test from
+      # completing.
+      stop_test_thread = threading.Thread(target=result.stopTest, args=(test,))
+      stop_test_thread.daemon = True
+      stop_test_thread.start()
+
+    stop_test_thread.join(10.0)
+    self.assertFalse(stop_test_thread.is_alive(),
+                     'result.stopTest(test) call failed to complete')
+
+
+class XMLTest(absltest.TestCase):
+
+  def test_escape_xml(self):
+    self.assertEqual(xml_reporter._escape_xml_attr('"Hi" <\'>\t\r\n'),
+                     '&quot;Hi&quot;&#x20;&lt;&apos;&gt;&#x9;&#xD;&#xA;')
+
+
+class XmlReporterFixtureTest(absltest.TestCase):
+
+  def _get_helper(self):
+    binary_name = 'absl/testing/tests/xml_reporter_helper_test'
+    return _bazelize_command.get_executable_path(binary_name)
+
+  def _run_test_and_get_xml(self, flag):
+    """Runs xml_reporter_helper_test and returns an Element instance.
+
+    Runs xml_reporter_helper_test in a new process so that it can
+    exercise the entire test infrastructure, and easily test issues in
+    the test fixture.
+
+    Args:
+      flag: flag to pass to xml_reporter_helper_test
+
+    Returns:
+      The Element instance of the XML output.
+    """
+
+    xml_fhandle, xml_fname = tempfile.mkstemp()
+    os.close(xml_fhandle)
+
+    try:
+      binary = self._get_helper()
+      args = [binary, flag, '--xml_output_file=%s' % xml_fname]
+      ret = subprocess.call(args)
+      self.assertEqual(ret, 0)
+
+      xml = ElementTree.parse(xml_fname).getroot()
+    finally:
+      os.remove(xml_fname)
+
+    return xml
+
+  def _run_test(self, flag, num_errors, num_failures, suites):
+    xml_fhandle, xml_fname = tempfile.mkstemp()
+    os.close(xml_fhandle)
+
+    try:
+      binary = self._get_helper()
+      args = [binary, flag, '--xml_output_file=%s' % xml_fname]
+      ret = subprocess.call(args)
+      self.assertNotEqual(ret, 0)
+
+      xml = ElementTree.parse(xml_fname).getroot()
+      logging.info('xml output is:\n%s', ElementTree.tostring(xml))
+    finally:
+      os.remove(xml_fname)
+
+    self.assertEqual(int(xml.attrib['errors']), num_errors)
+    self.assertEqual(int(xml.attrib['failures']), num_failures)
+    self.assertLen(xml, len(suites))
+    actual_suites = sorted(
+        xml.findall('testsuite'), key=lambda x: x.attrib['name'])
+    suites = sorted(suites, key=lambda x: x['name'])
+    for actual_suite, expected_suite in zip(actual_suites, suites):
+      self.assertEqual(actual_suite.attrib['name'], expected_suite['name'])
+      self.assertLen(actual_suite, len(expected_suite['cases']))
+      actual_cases = sorted(actual_suite.findall('testcase'),
+                            key=lambda x: x.attrib['name'])
+      expected_cases = sorted(expected_suite['cases'], key=lambda x: x['name'])
+      for actual_case, expected_case in zip(actual_cases, expected_cases):
+        self.assertEqual(actual_case.attrib['name'], expected_case['name'])
+        self.assertEqual(actual_case.attrib['classname'],
+                         expected_case['classname'])
+        if 'error' in expected_case:
