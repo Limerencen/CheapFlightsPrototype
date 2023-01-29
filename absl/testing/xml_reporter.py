@@ -427,3 +427,133 @@ class _TextAndXMLTestResult(_pretty_print_reporter.TextTestResult):
           3) an exception_message
           4) a string version of a sys.exc_info()-style tuple of values
              ('error', err[0], err[1], self._exc_info_to_string(err))
+             If the length of errors is 0, then the test is either passed or
+             skipped.
+      skip_reason: a string explaining why the test was skipped
+    """
+    with self._pending_test_case_results_lock:
+      test_id = id(test)
+      if test_id not in self.pending_test_case_results:
+        self.pending_test_case_results[test_id] = self._TEST_CASE_RESULT_CLASS(
+            test)
+      if error_summary:
+        self.pending_test_case_results[test_id].errors.append(error_summary)
+      if skip_reason:
+        self.pending_test_case_results[test_id].skip_reason = skip_reason
+
+  def delete_pending_test_case_result(self, test):
+    with self._pending_test_case_results_lock:
+      test_id = id(test)
+      del self.pending_test_case_results[test_id]
+
+  def get_pending_test_case_result(self, test):
+    test_id = id(test)
+    return self.pending_test_case_results.get(test_id, None)
+
+  def addSuccess(self, test):
+    super(_TextAndXMLTestResult, self).addSuccess(test)
+    self.add_pending_test_case_result(test)
+
+  def addError(self, test, err):
+    super(_TextAndXMLTestResult, self).addError(test, err)
+    error_summary = ('error', err[0], err[1],
+                     self._exc_info_to_string(err, test=test))
+    self.add_pending_test_case_result(test, error_summary=error_summary)
+
+  def addFailure(self, test, err):
+    super(_TextAndXMLTestResult, self).addFailure(test, err)
+    error_summary = ('failure', err[0], err[1],
+                     self._exc_info_to_string(err, test=test))
+    self.add_pending_test_case_result(test, error_summary=error_summary)
+
+  def addSkip(self, test, reason):
+    super(_TextAndXMLTestResult, self).addSkip(test, reason)
+    self.add_pending_test_case_result(test, skip_reason=reason)
+
+  def addExpectedFailure(self, test, err):
+    super(_TextAndXMLTestResult, self).addExpectedFailure(test, err)
+    if callable(getattr(test, 'recordProperty', None)):
+      test.recordProperty('EXPECTED_FAILURE',
+                          self._exc_info_to_string(err, test=test))
+    self.add_pending_test_case_result(test)
+
+  def addUnexpectedSuccess(self, test):
+    super(_TextAndXMLTestResult, self).addUnexpectedSuccess(test)
+    test_name = test.id() or str(test)
+    error_summary = ('error', '', '',
+                     'Test case %s should have failed, but passed.'
+                     % (test_name))
+    self.add_pending_test_case_result(test, error_summary=error_summary)
+
+  def addSubTest(self, test, subtest, err):  # pylint: disable=invalid-name
+    super(_TextAndXMLTestResult, self).addSubTest(test, subtest, err)
+    if err is not None:
+      if issubclass(err[0], test.failureException):
+        error_summary = ('failure', err[0], err[1],
+                         self._exc_info_to_string(err, test=test))
+      else:
+        error_summary = ('error', err[0], err[1],
+                         self._exc_info_to_string(err, test=test))
+    else:
+      error_summary = None
+    self.add_pending_test_case_result(subtest, error_summary=error_summary)
+
+  def printErrors(self):
+    super(_TextAndXMLTestResult, self).printErrors()
+    self.xml_stream.write('<?xml version="1.0"?>\n')
+    self.suite.print_xml_summary(self.xml_stream)
+
+
+class TextAndXMLTestRunner(unittest.TextTestRunner):
+  """A test runner that produces both formatted text results and XML.
+
+  It prints out the names of tests as they are run, errors as they
+  occur, and a summary of the results at the end of the test run.
+  """
+
+  _TEST_RESULT_CLASS = _TextAndXMLTestResult
+
+  _xml_stream = None
+  _testsuites_properties = {}
+
+  def __init__(self, xml_stream=None, *args, **kwargs):
+    """Initialize a TextAndXMLTestRunner.
+
+    Args:
+      xml_stream: file-like or None; XML-formatted test results are output
+          via this object's write() method.  If None (the default), the
+          new instance behaves as described in the set_default_xml_stream method
+          documentation below.
+      *args: passed unmodified to unittest.TextTestRunner.__init__.
+      **kwargs: passed unmodified to unittest.TextTestRunner.__init__.
+    """
+    super(TextAndXMLTestRunner, self).__init__(*args, **kwargs)
+    if xml_stream is not None:
+      self._xml_stream = xml_stream
+    # else, do not set self._xml_stream to None -- this allows implicit fallback
+    # to the class attribute's value.
+
+  @classmethod
+  def set_default_xml_stream(cls, xml_stream):
+    """Sets the default XML stream for the class.
+
+    Args:
+      xml_stream: file-like or None; used for instances when xml_stream is None
+          or not passed to their constructors.  If None is passed, instances
+          created with xml_stream=None will act as ordinary TextTestRunner
+          instances; this is the default state before any calls to this method
+          have been made.
+    """
+    cls._xml_stream = xml_stream
+
+  def _makeResult(self):
+    if self._xml_stream is None:
+      return super(TextAndXMLTestRunner, self)._makeResult()
+    else:
+      return self._TEST_RESULT_CLASS(
+          self._xml_stream, self.stream, self.descriptions, self.verbosity,
+          testsuites_properties=self._testsuites_properties)
+
+  @classmethod
+  def set_testsuites_property(cls, key, value):
+    cls._testsuites_properties[key] = value
