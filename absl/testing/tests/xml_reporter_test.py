@@ -975,3 +975,135 @@ class XmlReporterFixtureTest(absltest.TestCase):
         self.assertEqual(actual_case.attrib['classname'],
                          expected_case['classname'])
         if 'error' in expected_case:
+          actual_error = actual_case.find('error')
+          self.assertEqual(actual_error.attrib['message'],
+                           expected_case['error'])
+        if 'failure' in expected_case:
+          actual_failure = actual_case.find('failure')
+          self.assertEqual(actual_failure.attrib['message'],
+                           expected_case['failure'])
+
+    return xml
+
+  def test_set_up_module_error(self):
+    self._run_test(
+        flag='--set_up_module_error',
+        num_errors=1,
+        num_failures=0,
+        suites=[{'name': '__main__',
+                 'cases': [{'name': 'setUpModule',
+                            'classname': '__main__',
+                            'error': 'setUpModule Errored!'}]}])
+
+  def test_tear_down_module_error(self):
+    self._run_test(
+        flag='--tear_down_module_error',
+        num_errors=1,
+        num_failures=0,
+        suites=[{'name': 'FailableTest',
+                 'cases': [{'name': 'test',
+                            'classname': '__main__.FailableTest'}]},
+                {'name': '__main__',
+                 'cases': [{'name': 'tearDownModule',
+                            'classname': '__main__',
+                            'error': 'tearDownModule Errored!'}]}])
+
+  def test_set_up_class_error(self):
+    self._run_test(
+        flag='--set_up_class_error',
+        num_errors=1,
+        num_failures=0,
+        suites=[{'name': 'FailableTest',
+                 'cases': [{'name': 'setUpClass',
+                            'classname': '__main__.FailableTest',
+                            'error': 'setUpClass Errored!'}]}])
+
+  def test_tear_down_class_error(self):
+    self._run_test(
+        flag='--tear_down_class_error',
+        num_errors=1,
+        num_failures=0,
+        suites=[{'name': 'FailableTest',
+                 'cases': [{'name': 'test',
+                            'classname': '__main__.FailableTest'},
+                           {'name': 'tearDownClass',
+                            'classname': '__main__.FailableTest',
+                            'error': 'tearDownClass Errored!'}]}])
+
+  def test_set_up_error(self):
+    self._run_test(
+        flag='--set_up_error',
+        num_errors=1,
+        num_failures=0,
+        suites=[{'name': 'FailableTest',
+                 'cases': [{'name': 'test',
+                            'classname': '__main__.FailableTest',
+                            'error': 'setUp Errored!'}]}])
+
+  def test_tear_down_error(self):
+    self._run_test(
+        flag='--tear_down_error',
+        num_errors=1,
+        num_failures=0,
+        suites=[{'name': 'FailableTest',
+                 'cases': [{'name': 'test',
+                            'classname': '__main__.FailableTest',
+                            'error': 'tearDown Errored!'}]}])
+
+  def test_test_error(self):
+    self._run_test(
+        flag='--test_error',
+        num_errors=1,
+        num_failures=0,
+        suites=[{'name': 'FailableTest',
+                 'cases': [{'name': 'test',
+                            'classname': '__main__.FailableTest',
+                            'error': 'test Errored!'}]}])
+
+  def test_set_up_failure(self):
+    self._run_test(
+        flag='--set_up_fail',
+        num_errors=0,
+        num_failures=1,
+        suites=[{'name': 'FailableTest',
+                 'cases': [{'name': 'test',
+                            'classname': '__main__.FailableTest',
+                            'failure': 'setUp Failed!'}]}])
+
+  def test_tear_down_failure(self):
+    self._run_test(
+        flag='--tear_down_fail',
+        num_errors=0,
+        num_failures=1,
+        suites=[{'name': 'FailableTest',
+                 'cases': [{'name': 'test',
+                            'classname': '__main__.FailableTest',
+                            'failure': 'tearDown Failed!'}]}])
+
+  def test_test_fail(self):
+    self._run_test(
+        flag='--test_fail',
+        num_errors=0,
+        num_failures=1,
+        suites=[{'name': 'FailableTest',
+                 'cases': [{'name': 'test',
+                            'classname': '__main__.FailableTest',
+                            'failure': 'test Failed!'}]}])
+
+  def test_test_randomization_seed_logging(self):
+    # We expect the resulting XML to start as follows:
+    # <testsuites ...>
+    #  <properties>
+    #   <property name="test_randomize_ordering_seed" value="17" />
+    # ...
+    #
+    # which we validate here.
+    out = self._run_test_and_get_xml('--test_randomize_ordering_seed=17')
+    expected_attrib = {'name': 'test_randomize_ordering_seed', 'value': '17'}
+    property_attributes = [
+        prop.attrib for prop in out.findall('./properties/property')]
+    self.assertIn(expected_attrib, property_attributes)
+
+
+if __name__ == '__main__':
+  absltest.main()
