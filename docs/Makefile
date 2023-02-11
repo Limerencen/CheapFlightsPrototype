@@ -18,4 +18,8 @@ SOURCEDIR      = ../absl
 RSTDIR         = source
 HTMLDIR        = build
 HTMLDIR      = build
-# If you change the conf.py apidoc_excluded_paths, you need to 
+# If you change the conf.py apidoc_excluded_paths, you need to update
+# the excluded paths in APIDOC_EXCLUDE too.  The paths are relative
+# to the docs/ directory (if you want to filter out absl/tests you need
+# to use "../*/tests".)
+APIDOC_EXCLUDE = ../*/*/tests/* .
