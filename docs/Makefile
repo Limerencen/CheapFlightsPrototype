@@ -4,4 +4,13 @@
 #   Recommend doing this from a virtual environment:
 #   $ sudo apt-get install virtualenv python3-venv
 #   $ virtualenv myproject  # or python3 -m venv myproject
-#   $ source myproject/bin/activat
+#   $ source myproject/bin/activate
+#
+#   Then install sphinx packages (if running locally)
+#   $ pip install m2r2
+#   $ pip install sphinxcontrib-apidoc
+#   $ pip install sphinx-rtd-theme
+#
+
+# You can set these variables from the command line, and also
+#
