@@ -5,4 +5,15 @@ import sys
 
 # -- Project information
 project = 'Abseil Python Common Libraries'
-copyright = '2022, Abseil'  # pylint: di
+copyright = '2022, Abseil'  # pylint: disable=redefined-builtin
+author = 'The Abseil Authors'
+
+release = ''
+version = ''
+
+# -- General configuration
+
+extensions = [
+    'sphinx.ext.duration',
+    'sphinx.ext.doctest',
+    'sphinx
