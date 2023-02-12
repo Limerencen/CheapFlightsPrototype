@@ -34,4 +34,4 @@ rstfiles:
 # Run after "make rstfiles"
 # You can review sphinx generated files in docs/build directory.
 htmlfiles:
-	@$(SPHINXBUILD) -b html -c $(RSTDIR) $(RSTDIR) $
+	@$(SPHINXBUILD) -b html -c $(RSTDIR) $(RSTDIR) $(HTMLDIR)
