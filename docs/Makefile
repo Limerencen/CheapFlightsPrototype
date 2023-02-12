@@ -29,3 +29,9 @@ SPHINXAPIDOC  ?= sphinx-apidoc
 # Build .rst files for all Python sources in SOURCEDIR.
 # This rule isn't called by readthedocs, its only used for manual testing.
 rstfiles:
+	@$(SPHINXAPIDOC) -o $(RSTDIR) $(SOURCEDIR) $(APIDOC_EXCLUDE)
+
+# Run after "make rstfiles"
+# You can review sphinx generated files in docs/build directory.
+htmlfiles:
+	@$(SPHINXBUILD) -b html -c $(RSTDIR) $(RSTDIR) $
