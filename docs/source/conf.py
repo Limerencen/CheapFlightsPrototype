@@ -22,4 +22,13 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     'sphinx.ext.coverage',
-    'sphinxcontrib.apidoc',  # convert .py source
+    'sphinxcontrib.apidoc',  # convert .py sources to .rst docs.
+    'm2r2',                  # for .md files
+]
+
+# sphinxcontrib.apidoc vars
+apidoc_module_dir = '../../absl'
+apidoc_output_dir = '.'
+apidoc_toc_file = False
+apidoc_excluded_paths = [
+    '*/test
