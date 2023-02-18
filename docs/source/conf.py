@@ -31,4 +31,11 @@ apidoc_module_dir = '../../absl'
 apidoc_output_dir = '.'
 apidoc_toc_file = False
 apidoc_excluded_paths = [
-    '*/test
+    '*/tests/*',
+    'tests/*',
+]
+apidoc_separate_modules = True
+
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3/', None),
+    'sphinx': ('https://www.sphinx-doc.org/
