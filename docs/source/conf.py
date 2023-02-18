@@ -57,4 +57,4 @@ html_theme = 'sphinx_rtd_theme'
 epub_show_urls = 'footnote'
 
 sys.path.insert(0, os.path.abspath('../..'))       # access to README.md
-sys.path.insert(0, os.path.abspath
+sys.path.insert(0, os.path.abspath('../../absl'))  # access to python sources
