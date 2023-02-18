@@ -49,4 +49,12 @@ source_suffix = {
 
 templates_path = ['_templates']
 
-# -- Options for HTML outpu
+# -- Options for HTML output
+
+html_theme = 'sphinx_rtd_theme'
+
+# -- Options for EPUB output
+epub_show_urls = 'footnote'
+
+sys.path.insert(0, os.path.abspath('../..'))       # access to README.md
+sys.path.insert(0, os.path.abspath
