@@ -1,4 +1,5 @@
-# Copyright 2017 The Abseil Authors.
+
+# Copyright 2018 The Abseil Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,24 +15,16 @@
 
 """Test helper for smoke_test.sh."""
 
-import sys
-
-from absl import app
-from absl import flags
-from absl import logging
-
-FLAGS = flags.FLAGS
-
-flags.DEFINE_string('echo', None, 'Text to echo.')
+from absl.testing import absltest
 
 
-def main(argv):
-  del argv  # Unused.
+class SampleTest(absltest.TestCase):
 
-  print('Running under Python {0[0]}.{0[1]}.{0[2]}'.format(sys.version_info),
-        file=sys.stderr)
-  logging.info('echo is %s.', FLAGS.echo)
-
+  def test_subtest(self):
+    for i in (1, 2):
+      with self.subTest(i=i):
+        self.assertEqual(i, i)
+        print('msg_for_test')
 
 if __name__ == '__main__':
-  app.run(main)
+  absltest.main()
